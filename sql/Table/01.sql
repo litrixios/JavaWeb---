@@ -1,188 +1,181 @@
--- 1. åˆ›å»ºæ•°æ®åº“
-CREATE DATABASE AcademicSubmissionSystem;
-GO
-
-USE AcademicSubmissionSystem;
-GO
-
 -- =============================================
--- 1. ç”¨æˆ·è¡¨ (Users)
--- åŒ…å«è¶…çº§ç®¡ç†å‘˜ã€ç¼–è¾‘ã€ä½œè€…ã€å®¡ç¨¿äººç­‰æ‰€æœ‰è§’è‰²
+-- 1. ÓÃ»§±í (Users)
+-- °üº¬³¬¼¶¹ÜÀíÔ±¡¢±à¼­¡¢×÷Õß¡¢Éó¸åÈËµÈËùÓĞ½ÇÉ«
 -- =============================================
 CREATE TABLE Users (
-                       UserID INT PRIMARY KEY IDENTITY(1,1),      -- ç”¨æˆ·IDï¼Œè‡ªå¢
-                       Username NVARCHAR(50) NOT NULL UNIQUE,     -- ç”¨æˆ·åï¼Œå”¯ä¸€
-                       Password NVARCHAR(100) NOT NULL,           -- å¯†ç  (å»ºè®®å­˜åŠ å¯†åçš„å“ˆå¸Œå€¼ï¼Œè¯¾è®¾åˆæœŸå¯ç”¨æ˜æ–‡)
-                       Role NVARCHAR(20) NOT NULL,                -- è§’è‰²ç±»å‹ (SuperAdmin, Admin, Author, Reviewer, Editor, EditorInChief, EditorialAdmin)
-                       Email NVARCHAR(100) NOT NULL,              -- é‚®ç®±
-                       FullName NVARCHAR(50),                     -- å…¨å (æ˜¾ç¤ºåœ¨é¡µé¢å³ä¸Šè§’)
-                       Affiliation NVARCHAR(100),                 -- å•ä½
-                       ResearchDirection NVARCHAR(200),           -- ç ”ç©¶æ–¹å‘
-                       RegisterTime DATETIME DEFAULT GETDATE(),   -- æ³¨å†Œæ—¶é—´
-                       Status INT DEFAULT 0                       -- çŠ¶æ€ (0: å¾…å®¡æ ¸/æœªæ¿€æ´», 1: æ­£å¸¸, 2: ç¦ç”¨)
+                       UserID INT PRIMARY KEY IDENTITY(1,1),      -- ÓÃ»§ID£¬×ÔÔö
+                       Username NVARCHAR(50) NOT NULL UNIQUE,     -- ÓÃ»§Ãû£¬Î¨Ò»
+                       Password NVARCHAR(100) NOT NULL,           -- ÃÜÂë (½¨Òé´æ¼ÓÃÜºóµÄ¹şÏ£Öµ£¬¿ÎÉè³õÆÚ¿ÉÓÃÃ÷ÎÄ)
+                       Role NVARCHAR(20) NOT NULL,                -- ½ÇÉ«ÀàĞÍ (SuperAdmin, Admin, Author, Reviewer, Editor, EditorInChief, EditorialAdmin)
+                       Email NVARCHAR(100) NOT NULL,              -- ÓÊÏä
+                       FullName NVARCHAR(50),                     -- È«Ãû (ÏÔÊ¾ÔÚÒ³ÃæÓÒÉÏ½Ç)
+                       Affiliation NVARCHAR(100),                 -- µ¥Î»
+                       ResearchDirection NVARCHAR(200),           -- ÑĞ¾¿·½Ïò
+                       RegisterTime DATETIME DEFAULT GETDATE(),   -- ×¢²áÊ±¼ä
+                       Status INT DEFAULT 0                       -- ×´Ì¬ (0: ´ıÉóºË/Î´¼¤»î, 1: Õı³£, 2: ½ûÓÃ)
 );
 GO
 
 -- =============================================
--- 2. æœŸåˆŠè¡¨ (Journal)
--- å­˜å‚¨æœŸåˆŠçš„åŸºæœ¬ä¿¡æ¯
+-- 2. ÆÚ¿¯±í (Journal)
+-- ´æ´¢ÆÚ¿¯µÄ»ù±¾ĞÅÏ¢
 -- =============================================
 CREATE TABLE Journal (
-                         JournalID INT PRIMARY KEY IDENTITY(1,1),   -- æœŸåˆŠID
-                         Name NVARCHAR(100) NOT NULL,               -- æœŸåˆŠåç§° (å¦‚ï¼šInternational Artificial Intelligence Research)
-                         Introduction NVARCHAR(MAX),                -- æœŸåˆŠä»‹ç»
-                         ImpactFactor DECIMAL(5, 3),                -- å½±å“å› å­ (ä¾‹å¦‚: 3.502)
-                         Timeline NVARCHAR(MAX)                     -- å‘è¡¨æ—¶é—´çº¿è¯´æ˜
+                         JournalID INT PRIMARY KEY IDENTITY(1,1),   -- ÆÚ¿¯ID
+                         Name NVARCHAR(100) NOT NULL,               -- ÆÚ¿¯Ãû³Æ (Èç£ºInternational Artificial Intelligence Research)
+                         Introduction NVARCHAR(MAX),                -- ÆÚ¿¯½éÉÜ
+                         ImpactFactor DECIMAL(5, 3),                -- Ó°ÏìÒò×Ó (ÀıÈç: 3.502)
+                         Timeline NVARCHAR(MAX)                     -- ·¢±íÊ±¼äÏßËµÃ÷
 );
 GO
 
 -- =============================================
--- 3. ç¨¿ä»¶è¡¨ (Manuscript)
--- æ ¸å¿ƒè¡¨ï¼Œå­˜å‚¨ç¨¿ä»¶çš„å…ƒæ•°æ®å’Œå½“å‰çŠ¶æ€
+-- 3. ¸å¼ş±í (Manuscript)
+-- ºËĞÄ±í£¬´æ´¢¸å¼şµÄÔªÊı¾İºÍµ±Ç°×´Ì¬
 -- =============================================
 CREATE TABLE Manuscript (
-                            ManuscriptID INT PRIMARY KEY IDENTITY(1,1), -- ç¨¿ä»¶ID
-                            AuthorID INT NOT NULL,                      -- æäº¤ä½œè€…ID (å¤–é”®)
-                            CurrentEditorID INT,                        -- å½“å‰è´Ÿè´£ç¼–è¾‘ID (å¤–é”®ï¼Œå¯ä¸ºç©º)
-                            Title NVARCHAR(255) NOT NULL,               -- æ ‡é¢˜
-                            Abstract NVARCHAR(MAX),                     -- æ‘˜è¦
-                            Keywords NVARCHAR(200),                     -- å…³é”®è¯
-                            AuthorList NVARCHAR(MAX),                   -- ä½œè€…åˆ—è¡¨ (æ–‡æœ¬å½¢å¼å­˜å‚¨ï¼Œå¦‚ "å¼ ä¸‰, æå››")
-                            FundingInfo NVARCHAR(200),                  -- é¡¹ç›®èµ„åŠ©æƒ…å†µ
-                            Status NVARCHAR(50) DEFAULT 'Submitted',    -- çŠ¶æ€ (Incomplete, Submitted, With Editor, Under Review, Needing Revision, Accepted, Rejected)
-                            SubmissionTime DATETIME DEFAULT GETDATE(),  -- æäº¤æ—¶é—´
-                            Decision NVARCHAR(50),                      -- æœ€ç»ˆå†³ç­– (Accept, Reject, Revise)
-                            DecisionTime DATETIME,                      -- å†³ç­–æ—¶é—´
+                            ManuscriptID INT PRIMARY KEY IDENTITY(1,1), -- ¸å¼şID
+                            AuthorID INT NOT NULL,                      -- Ìá½»×÷ÕßID (Íâ¼ü)
+                            CurrentEditorID INT,                        -- µ±Ç°¸ºÔğ±à¼­ID (Íâ¼ü£¬¿ÉÎª¿Õ)
+                            Title NVARCHAR(255) NOT NULL,               -- ±êÌâ
+                            Abstract NVARCHAR(MAX),                     -- ÕªÒª
+                            Keywords NVARCHAR(200),                     -- ¹Ø¼ü´Ê
+                            AuthorList NVARCHAR(MAX),                   -- ×÷ÕßÁĞ±í (ÎÄ±¾ĞÎÊ½´æ´¢£¬Èç "ÕÅÈı, ÀîËÄ")
+                            FundingInfo NVARCHAR(200),                  -- ÏîÄ¿×ÊÖúÇé¿ö
+                            Status NVARCHAR(50) DEFAULT 'Submitted',    -- ×´Ì¬ (Incomplete, Submitted, With Editor, Under Review, Needing Revision, Accepted, Rejected)
+                            SubmissionTime DATETIME DEFAULT GETDATE(),  -- Ìá½»Ê±¼ä
+                            Decision NVARCHAR(50),                      -- ×îÖÕ¾ö²ß (Accept, Reject, Revise)
+                            DecisionTime DATETIME,                      -- ¾ö²ßÊ±¼ä
                             CONSTRAINT FK_Manuscript_Author FOREIGN KEY (AuthorID) REFERENCES Users(UserID),
                             CONSTRAINT FK_Manuscript_Editor FOREIGN KEY (CurrentEditorID) REFERENCES Users(UserID)
 );
 GO
 
 -- =============================================
--- 4. ç¨¿ä»¶ç‰ˆæœ¬è¡¨ (Versions)
--- ç”¨äºæ”¯æŒä¿®å›åŠŸèƒ½ï¼Œå­˜å‚¨ç¨¿ä»¶çš„ä¸åŒç‰ˆæœ¬
+-- 4. ¸å¼ş°æ±¾±í (Versions)
+-- ÓÃÓÚÖ§³ÖĞŞ»Ø¹¦ÄÜ£¬´æ´¢¸å¼şµÄ²»Í¬°æ±¾
 -- =============================================
 CREATE TABLE Versions (
-                          VersionID INT PRIMARY KEY IDENTITY(1,1),    -- ç‰ˆæœ¬ID
-                          ManuscriptID INT NOT NULL,                  -- ç¨¿ä»¶ID (å¤–é”®)
-                          VersionNumber INT NOT NULL,                 -- ç‰ˆæœ¬å· (1, 2, 3...)
-                          AnonymousFilePath NVARCHAR(255),            -- åŒ¿åç‰ˆæ–‡ä»¶è·¯å¾„ (PDF)
-                          OriginalFilePath NVARCHAR(255),             -- åŸç‰ˆæ–‡ä»¶è·¯å¾„ (PDF)
-                          CoverLetterPath NVARCHAR(255),              -- Cover Letterè·¯å¾„
-                          ResponseLetterPath NVARCHAR(255),           -- å›å¤ä¿¡è·¯å¾„ (ä¿®å›æ—¶ä½¿ç”¨)
-                          UploadTime DATETIME DEFAULT GETDATE(),      -- ä¸Šä¼ æ—¶é—´
+                          VersionID INT PRIMARY KEY IDENTITY(1,1),    -- °æ±¾ID
+                          ManuscriptID INT NOT NULL,                  -- ¸å¼şID (Íâ¼ü)
+                          VersionNumber INT NOT NULL,                 -- °æ±¾ºÅ (1, 2, 3...)
+                          AnonymousFilePath NVARCHAR(255),            -- ÄäÃû°æÎÄ¼şÂ·¾¶ (PDF)
+                          OriginalFilePath NVARCHAR(255),             -- Ô­°æÎÄ¼şÂ·¾¶ (PDF)
+                          CoverLetterPath NVARCHAR(255),              -- Cover LetterÂ·¾¶
+                          ResponseLetterPath NVARCHAR(255),           -- »Ø¸´ĞÅÂ·¾¶ (ĞŞ»ØÊ±Ê¹ÓÃ)
+                          UploadTime DATETIME DEFAULT GETDATE(),      -- ÉÏ´«Ê±¼ä
                           CONSTRAINT FK_Versions_Manuscript FOREIGN KEY (ManuscriptID) REFERENCES Manuscript(ManuscriptID)
 );
 GO
 
 -- =============================================
--- 5. å®¡ç¨¿ä»»åŠ¡è¡¨ (Review)
--- å­˜å‚¨å®¡ç¨¿äººä¸ç¨¿ä»¶çš„å…³è”åŠå®¡ç¨¿ç»“æœ
+-- 5. Éó¸åÈÎÎñ±í (Review)
+-- ´æ´¢Éó¸åÈËÓë¸å¼şµÄ¹ØÁª¼°Éó¸å½á¹û
 -- =============================================
 CREATE TABLE Review (
-                        ReviewID INT PRIMARY KEY IDENTITY(1,1),     -- è¯„å®¡ID
-                        ManuscriptID INT NOT NULL,                  -- ç¨¿ä»¶ID (å¤–é”®)
-                        ReviewerID INT NOT NULL,                    -- å®¡ç¨¿äººID (å¤–é”®)
-                        CommentsToAuthor NVARCHAR(MAX),             -- ç»™ä½œè€…çš„å…¬å¼€æ„è§
-                        ConfidentialComments NVARCHAR(MAX),         -- ç»™ç¼–è¾‘çš„ä¿å¯†æ„è§
-                        Score INT,                                  -- æ‰“åˆ† (ä¾‹å¦‚ 1-5 åˆ†)
-                        Suggestion NVARCHAR(50),                    -- å»ºè®® (Accept, Minor Revision, Major Revision, Reject)
-                        InviteDate DATETIME DEFAULT GETDATE(),      -- é‚€è¯·æ—¥æœŸ
-                        Deadline DATETIME,                          -- æˆªæ­¢æ—¥æœŸ
-                        SubmitTime DATETIME,                        -- æ„è§æäº¤æ—¶é—´
-                        Status NVARCHAR(20) DEFAULT 'Invited',      -- çŠ¶æ€ (Invited, Accepted, Rejected, Completed, Overdue)
+                        ReviewID INT PRIMARY KEY IDENTITY(1,1),     -- ÆÀÉóID
+                        ManuscriptID INT NOT NULL,                  -- ¸å¼şID (Íâ¼ü)
+                        ReviewerID INT NOT NULL,                    -- Éó¸åÈËID (Íâ¼ü)
+                        CommentsToAuthor NVARCHAR(MAX),             -- ¸ø×÷ÕßµÄ¹«¿ªÒâ¼û
+                        ConfidentialComments NVARCHAR(MAX),         -- ¸ø±à¼­µÄ±£ÃÜÒâ¼û
+                        Score INT,                                  -- ´ò·Ö (ÀıÈç 1-5 ·Ö)
+                        Suggestion NVARCHAR(50),                    -- ½¨Òé (Accept, Minor Revision, Major Revision, Reject)
+                        InviteDate DATETIME DEFAULT GETDATE(),      -- ÑûÇëÈÕÆÚ
+                        Deadline DATETIME,                          -- ½ØÖ¹ÈÕÆÚ
+                        SubmitTime DATETIME,                        -- Òâ¼ûÌá½»Ê±¼ä
+                        Status NVARCHAR(20) DEFAULT 'Invited',      -- ×´Ì¬ (Invited, Accepted, Rejected, Completed, Overdue)
                         CONSTRAINT FK_Review_Manuscript FOREIGN KEY (ManuscriptID) REFERENCES Manuscript(ManuscriptID),
                         CONSTRAINT FK_Review_Reviewer FOREIGN KEY (ReviewerID) REFERENCES Users(UserID)
 );
 GO
 
 -- =============================================
--- 6. ç¼–å§”è¡¨ (Editorial_Board)
--- å±•ç¤ºåœ¨å‰å°çš„ç¼–å§”ä¿¡æ¯
+-- 6. ±àÎ¯±í (Editorial_Board)
+-- Õ¹Ê¾ÔÚÇ°Ì¨µÄ±àÎ¯ĞÅÏ¢
 -- =============================================
 CREATE TABLE Editorial_Board (
-                                 BoardID INT PRIMARY KEY IDENTITY(1,1),      -- æˆå‘˜ID
-                                 UserID INT NOT NULL,                        -- å…³è”çš„ç”¨æˆ·ID (å¤–é”®)
-                                 Position NVARCHAR(50),                      -- èŒä½ (Editor-in-Chief, Associate Editor)
-                                 Introduction NVARCHAR(MAX),                 -- ä¸ªäººç®€ä»‹
-                                 Section NVARCHAR(100),                      -- æ‰€å±æ ç›®/é¢†åŸŸ
+                                 BoardID INT PRIMARY KEY IDENTITY(1,1),      -- ³ÉÔ±ID
+                                 UserID INT NOT NULL,                        -- ¹ØÁªµÄÓÃ»§ID (Íâ¼ü)
+                                 Position NVARCHAR(50),                      -- Ö°Î» (Editor-in-Chief, Associate Editor)
+                                 Introduction NVARCHAR(MAX),                 -- ¸öÈË¼ò½é
+                                 Section NVARCHAR(100),                      -- ËùÊôÀ¸Ä¿/ÁìÓò
                                  CONSTRAINT FK_Board_User FOREIGN KEY (UserID) REFERENCES Users(UserID)
 );
 GO
 
 -- =============================================
--- 7. æ–°é—»è¡¨ (News)
--- ç”¨äºå‰å°å±•ç¤ºé€šçŸ¥å’Œå…¬å‘Š
+-- 7. ĞÂÎÅ±í (News)
+-- ÓÃÓÚÇ°Ì¨Õ¹Ê¾Í¨ÖªºÍ¹«¸æ
 -- =============================================
 CREATE TABLE News (
-                      NewsID INT PRIMARY KEY IDENTITY(1,1),       -- æ–°é—»ID
-                      Title NVARCHAR(200) NOT NULL,               -- æ ‡é¢˜
-                      Content NVARCHAR(MAX),                      -- å†…å®¹ (æ”¯æŒHTMLå¯Œæ–‡æœ¬)
-                      PublishDate DATETIME DEFAULT GETDATE(),     -- å‘å¸ƒæ—¥æœŸ
-                      PublisherID INT,                            -- å‘å¸ƒäººID (å¤–é”®)
-                      IsActive BIT DEFAULT 1,                     -- æ˜¯å¦æ˜¾ç¤º
+                      NewsID INT PRIMARY KEY IDENTITY(1,1),       -- ĞÂÎÅID
+                      Title NVARCHAR(200) NOT NULL,               -- ±êÌâ
+                      Content NVARCHAR(MAX),                      -- ÄÚÈİ (Ö§³ÖHTML¸»ÎÄ±¾)
+                      PublishDate DATETIME DEFAULT GETDATE(),     -- ·¢²¼ÈÕÆÚ
+                      PublisherID INT,                            -- ·¢²¼ÈËID (Íâ¼ü)
+                      IsActive BIT DEFAULT 1,                     -- ÊÇ·ñÏÔÊ¾
                       CONSTRAINT FK_News_Publisher FOREIGN KEY (PublisherID) REFERENCES Users(UserID)
 );
 GO
 
 -- =============================================
--- 8. æ–‡ä»¶è¡¨ (File)
--- é€šç”¨çš„æ–‡ä»¶å­˜å‚¨è®°å½•ï¼ˆå¦‚æ–°é—»é™„ä»¶ã€è¡¥å……ææ–™ç­‰ï¼‰
+-- 8. ÎÄ¼ş±í (File)
+-- Í¨ÓÃµÄÎÄ¼ş´æ´¢¼ÇÂ¼£¨ÈçĞÂÎÅ¸½¼ş¡¢²¹³ä²ÄÁÏµÈ£©
 -- =============================================
 CREATE TABLE Files (
-                       FileID INT PRIMARY KEY IDENTITY(1,1),       -- æ–‡ä»¶ID
-                       FileName NVARCHAR(100) NOT NULL,            -- æ–‡ä»¶åŸå§‹åç§°
-                       FilePath NVARCHAR(255) NOT NULL,            -- æœåŠ¡å™¨å­˜å‚¨è·¯å¾„
-                       UploadTime DATETIME DEFAULT GETDATE(),      -- ä¸Šä¼ æ—¶é—´
-                       ManuscriptID INT,                           -- å…³è”ç¨¿ä»¶ID (å¯ä¸ºç©ºï¼Œå¦‚æœæ˜¯æ–°é—»é™„ä»¶åˆ™ä¸ºç©º)
-                       UploaderID INT                              -- ä¸Šä¼ è€…ID
+                       FileID INT PRIMARY KEY IDENTITY(1,1),       -- ÎÄ¼şID
+                       FileName NVARCHAR(100) NOT NULL,            -- ÎÄ¼şÔ­Ê¼Ãû³Æ
+                       FilePath NVARCHAR(255) NOT NULL,            -- ·şÎñÆ÷´æ´¢Â·¾¶
+                       UploadTime DATETIME DEFAULT GETDATE(),      -- ÉÏ´«Ê±¼ä
+                       ManuscriptID INT,                           -- ¹ØÁª¸å¼şID (¿ÉÎª¿Õ£¬Èç¹ûÊÇĞÂÎÅ¸½¼şÔòÎª¿Õ)
+                       UploaderID INT                              -- ÉÏ´«ÕßID
 );
 GO
 
 -- =============================================
--- 9. æ—¥å¿—è¡¨ (Logs)
--- è®°å½•ç³»ç»Ÿå…³é”®æ“ä½œï¼Œç”¨äºå®¡è®¡
+-- 9. ÈÕÖ¾±í (Logs)
+-- ¼ÇÂ¼ÏµÍ³¹Ø¼ü²Ù×÷£¬ÓÃÓÚÉó¼Æ
 -- =============================================
 CREATE TABLE Logs (
-                      LogID INT PRIMARY KEY IDENTITY(1,1),        -- æ—¥å¿—ID
-                      OperationTime DATETIME DEFAULT GETDATE(),   -- æ“ä½œæ—¶é—´
-                      OperatorID INT,                             -- æ“ä½œäººID (å¤–é”®)
-                      OperationType NVARCHAR(50),                 -- æ“ä½œç±»å‹ (å¦‚ï¼šLogin, Submit, Decision)
-                      ManuscriptID INT,                           -- ç›¸å…³ç¨¿ä»¶ID (å¯ä¸ºç©º)
-                      Description NVARCHAR(MAX),                  -- æ“ä½œè¯¦æƒ…æè¿°
+                      LogID INT PRIMARY KEY IDENTITY(1,1),        -- ÈÕÖ¾ID
+                      OperationTime DATETIME DEFAULT GETDATE(),   -- ²Ù×÷Ê±¼ä
+                      OperatorID INT,                             -- ²Ù×÷ÈËID (Íâ¼ü)
+                      OperationType NVARCHAR(50),                 -- ²Ù×÷ÀàĞÍ (Èç£ºLogin, Submit, Decision)
+                      ManuscriptID INT,                           -- Ïà¹Ø¸å¼şID (¿ÉÎª¿Õ)
+                      Description NVARCHAR(MAX),                  -- ²Ù×÷ÏêÇéÃèÊö
                       CONSTRAINT FK_Logs_Operator FOREIGN KEY (OperatorID) REFERENCES Users(UserID)
 );
 GO
 
--- 10. ç”¨æˆ·æƒé™è¡¨ (UserPermissions)
--- å®ç°é’ˆå¯¹æ¯ä¸ªç”¨æˆ·çš„ç‹¬ç«‹æƒé™é…ç½®
+-- 10. ÓÃ»§È¨ÏŞ±í (UserPermissions)
+-- ÊµÏÖÕë¶ÔÃ¿¸öÓÃ»§µÄ¶ÀÁ¢È¨ÏŞÅäÖÃ
 CREATE TABLE UserPermissions (
-                                 UserID INT PRIMARY KEY,                 -- ä¸»é”®åŒæ—¶ä½œä¸ºå¤–é”®ï¼Œç¡®ä¿æ¯ä¸ªç”¨æˆ·åªæœ‰ä¸€æ¡è®°å½•
+                                 UserID INT PRIMARY KEY,                 -- Ö÷¼üÍ¬Ê±×÷ÎªÍâ¼ü£¬È·±£Ã¿¸öÓÃ»§Ö»ÓĞÒ»Ìõ¼ÇÂ¼
 
-    -- å¤–é”®çº¦æŸï¼Œå…³è”åˆ° Users è¡¨
+    -- Íâ¼üÔ¼Êø£¬¹ØÁªµ½ Users ±í
                                  CONSTRAINT FK_UserPermissions_UserID
                                      FOREIGN KEY (UserID) REFERENCES Users(UserID),
 
     -- ===================================
-    -- æƒé™åˆ—ï¼šå¯¹åº”äºä»»åŠ¡ä¹¦ä¸­çš„å„ä¸ªåŠŸèƒ½æ¨¡å—
-    -- BIT ç±»å‹ï¼š1 è¡¨ç¤ºæœ‰æƒé™ï¼Œ0 è¡¨ç¤ºæ— æƒé™ (NULL è¡¨ç¤ºæœªé…ç½®ï¼Œä½†ä½¿ç”¨ 0/1 æ›´æ˜ç¡®)
+    -- È¨ÏŞÁĞ£º¶ÔÓ¦ÓÚÈÎÎñÊéÖĞµÄ¸÷¸ö¹¦ÄÜÄ£¿é
+    -- BIT ÀàĞÍ£º1 ±íÊ¾ÓĞÈ¨ÏŞ£¬0 ±íÊ¾ÎŞÈ¨ÏŞ (NULL ±íÊ¾Î´ÅäÖÃ£¬µ«Ê¹ÓÃ 0/1 ¸üÃ÷È·)
     -- ===================================
 
-    -- ç¨¿ä»¶ç›¸å…³æƒé™
-                                 CanSubmitManuscript BIT DEFAULT 0,          -- æäº¤æ–°ç¨¿ä»¶
-                                 CanViewAllManuscripts BIT DEFAULT 0,        -- æŸ¥çœ‹æ‰€æœ‰ç¨¿ä»¶ (ä¸»ç¼–/ç®¡ç†å‘˜)
+    -- ¸å¼şÏà¹ØÈ¨ÏŞ
+                                 CanSubmitManuscript BIT DEFAULT 0,          -- Ìá½»ĞÂ¸å¼ş
+                                 CanViewAllManuscripts BIT DEFAULT 0,        -- ²é¿´ËùÓĞ¸å¼ş (Ö÷±à/¹ÜÀíÔ±)
 
-    -- å®¡ç¨¿/å†³ç­–ç›¸å…³æƒé™
-                                 CanAssignReviewer BIT DEFAULT 0,            -- é‚€è¯·/æŒ‡æ´¾äººå‘˜
-                                 CanViewReviewerIdentity BIT DEFAULT 0,      -- æŸ¥çœ‹å®¡ç¨¿äººèº«ä»½
-                                 CanWriteReview BIT DEFAULT 0,               -- å¡«å†™å®¡ç¨¿æ„è§
-                                 CanMakeDecision BIT DEFAULT 0,              -- åšå‡ºå½•ç”¨/æ‹’ç¨¿å†³å®š
+    -- Éó¸å/¾ö²ßÏà¹ØÈ¨ÏŞ
+                                 CanAssignReviewer BIT DEFAULT 0,            -- ÑûÇë/Ö¸ÅÉÈËÔ±
+                                 CanViewReviewerIdentity BIT DEFAULT 0,      -- ²é¿´Éó¸åÈËÉí·İ
+                                 CanWriteReview BIT DEFAULT 0,               -- ÌîĞ´Éó¸åÒâ¼û
+                                 CanMakeDecision BIT DEFAULT 0,              -- ×ö³öÂ¼ÓÃ/¾Ü¸å¾ö¶¨
 
-    -- ç³»ç»Ÿ/å†…å®¹ç›¸å…³æƒé™
-                                 CanModifySystemConfig BIT DEFAULT 0,        -- ä¿®æ”¹ç³»ç»Ÿé…ç½® (ç³»ç»Ÿç®¡ç†å‘˜/è¶…çº§ç®¡ç†å‘˜)
-                                 CanTechCheck BIT DEFAULT 0,                 -- å½¢å¼å®¡æŸ¥ (ç¼–è¾‘éƒ¨ç®¡ç†å‘˜)
-                                 CanPublishNews BIT DEFAULT 0                -- å‘å¸ƒæ–°é—»/å…¬å‘Š (ç¼–è¾‘éƒ¨ç®¡ç†å‘˜)
+    -- ÏµÍ³/ÄÚÈİÏà¹ØÈ¨ÏŞ
+                                 CanModifySystemConfig BIT DEFAULT 0,        -- ĞŞ¸ÄÏµÍ³ÅäÖÃ (ÏµÍ³¹ÜÀíÔ±/³¬¼¶¹ÜÀíÔ±)
+                                 CanTechCheck BIT DEFAULT 0,                 -- ĞÎÊ½Éó²é (±à¼­²¿¹ÜÀíÔ±)
+                                 CanPublishNews BIT DEFAULT 0                -- ·¢²¼ĞÂÎÅ/¹«¸æ (±à¼­²¿¹ÜÀíÔ±)
 
-    -- æ³¨æ„ï¼šå¦‚æœæœªæ¥æ–°å¢åŠŸèƒ½ï¼Œéœ€è¦æ‰‹åŠ¨ ALTER TABLE ADD COLUMN
+    -- ×¢Òâ£ºÈç¹ûÎ´À´ĞÂÔö¹¦ÄÜ£¬ĞèÒªÊÖ¶¯ ALTER TABLE ADD COLUMN
 );
 GO
