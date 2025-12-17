@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bjfu.cms.mapper.ManuscriptMapper">
+
+    <resultMap id="ManuscriptMap" type="com.bjfu.cms.entity.Manuscript">
+        <id property="manuscriptId" column="ManuscriptID"/>
+        <result property="authorId" column="AuthorID"/>
+        <result property="title" column="Title"/>
+        <result property="abstractText" column="Abstract"/>
+        <result property="status" column="Status"/>
+        <result property="submissionTime" column="SubmissionTime"/>
+    </resultMap>
+
+    <insert id="insertManuscript" useGeneratedKeys="true" keyProperty="manuscriptId" keyColumn="ManuscriptID">
+        INSERT INTO Manuscript
+        (AuthorID, Title, Abstract, Keywords, AuthorList, FundingInfo, Status, SubmissionTime)
+        VALUES
+            (#{authorId}, #{title}, #{abstractText}, #{keywords}, #{authorList}, #{fundingInfo}, #{status}, #{submissionTime})
+    </insert>
+
+    <select id="selectByAuthorId" resultMap="ManuscriptMap">
+        SELECT * FROM Manuscript WHERE AuthorID = #{authorId} ORDER BY SubmissionTime DESC
+    </select>
+
+<!--    <select id="selectById" resultMap="ManuscriptMap">-->
+<!--        SELECT * FROM Manuscript WHERE ID = #-->
+<!--    </select>-->
+
+</mapper>
