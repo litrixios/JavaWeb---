@@ -25,7 +25,10 @@ CREATE TABLE Journal (
                          Name NVARCHAR(100) NOT NULL,               -- 期刊名称 (如：International Artificial Intelligence Research)
                          Introduction NVARCHAR(MAX),                -- 期刊介绍
                          ImpactFactor DECIMAL(5, 3),                -- 影响因子 (例如: 3.502)
-                         Timeline NVARCHAR(MAX)                     -- 发表时间线说明
+                         Timeline NVARCHAR(MAX),                    -- 发表时间线说明
+                         JournalLink NVARCHAR(255),                 -- 新增的链接属性，用于前端跳转
+                         JournalImageLink NVARCHAR(255)             -- 存储期刊封面的图片 URL 链接
+
 );
 GO
 
