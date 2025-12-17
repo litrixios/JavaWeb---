@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bjfu.cms.mapper.UserMapper">
+
+    <resultMap id="UserMap" type="com.bjfu.cms.entity.User">
+        <id property="userId" column="UserID"/>
+        <result property="username" column="Username"/>
+        <result property="password" column="Password"/>
+        <result property="role" column="Role"/>
+        <result property="email" column="Email"/>
+        <result property="fullName" column="FullName"/>
+        <result property="registerTime" column="RegisterTime"/>
+        <result property="status" column="Status"/>
+
+        <association property="permissions" javaType="com.bjfu.cms.entity.UserPermission">
+            <id property="userId" column="UserID"/>
+            <result property="canSubmitManuscript" column="CanSubmitManuscript"/>
+            <result property="canMakeDecision" column="CanMakeDecision"/>
+        </association>
+    </resultMap>
+
+    <select id="findByUsername" resultMap="UserMap">
+        SELECT u.*, p.*
+        FROM Users u
+                 LEFT JOIN UserPermissions p ON u.UserID = p.UserID
+        WHERE u.Username = #{username}
+    </select>
+
+    <insert id="insertUser" useGeneratedKeys="true" keyProperty="userId" keyColumn="UserID">
+        INSERT INTO Users (Username, Password, Role, Email, FullName, Status)
+        VALUES (#{username}, #{password}, #{role}, #{email}, #{fullName}, #{status})
+    </insert>
+
+    <insert id="insertPermissions">
+        INSERT INTO UserPermissions (UserID, CanSubmitManuscript, CanMakeDecision)
+        VALUES (#{userId}, #{canSubmitManuscript}, #{canMakeDecision})
+    </insert>
+
+</mapper>
