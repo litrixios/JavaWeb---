@@ -1,33 +1,33 @@
--- æ’å…¥ç”¨æˆ·æƒé™æ•°æ®ï¼ˆåŸºäºŽä»»åŠ¡ä¹¦ä¸­å„è§’è‰²çš„æƒé™å®šä¹‰ï¼‰
+-- ²åÈëÓÃ»§È¨ÏÞÊý¾Ý£¨»ùÓÚÈÎÎñÊéÖÐ¸÷½ÇÉ«µÄÈ¨ÏÞ¶¨Òå£©
 INSERT INTO UserPermissions (UserID, CanSubmitManuscript, CanViewAllManuscripts, CanAssignReviewer, CanViewReviewerIdentity, CanWriteReview, CanMakeDecision, CanModifySystemConfig, CanTechCheck, CanPublishNews)
 VALUES
--- 1. è¶…çº§ç®¡ç†å‘˜ (UserID=1) - æ‹¥æœ‰æ‰€æœ‰æƒé™
+-- 1. ³¬¼¶¹ÜÀíÔ± (UserID=1) - ÓµÓÐËùÓÐÈ¨ÏÞ
 (1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 
--- 2. ç¼–è¾‘éƒ¨ä¸»ä»»/ä¸»ç¼– (UserID=2) - ä¸»ç¼–æƒé™
+-- 2. ±à¼­²¿Ö÷ÈÎ/Ö÷±à (UserID=2) - Ö÷±àÈ¨ÏÞ
 (2, 0, 1, 1, 1, 0, 1, 0, 0, 0),
 
--- 3. ç¼–è¾‘éƒ¨ç®¡ç†å‘˜ (UserID=3) - ç¼–è¾‘éƒ¨ç®¡ç†å‘˜æƒé™
+-- 3. ±à¼­²¿¹ÜÀíÔ± (UserID=3) - ±à¼­²¿¹ÜÀíÔ±È¨ÏÞ
 (3, 0, 0, 0, 0, 0, 0, 0, 1, 1),
 
--- 4. ç¼–è¾‘/AIæ–¹å‘ (UserID=4) - ç¼–è¾‘æƒé™
+-- 4. ±à¼­/AI·½Ïò (UserID=4) - ±à¼­È¨ÏÞ
 (4, 0, 0, 1, 1, 0, 0, 0, 0, 0),
 
--- 5. ç¼–è¾‘/ææ–™æ–¹å‘ (UserID=5) - ç¼–è¾‘æƒé™
+-- 5. ±à¼­/²ÄÁÏ·½Ïò (UserID=5) - ±à¼­È¨ÏÞ
 (5, 0, 0, 1, 1, 0, 0, 0, 0, 0),
 
--- 6. ä½œè€…/æ•™æŽˆ (UserID=6) - ä½œè€…æƒé™
+-- 6. ×÷Õß/½ÌÊÚ (UserID=6) - ×÷ÕßÈ¨ÏÞ
 (6, 1, 0, 0, 0, 0, 0, 0, 0, 0),
 
--- 7. ä½œè€…/åšå£«ç”Ÿ (UserID=7) - ä½œè€…æƒé™
+-- 7. ×÷Õß/²©Ê¿Éú (UserID=7) - ×÷ÕßÈ¨ÏÞ
 (7, 1, 0, 0, 0, 0, 0, 0, 0, 0),
 
--- 8. å®¡ç¨¿äºº/èµ„æ·±ä¸“å®¶ (UserID=8) - å®¡ç¨¿äººæƒé™
+-- 8. Éó¸åÈË/×ÊÉî×¨¼Ò (UserID=8) - Éó¸åÈËÈ¨ÏÞ
 (8, 0, 0, 0, 0, 1, 0, 0, 0, 0),
 
--- 9. å®¡ç¨¿äºº/é’å¹´æ•™å¸ˆ (UserID=9) - å®¡ç¨¿äººæƒé™
+-- 9. Éó¸åÈË/ÇàÄê½ÌÊ¦ (UserID=9) - Éó¸åÈËÈ¨ÏÞ
 (9, 0, 0, 0, 0, 1, 0, 0, 0, 0),
 
--- 10. æ–°ä½œè€…/å¾…å®¡æ ¸ (UserID=10) - æ³¨å†ŒåŽé»˜è®¤æ— æƒé™ï¼Œå®¡æ ¸é€šè¿‡åŽèµ‹äºˆä½œè€…æƒé™
+-- 10. ÐÂ×÷Õß/´ýÉóºË (UserID=10) - ×¢²áºóÄ¬ÈÏÎÞÈ¨ÏÞ£¬ÉóºËÍ¨¹ýºó¸³Óè×÷ÕßÈ¨ÏÞ
 (10, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 GO
