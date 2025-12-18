@@ -1,108 +1,27 @@
--- =============================================
--- 步骤 1: 插入必要的前置用户数据 (Users)
--- 说明：Manuscript 表有外键指向 Users。
--- 原数据中使用了 AuthorID: 6, 7, 10 和 EditorID: 4, 5
--- 我们需要使用 IDENTITY_INSERT 强行指定这些 ID 以匹配稿件数据
--- =============================================
-
-SET IDENTITY_INSERT Users ON;
-GO
-
-INSERT INTO Users (UserID, Username, Password, Role, Email, FullName, Affiliation, ResearchDirection, RegisterTime, Status)
-VALUES
--- 编辑 (ID 4, 5)
-(4, 'editor_zhang', 'hashed_pass_123', 'Editor', 'editor.zhang@journal.com', '张编辑', '复旦大学', '人工智能', '2023-01-01', 1),
-(5, 'editor_li',   'hashed_pass_123', 'Editor', 'editor.li@journal.com',    '李编辑', '浙江大学', '材料科学', '2023-01-02', 1),
-
--- 作者 (ID 6, 7, 10)
-(6, 'author_zhang', 'hashed_pass_123', 'Author', 'jg.zhang@univ.edu.cn',   '张建国', '上海交通大学', '计算机视觉', '2023-05-10', 1),
-(7, 'author_wang',  'hashed_pass_123', 'Author', 'xm.wang@nankai.edu.cn',  '王晓明', '南开大学',     '应用数学',   '2023-06-15', 1),
-(10,'author_zhao',  'hashed_pass_123', 'Author', 'xy.zhao@nju.edu.cn',     '赵新宇', '南京大学',     '物理学',     '2023-08-20', 1);
-GO
-
-SET IDENTITY_INSERT Users OFF;
-GO
-
--- =============================================
--- 步骤 2: 插入稿件数据 (Manuscript)
--- 数据已经过核对，符合 CK_Status_Logic 约束
--- =============================================
-
 INSERT INTO Manuscript (
-    AuthorID,
-    CurrentEditorID,
-    Title,
-    Abstract,
-    Keywords,
-    AuthorList,
-    FundingInfo,
-    Status,
-    SubStatus,
-    SubmissionTime,
-    Decision,
-    DecisionTime,
-    EditorRecommendation,
-    EditorSummaryReport,
-    RecommendationDate
+    AuthorID, CurrentEditorID, Title, Abstract, Keywords, AuthorList,
+    FundingInfo, Status, SubStatus, SubmissionTime, Decision, DecisionTime,
+    EditorRecommendation, EditorSummaryReport, RecommendationDate
 )
 VALUES
-    -- 1. 已录用 (Decided -> Accepted)
     (6, 4, '基于深度学习的图像识别算法研究', '本文提出了一种新的深度学习模型，用于图像识别任务，在多个数据集上取得了state-of-the-art的效果。', '深度学习;图像识别;计算机视觉', '张建国, 李四, 王五', '国家自然科学基金(No. 61876001)', 'Decided', 'Accepted', '2024-03-01 10:00:00', 'Accept', '2024-05-15 14:30:00', 'Suggest Acceptance', '稿件质量高，实验充分，建议接受。', '2024-05-10 10:00:00'),
-
-    -- 2. 外审中 (Processing -> UnderReview)
     (6, 4, '多模态情感分析在社交媒体中的应用', '研究结合文本、图像和语音的多模态情感分析方法，在社交媒体数据上进行了验证。', '多模态;情感分析;社交媒体;深度学习', '张建国, 陈六', '国家重点研发计划(No. 2022YFB1000)', 'Processing', 'UnderReview', '2024-03-10 14:20:00', NULL, NULL, NULL, NULL, NULL),
-
-    -- 3. 修回中 (Revision -> NULL, 只有Processing和Decided强制要求SubStatus)
     (6, 5, '基于图神经网络的推荐系统优化', '利用图神经网络建模用户-物品交互关系，提高推荐系统的准确性和多样性。', '推荐系统;图神经网络;个性化推荐', '张建国, 王五, 赵七', '企业合作项目', 'Revision', NULL, '2024-02-15 09:30:00', 'Revise', NULL, 'Suggest Revision', '需要补充更多实验数据，并重新整理分析部分。', '2024-03-10 10:00:00'),
-
-    -- 4. 外审中
     (7, 4, '高效数值优化算法及其收敛性分析', '提出了一种新的优化算法，证明了其收敛性，并在大规模优化问题上进行了测试。', '优化算法;收敛性分析;数值计算', '王晓明, 刘八', '国家自然科学基金青年项目(No. 62106001)', 'Processing', 'UnderReview', '2024-03-05 11:15:00', NULL, NULL, NULL, NULL, NULL),
-
-    -- 5. 待指派审稿人 (Processing -> PendingAssign)
     (7, 4, '大规模稀疏矩阵求解的并行算法', '针对大规模稀疏线性方程组，提出了一种高效的并行求解算法。', '稀疏矩阵;并行计算;线性方程组', '王晓明, 张建国, 陈六', NULL, 'Processing', 'PendingAssign', '2024-03-12 16:40:00', NULL, NULL, NULL, NULL, NULL),
-
-    -- 6. 未完成草稿 (Incomplete)
     (7, NULL, '非线性动力系统的稳定性分析', '研究一类非线性动力系统的稳定性条件及其应用。', '非线性系统;稳定性;动力系统', '王晓明', '南开大学创新项目', 'Incomplete', NULL, '2024-03-15 10:20:00', NULL, NULL, NULL, NULL, NULL),
-
-    -- 7. 编辑处理中 (Processing -> WithEditor)
     (10, 4, '量子计算在材料设计中的应用前景', '综述了量子计算在材料科学中的应用现状和发展趋势。', '量子计算;材料设计;量子模拟', '赵新宇, 周涛', '南京大学科研启动基金', 'Processing', 'WithEditor', '2024-02-28 13:45:00', NULL, NULL, NULL, NULL, NULL),
-
-    -- 8. 已拒稿 (Decided -> Rejected)
     (6, 5, '新型纳米材料的制备与表征', '采用水热法制备了新型纳米材料，并对其结构、性能进行了系统表征。', '纳米材料;水热法;材料表征', '张建国, 刘伟, 李娜', '国家自然科学基金重点项目(No. 62236001)', 'Decided', 'Rejected', '2024-01-20 09:00:00', 'Reject', '2024-03-10 16:20:00', 'Suggest Rejection', '创新性不足，实验数据不够充分。', '2024-03-05 15:00:00'),
-
-    -- 9. 已录用
     (6, 4, '基于Transformer的文本生成模型', '提出了一种改进的Transformer模型，在文本生成任务上取得了更好的效果。', 'Transformer;文本生成;自然语言处理', '张建国, 王芳', '上海市科技计划项目', 'Decided', 'Accepted', '2024-01-10 14:30:00', 'Accept', '2024-04-01 10:15:00', 'Suggest Acceptance', '方法新颖，实验设计合理，结果显著。', '2024-03-25 14:30:00'),
-
-    -- 10. 外审中
     (7, 5, '机器学习在材料科学中的应用综述', '系统综述了机器学习在材料发现、性能预测等方面的应用进展。', '机器学习;材料科学;人工智能', '王晓明, 陈强', '国家自然科学基金(No. 62076002)', 'Processing', 'UnderReview', '2024-03-08 10:50:00', NULL, NULL, NULL, NULL, NULL),
-
-    -- 11. 编辑处理中
     (6, 4, '联邦学习中的隐私保护技术研究', '研究联邦学习框架下的隐私保护机制，提出了新的安全聚合算法。', '联邦学习;隐私保护;安全计算', '张建国, 周涛, 李华', '国家重点研发计划(No. 2023YFB2000)', 'Processing', 'WithEditor', '2024-03-13 15:30:00', NULL, NULL, NULL, NULL, NULL),
-
-    -- 12. 形式审查中 (Processing -> TechCheck)
     (7, NULL, '随机优化算法的理论分析', '对几类随机优化算法进行了理论分析，建立了收敛速率界。', '随机优化;收敛分析;优化理论', '王晓明, 张建国', NULL, 'Processing', 'TechCheck', '2024-03-18 11:20:00', NULL, NULL, NULL, NULL, NULL),
-
-    -- 13. 修回中
     (10, 5, '钙钛矿太阳能电池的稳定性研究', '通过界面工程提高了钙钛矿太阳能电池的长期稳定性。', '钙钛矿;太阳能电池;稳定性;界面工程', '赵新宇, 刘伟', '江苏省自然科学基金', 'Revision', NULL, '2024-02-25 09:40:00', 'Revise', NULL, 'Suggest Revision', '需要补充长期稳定性测试数据，并优化实验设计。', '2024-03-20 14:00:00'),
-
-    -- 14. 已录用
     (6, 4, '知识图谱在智能问答中的应用', '构建了领域知识图谱，并应用于智能问答系统，提高了回答准确性。', '知识图谱;智能问答;自然语言处理', '张建国, 陈六, 王五', '企业合作研发项目', 'Decided', 'Accepted', '2024-01-30 10:10:00', 'Accept', '2024-04-20 15:45:00', 'Suggest Acceptance', '应用价值高，系统实现完整。', '2024-04-10 11:20:00'),
-
-    -- 15. 外审中
     (7, 4, '深度学习模型的对抗鲁棒性研究', '研究深度学习模型对抗样本的防御方法，提高了模型的鲁棒性。', '深度学习;对抗样本;鲁棒性;安全', '王晓明, 周涛', '国家自然科学基金(No. 62176003)', 'Processing', 'UnderReview', '2024-03-14 13:25:00', NULL, NULL, NULL, NULL, NULL),
-
-    -- 16. 已拒稿
     (6, 5, '柔性电子材料的制备与应用', '开发了新型柔性电子材料，在可穿戴设备中具有良好的应用前景。', '柔性电子;功能材料;可穿戴设备', '张建国, 刘伟, 李娜', '国家863计划', 'Decided', 'Rejected', '2024-02-10 16:00:00', 'Reject', '2024-03-30 11:20:00', 'Suggest Rejection', '材料性能不够突出，应用前景不明确。', '2024-03-20 09:15:00'),
-
-    -- 17. 已录用
     (7, 4, '医学图像分割的深度学习算法', '提出了一种医学图像自动分割算法，在多个数据集上验证了有效性。', '医学图像;图像分割;深度学习;医疗AI', '王晓明, 陈强, 王芳', '国家自然科学基金(No. 62256001)', 'Decided', 'Accepted', '2024-01-25 14:15:00', 'Accept', '2024-04-10 09:30:00', 'Suggest Acceptance', '医学应用价值高，算法性能优越。', '2024-04-01 16:45:00'),
-
-    -- 18. 编辑处理中
     (10, 4, '量子机器学习算法研究进展', '综述了量子计算与机器学习交叉领域的最新研究进展。', '量子计算;机器学习;量子算法', '赵新宇, 周涛, 陈强', '南京大学科研基金', 'Processing', 'WithEditor', '2024-03-05 10:45:00', NULL, NULL, NULL, NULL, NULL),
-
-    -- 19. 形式审查中
     (6, 5, '智能材料在机器人中的应用', '研究智能材料在软体机器人中的应用，实现了自适应变形功能。', '智能材料;软体机器人;仿生材料', '张建国, 刘伟, 王晓明', '国家自然科学基金(No. 62336001)', 'Processing', 'TechCheck', '2024-03-16 15:20:00', NULL, NULL, NULL, NULL, NULL),
-
-    -- 20. 未完成草稿
     (7, NULL, '复杂网络社区发现算法', '提出了一种高效的社区发现算法，适用于大规模复杂网络分析。', '复杂网络;社区发现;图算法', '王晓明, 李娜', '南开大学科研项目', 'Incomplete', NULL, '2024-03-20 10:00:00', NULL, NULL, NULL, NULL, NULL);
 GO
