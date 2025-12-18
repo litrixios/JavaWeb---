@@ -12,8 +12,8 @@ CREATE TABLE Users (
                        Affiliation NVARCHAR(100),                 -- 单位
                        ResearchDirection NVARCHAR(200),           -- 研究方向
                        RegisterTime DATETIME DEFAULT GETDATE(),   -- 注册时间
-                       Status INT DEFAULT 0,                      -- 状态 (0: 待审核/未激活, 1: 正常, 2: 禁用)
-                       AvatarUrl NVARCHAR(500) NULL               -- 新增：存储个人头像的图片路径
+                       Status INT DEFAULT 0,                       -- 状态 (0: 待审核/未激活, 1: 正常, 2: 禁用)
+                       AvatarUrl NVARCHAR(500) NULL                 -- 新增：存储个人头像的图片路径
 );
 GO
 
@@ -25,10 +25,10 @@ CREATE TABLE Journal (
                          JournalID INT PRIMARY KEY IDENTITY(1,1),   -- 期刊ID
                          Name NVARCHAR(100) NOT NULL,               -- 期刊名称 (如：International Artificial Intelligence Research)
                          Introduction NVARCHAR(MAX),                -- 期刊介绍
-                         ImpactFactor DECIMAL(5, 3),                -- 影响因子 (例如: 3.502)
+                         ImpactFactor DECIMAL(6, 3),                -- 影响因子 (例如: 3.502)
                          Timeline NVARCHAR(MAX),                    -- 发表时间线说明
                          JournalLink NVARCHAR(255),                 -- 新增的链接属性，用于前端跳转
-                         JournalImageLink NVARCHAR(1023)             -- 存储期刊封面的图片 URL 链接
+                         JournalImageLink NVARCHAR(666)             -- 存储期刊封面的图片 URL 链接
 
 );
 GO
@@ -56,7 +56,9 @@ CREATE TABLE Manuscript (
                             RecommendationDate DATETIME NULL,       -- 提交建议的时间
                             CONSTRAINT CK_Status_Logic CHECK (
                                 (Status = 'Processing' AND SubStatus IN ('TechCheck', 'PendingAssign', 'WithEditor', 'UnderReview')) OR
-                                (Status = 'Decided'    AND SubStatus IN ('Accepted', 'Rejected'))
+                                (Status = 'Decided'    AND SubStatus IN ('Accepted', 'Rejected'))OR
+                                (Status = 'Revision'   AND SubStatus IS NULL) OR
+                                (Status = 'Incomplete' AND SubStatus IS NULL)
                                 ),
                             CONSTRAINT FK_Manuscript_Author FOREIGN KEY (AuthorID) REFERENCES Users(UserID),
                             CONSTRAINT FK_Manuscript_Editor FOREIGN KEY (CurrentEditorID) REFERENCES Users(UserID)
