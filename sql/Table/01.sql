@@ -12,7 +12,8 @@ CREATE TABLE Users (
                        Affiliation NVARCHAR(100),                 -- 单位
                        ResearchDirection NVARCHAR(200),           -- 研究方向
                        RegisterTime DATETIME DEFAULT GETDATE(),   -- 注册时间
-                       Status INT DEFAULT 0                       -- 状态 (0: 待审核/未激活, 1: 正常, 2: 禁用)
+                       Status INT DEFAULT 0,                      -- 状态 (0: 待审核/未激活, 1: 正常, 2: 禁用)
+                       AvatarUrl NVARCHAR(500) NULL               -- 新增：存储个人头像的图片路径
 );
 GO
 
@@ -45,10 +46,18 @@ CREATE TABLE Manuscript (
                             Keywords NVARCHAR(200),                     -- 关键词
                             AuthorList NVARCHAR(MAX),                   -- 作者列表 (文本形式存储，如 "张三, 李四")
                             FundingInfo NVARCHAR(200),                  -- 项目资助情况
-                            Status NVARCHAR(50) DEFAULT 'Submitted',    -- 状态 (Incomplete, Submitted, With Editor, Under Review, Needing Revision, Accepted, Rejected)
+                            Status NVARCHAR(50) NOT NULL DEFAULT 'Incomplete' CONSTRAINT CK_Manuscript_Status CHECK (Status IN ('Incomplete','Processing','Revision','Decided')),-- 状态大类：使用 CHECK 约束确保只能输入这四个大类
+                            SubStatus NVARCHAR(50) CONSTRAINT CK_Manuscript_SubStatus CHECK (SubStatus IN ('TechCheck','PendingAssign','WithEditor','UnderReview','Accepted','Rejected')),
                             SubmissionTime DATETIME DEFAULT GETDATE(),  -- 提交时间
                             Decision NVARCHAR(50),                      -- 最终决策 (Accept, Reject, Revise)
                             DecisionTime DATETIME,                      -- 决策时间
+                            EditorRecommendation NVARCHAR(50) NULL, -- 编辑给主编的建议 (如: Suggest Acceptance, Suggest Rejection)
+                            EditorSummaryReport NVARCHAR(MAX) NULL, -- 编辑撰写的总结报告
+                            RecommendationDate DATETIME NULL,       -- 提交建议的时间
+                            CONSTRAINT CK_Status_Logic CHECK (
+                                (Status = 'Processing' AND SubStatus IN ('TechCheck', 'PendingAssign', 'WithEditor', 'UnderReview')) OR
+                                (Status = 'Decided'    AND SubStatus IN ('Accepted', 'Rejected'))
+                                ),
                             CONSTRAINT FK_Manuscript_Author FOREIGN KEY (AuthorID) REFERENCES Users(UserID),
                             CONSTRAINT FK_Manuscript_Editor FOREIGN KEY (CurrentEditorID) REFERENCES Users(UserID)
 );
