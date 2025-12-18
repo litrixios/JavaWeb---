@@ -1,13 +1,13 @@
-INSERT INTO Users (Username, Password, Role, Email, FullName, Affiliation, ResearchDirection, RegisterTime, Status)
+INSERT INTO Users (Username, Password, Role, Email, FullName, Affiliation, ResearchDirection, RegisterTime, Status,AvatarUrl)
 VALUES
-    ('superadmin', 'admin123', 'SuperAdmin', 'superadmin@journal.edu', 'å¼ æ˜', 'æœŸåˆŠç®¡ç†ç³»ç»Ÿæ€»éƒ¨', 'ç³»ç»Ÿç®¡ç†ã€æœŸåˆŠå‡ºç‰ˆç®¡ç†', '2024-01-15 09:00:00', 1),
-    ('editorinchief', 'editor123', 'EditorInChief', 'chief.editor@journal.edu', 'æå', 'æ¸…åå¤§å­¦è®¡ç®—æœºç§‘å­¦ä¸æŠ€æœ¯å­¦é™¢', 'äººå·¥æ™ºèƒ½ã€è®¡ç®—æœºè§†è§‰ã€æœŸåˆŠç¼–è¾‘ç®¡ç†', '2024-01-20 10:30:00', 1),
-    ('editorialadmin1', 'admin456', 'EditorialAdmin', 'admin.li@journal.edu', 'ç‹èŠ³', 'æœŸåˆŠç®¡ç†åŠå…¬å®¤', 'ç¨¿ä»¶æµç¨‹ç®¡ç†ã€ä½œè€…æœåŠ¡', '2024-01-25 14:20:00', 1),
-    ('editor_ai', 'edit123', 'Editor', 'ai.editor@journal.edu', 'é™ˆå¼º', 'åŒ—äº¬å¤§å­¦äººå·¥æ™ºèƒ½ç ”ç©¶é™¢', 'æœºå™¨å­¦ä¹ ã€æ·±åº¦å­¦ä¹ ã€è‡ªç„¶è¯­è¨€å¤„ç†', '2024-02-01 11:00:00', 1),
-    ('editor_material', 'edit456', 'Editor', 'material.editor@journal.edu', 'åˆ˜ä¼Ÿ', 'ä¸­å›½ç§‘å­¦é™¢ææ–™ç ”ç©¶æ‰€', 'çº³ç±³ææ–™ã€åŠŸèƒ½ææ–™ã€å¤åˆææ–™', '2024-02-05 15:30:00', 1),
-    ('prof_zhang', 'author123', 'Author', 'zhang.research@fudan.edu.cn', 'å¼ å»ºå›½', 'å¤æ—¦å¤§å­¦è®¡ç®—æœºç§‘å­¦å­¦é™¢', 'æ•°æ®æŒ–æ˜ã€æ¨èç³»ç»Ÿã€äººå·¥æ™ºèƒ½', '2024-02-10 09:45:00', 1),
-    ('phd_student', 'student123', 'Author', 'wang.phd@nankai.edu.cn', 'ç‹æ™“æ˜', 'å—å¼€å¤§å­¦æ•°å­¦ç§‘å­¦å­¦é™¢', 'è®¡ç®—æ•°å­¦ã€ä¼˜åŒ–ç®—æ³•ã€æ•°å€¼åˆ†æ', '2024-02-15 13:20:00', 1),
-    ('reviewer_expert', 'review123', 'Reviewer', 'review.expert@zju.edu.cn', 'å‘¨æ¶›', 'æµ™æ±Ÿå¤§å­¦è®¡ç®—æœºå­¦é™¢', 'è®¡ç®—æœºè§†è§‰ã€å›¾åƒå¤„ç†ã€æ¨¡å¼è¯†åˆ«', '2024-02-20 16:10:00', 1),
-    ('young_reviewer', 'review456', 'Reviewer', 'li.young@whu.edu.cn', 'æå¨œ', 'æ­¦æ±‰å¤§å­¦ä¿¡æ¯ç®¡ç†å­¦é™¢', 'ä¿¡æ¯æ£€ç´¢ã€æ–‡æœ¬æŒ–æ˜ã€æ•°å­—å›¾ä¹¦é¦†', '2024-02-25 10:00:00', 1),
-    ('new_author', 'newuser123', 'Author', 'new.author@nju.edu.cn', 'èµµæ–°å®‡', 'å—äº¬å¤§å­¦ç‰©ç†å­¦é™¢', 'å‡èšæ€ç‰©ç†ã€é‡å­è®¡ç®—ã€ææ–™ç‰©ç†', '2024-03-01 14:00:00', 0);
+    ('superadmin', 'admin123', 'SuperAdmin', 'superadmin@journal.edu', 'ÕÅÃ÷', 'ÆÚ¿¯¹ÜÀíÏµÍ³×Ü²¿', 'ÏµÍ³¹ÜÀí¡¢ÆÚ¿¯³ö°æ¹ÜÀí', '2024-01-15 09:00:00', 1,NULL),
+    ('editorinchief', 'editor123', 'EditorInChief', 'chief.editor@journal.edu', 'Àî»ª', 'Çå»ª´óÑ§¼ÆËã»ú¿ÆÑ§Óë¼¼ÊõÑ§Ôº', 'ÈË¹¤ÖÇÄÜ¡¢¼ÆËã»úÊÓ¾õ¡¢ÆÚ¿¯±à¼­¹ÜÀí', '2024-01-20 10:30:00', 1,NULL),
+    ('editorialadmin1', 'admin456', 'EditorialAdmin', 'admin.li@journal.edu', 'Íõ·¼', 'ÆÚ¿¯¹ÜÀí°ì¹«ÊÒ', '¸å¼şÁ÷³Ì¹ÜÀí¡¢×÷Õß·şÎñ', '2024-01-25 14:20:00', 1,NULL),
+    ('editor_ai', 'edit123', 'Editor', 'ai.editor@journal.edu', '³ÂÇ¿', '±±¾©´óÑ§ÈË¹¤ÖÇÄÜÑĞ¾¿Ôº', '»úÆ÷Ñ§Ï°¡¢Éî¶ÈÑ§Ï°¡¢×ÔÈ»ÓïÑÔ´¦Àí', '2024-02-01 11:00:00', 1,NULL),
+    ('editor_material', 'edit456', 'Editor', 'material.editor@journal.edu', 'ÁõÎ°', 'ÖĞ¹ú¿ÆÑ§Ôº²ÄÁÏÑĞ¾¿Ëù', 'ÄÉÃ×²ÄÁÏ¡¢¹¦ÄÜ²ÄÁÏ¡¢¸´ºÏ²ÄÁÏ', '2024-02-05 15:30:00', 1,NULL),
+    ('prof_zhang', 'author123', 'Author', 'zhang.research@fudan.edu.cn', 'ÕÅ½¨¹ú', '¸´µ©´óÑ§¼ÆËã»ú¿ÆÑ§Ñ§Ôº', 'Êı¾İÍÚ¾ò¡¢ÍÆ¼öÏµÍ³¡¢ÈË¹¤ÖÇÄÜ', '2024-02-10 09:45:00', 1,NULL),
+    ('phd_student', 'student123', 'Author', 'wang.phd@nankai.edu.cn', 'ÍõÏşÃ÷', 'ÄÏ¿ª´óÑ§ÊıÑ§¿ÆÑ§Ñ§Ôº', '¼ÆËãÊıÑ§¡¢ÓÅ»¯Ëã·¨¡¢ÊıÖµ·ÖÎö', '2024-02-15 13:20:00', 1,NULL),
+    ('reviewer_expert', 'review123', 'Reviewer', 'review.expert@zju.edu.cn', 'ÖÜÌÎ', 'Õã½­´óÑ§¼ÆËã»úÑ§Ôº', '¼ÆËã»úÊÓ¾õ¡¢Í¼Ïñ´¦Àí¡¢Ä£Ê½Ê¶±ğ', '2024-02-20 16:10:00', 1,NULL),
+    ('young_reviewer', 'review456', 'Reviewer', 'li.young@whu.edu.cn', 'ÀîÄÈ', 'Îäºº´óÑ§ĞÅÏ¢¹ÜÀíÑ§Ôº', 'ĞÅÏ¢¼ìË÷¡¢ÎÄ±¾ÍÚ¾ò¡¢Êı×ÖÍ¼Êé¹İ', '2024-02-25 10:00:00', 1,NULL),
+    ('new_author', 'newuser123', 'Author', 'new.author@nju.edu.cn', 'ÕÔĞÂÓî', 'ÄÏ¾©´óÑ§ÎïÀíÑ§Ôº', 'Äı¾ÛÌ¬ÎïÀí¡¢Á¿×Ó¼ÆËã¡¢²ÄÁÏÎïÀí', '2024-03-01 14:00:00', 0,NULL);
 GO

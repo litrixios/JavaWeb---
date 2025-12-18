@@ -1,54 +1,54 @@
 INSERT INTO Files (FileName, FilePath, UploadTime, ManuscriptID, UploaderID)
 VALUES
--- æŠ•ç¨¿ç›¸å…³çš„æ–‡ä»¶
-('æŠ•ç¨¿æ¨¡æ¿.docx', '/uploads/templates/submission_template.docx', '2024-01-10 09:00:00', NULL, 2),
-('ç‰ˆæƒè½¬è®©åè®®.pdf', '/uploads/templates/copyright_form.pdf', '2024-01-10 09:05:00', NULL, 2),
-('å®¡ç¨¿æ„è§æ¨¡æ¿.docx', '/uploads/templates/review_template.docx', '2024-01-10 09:10:00', NULL, 2),
+-- Í¶¸åÏà¹ØµÄÎÄ¼ş
+('Í¶¸åÄ£°å.docx', '/uploads/templates/submission_template.docx', '2024-01-10 09:00:00', NULL, 2),
+('°æÈ¨×ªÈÃĞ­Òé.pdf', '/uploads/templates/copyright_form.pdf', '2024-01-10 09:05:00', NULL, 2),
+('Éó¸åÒâ¼ûÄ£°å.docx', '/uploads/templates/review_template.docx', '2024-01-10 09:10:00', NULL, 2),
 
--- ç¨¿ä»¶1çš„ç›¸å…³æ–‡ä»¶
-('æ·±åº¦å­¦ä¹ å›¾åƒè¯†åˆ«è®ºæ–‡.pdf', '/uploads/manuscripts/1/original_v1.pdf', '2024-03-01 10:00:00', 1, 6),
-('ç¨¿ä»¶1åŒ¿åç‰ˆ.pdf', '/uploads/manuscripts/1/anonymous_v1.pdf', '2024-03-01 10:01:00', 1, 6),
+-- ¸å¼ş1µÄÏà¹ØÎÄ¼ş
+('Éî¶ÈÑ§Ï°Í¼ÏñÊ¶±ğÂÛÎÄ.pdf', '/uploads/manuscripts/1/original_v1.pdf', '2024-03-01 10:00:00', 1, 6),
+('¸å¼ş1ÄäÃû°æ.pdf', '/uploads/manuscripts/1/anonymous_v1.pdf', '2024-03-01 10:01:00', 1, 6),
 ('cover_letter_1.pdf', '/uploads/manuscripts/1/cover_letter_v1.pdf', '2024-03-01 10:02:00', 1, 6),
-('ä¿®æ”¹è¯´æ˜_ç¨¿ä»¶1.pdf', '/uploads/manuscripts/1/revision_notes_v2.pdf', '2024-03-20 14:30:00', 1, 6),
+('ĞŞ¸ÄËµÃ÷_¸å¼ş1.pdf', '/uploads/manuscripts/1/revision_notes_v2.pdf', '2024-03-20 14:30:00', 1, 6),
 
--- ç¨¿ä»¶3çš„ç›¸å…³æ–‡ä»¶
-('å›¾ç¥ç»ç½‘ç»œæ¨èç³»ç»Ÿ.pdf', '/uploads/manuscripts/3/original_v1.pdf', '2024-02-15 09:30:00', 3, 6),
-('å®¡ç¨¿æ„è§å›å¤_ç¨¿ä»¶3.pdf', '/uploads/manuscripts/3/review_response.pdf', '2024-03-10 11:20:00', 3, 6),
+-- ¸å¼ş3µÄÏà¹ØÎÄ¼ş
+('Í¼Éñ¾­ÍøÂçÍÆ¼öÏµÍ³.pdf', '/uploads/manuscripts/3/original_v1.pdf', '2024-02-15 09:30:00', 3, 6),
+('Éó¸åÒâ¼û»Ø¸´_¸å¼ş3.pdf', '/uploads/manuscripts/3/review_response.pdf', '2024-03-10 11:20:00', 3, 6),
 
--- ç¨¿ä»¶8çš„ç›¸å…³æ–‡ä»¶
-('çº³ç±³ææ–™åˆ¶å¤‡.pdf', '/uploads/manuscripts/8/original_v1.pdf', '2024-01-20 09:00:00', 8, 6),
-('è¡¥å……å®éªŒæ•°æ®_ç¨¿ä»¶8.zip', '/uploads/manuscripts/8/supplementary_data.zip', '2024-02-20 10:15:00', 8, 6),
+-- ¸å¼ş8µÄÏà¹ØÎÄ¼ş
+('ÄÉÃ×²ÄÁÏÖÆ±¸.pdf', '/uploads/manuscripts/8/original_v1.pdf', '2024-01-20 09:00:00', 8, 6),
+('²¹³äÊµÑéÊı¾İ_¸å¼ş8.zip', '/uploads/manuscripts/8/supplementary_data.zip', '2024-02-20 10:15:00', 8, 6),
 
--- ç¨¿ä»¶9çš„ç›¸å…³æ–‡ä»¶
-('Transformeræ–‡æœ¬ç”Ÿæˆ.pdf', '/uploads/manuscripts/9/original_v1.pdf', '2024-01-10 14:30:00', 9, 6),
-('ä¿®æ”¹ç¨¿_ç¨¿ä»¶9.pdf', '/uploads/manuscripts/9/revised_v2.pdf', '2024-02-05 16:20:00', 9, 6),
+-- ¸å¼ş9µÄÏà¹ØÎÄ¼ş
+('TransformerÎÄ±¾Éú³É.pdf', '/uploads/manuscripts/9/original_v1.pdf', '2024-01-10 14:30:00', 9, 6),
+('ĞŞ¸Ä¸å_¸å¼ş9.pdf', '/uploads/manuscripts/9/revised_v2.pdf', '2024-02-05 16:20:00', 9, 6),
 
--- ç¨¿ä»¶13çš„ç›¸å…³æ–‡ä»¶
-('é’™é’›çŸ¿å¤ªé˜³èƒ½ç”µæ± .pdf', '/uploads/manuscripts/13/original_v1.pdf', '2024-02-25 09:40:00', 13, 10),
-('è¡¥å……å®éªŒ_ç¨¿ä»¶13.xlsx', '/uploads/manuscripts/13/supplementary_experiments.xlsx', '2024-03-15 14:10:00', 13, 10),
-('ç¬¬äºŒè½®ä¿®æ”¹ç¨¿_13.pdf', '/uploads/manuscripts/13/revised_v3.pdf', '2024-03-25 10:30:00', 13, 10),
+-- ¸å¼ş13µÄÏà¹ØÎÄ¼ş
+('¸ÆîÑ¿óÌ«ÑôÄÜµç³Ø.pdf', '/uploads/manuscripts/13/original_v1.pdf', '2024-02-25 09:40:00', 13, 10),
+('²¹³äÊµÑé_¸å¼ş13.xlsx', '/uploads/manuscripts/13/supplementary_experiments.xlsx', '2024-03-15 14:10:00', 13, 10),
+('µÚ¶şÂÖĞŞ¸Ä¸å_13.pdf', '/uploads/manuscripts/13/revised_v3.pdf', '2024-03-25 10:30:00', 13, 10),
 
--- ç¨¿ä»¶14çš„ç›¸å…³æ–‡ä»¶
-('çŸ¥è¯†å›¾è°±é—®ç­”ç³»ç»Ÿ.pdf', '/uploads/manuscripts/14/original_v1.pdf', '2024-01-30 10:10:00', 14, 6),
-('æ•°æ®é›†_ç¨¿ä»¶14.zip', '/uploads/manuscripts/14/dataset.zip', '2024-01-30 10:12:00', 14, 6),
+-- ¸å¼ş14µÄÏà¹ØÎÄ¼ş
+('ÖªÊ¶Í¼Æ×ÎÊ´ğÏµÍ³.pdf', '/uploads/manuscripts/14/original_v1.pdf', '2024-01-30 10:10:00', 14, 6),
+('Êı¾İ¼¯_¸å¼ş14.zip', '/uploads/manuscripts/14/dataset.zip', '2024-01-30 10:12:00', 14, 6),
 
--- ç¨¿ä»¶16çš„ç›¸å…³æ–‡ä»¶
-('æŸ”æ€§ç”µå­ææ–™ç ”ç©¶.pdf', '/uploads/manuscripts/16/original_v1.pdf', '2024-02-10 16:00:00', 16, 6),
-('ææ–™æ€§èƒ½æµ‹è¯•æŠ¥å‘Š.pdf', '/uploads/manuscripts/16/test_report.pdf', '2024-02-10 16:01:00', 16, 6),
+-- ¸å¼ş16µÄÏà¹ØÎÄ¼ş
+('ÈáĞÔµç×Ó²ÄÁÏÑĞ¾¿.pdf', '/uploads/manuscripts/16/original_v1.pdf', '2024-02-10 16:00:00', 16, 6),
+('²ÄÁÏĞÔÄÜ²âÊÔ±¨¸æ.pdf', '/uploads/manuscripts/16/test_report.pdf', '2024-02-10 16:01:00', 16, 6),
 
--- ç¨¿ä»¶17çš„ç›¸å…³æ–‡ä»¶
-('åŒ»å­¦å›¾åƒåˆ†å‰²ç®—æ³•.pdf', '/uploads/manuscripts/17/original_v1.pdf', '2024-01-25 14:15:00', 17, 7),
-('åŒ»å­¦å›¾åƒæ•°æ®é›†_17.zip', '/uploads/manuscripts/17/medical_images.zip', '2024-01-25 14:16:00', 17, 7),
+-- ¸å¼ş17µÄÏà¹ØÎÄ¼ş
+('Ò½Ñ§Í¼Ïñ·Ö¸îËã·¨.pdf', '/uploads/manuscripts/17/original_v1.pdf', '2024-01-25 14:15:00', 17, 7),
+('Ò½Ñ§Í¼ÏñÊı¾İ¼¯_17.zip', '/uploads/manuscripts/17/medical_images.zip', '2024-01-25 14:16:00', 17, 7),
 
--- æ–°é—»ç›¸å…³çš„é™„ä»¶
-('2024æŠ•ç¨¿æŒ‡å—.pdf', '/uploads/news/2024_guide.pdf', '2024-01-15 14:35:00', NULL, 2),
-('ç‰¹åˆŠå¾ç¨¿é€šçŸ¥.pdf', '/uploads/news/special_issue.pdf', '2024-01-20 10:05:00', NULL, 2),
-('ç¼–å§”ä¼šä¼šè®®çºªè¦.pdf', '/uploads/news/editorial_meeting.pdf', '2024-02-21 10:25:00', NULL, 2),
+-- ĞÂÎÅÏà¹ØµÄ¸½¼ş
+('2024Í¶¸åÖ¸ÄÏ.pdf', '/uploads/news/2024_guide.pdf', '2024-01-15 14:35:00', NULL, 2),
+('ÌØ¿¯Õ÷¸åÍ¨Öª.pdf', '/uploads/news/special_issue.pdf', '2024-01-20 10:05:00', NULL, 2),
+('±àÎ¯»á»áÒé¼ÍÒª.pdf', '/uploads/news/editorial_meeting.pdf', '2024-02-21 10:25:00', NULL, 2),
 
--- ç”¨æˆ·ä¸ªäººæ–‡ä»¶
-('ä¸ªäººç®€å†_å¼ ä¸‰.pdf', '/uploads/users/6/cv.pdf', '2024-02-12 10:00:00', NULL, 6),
-('ç ”ç©¶æˆæœåˆ—è¡¨_æå››.pdf', '/uploads/users/7/publications.pdf', '2024-02-18 11:00:00', NULL, 7),
+-- ÓÃ»§¸öÈËÎÄ¼ş
+('¸öÈË¼òÀú_ÕÅÈı.pdf', '/uploads/users/6/cv.pdf', '2024-02-12 10:00:00', NULL, 6),
+('ÑĞ¾¿³É¹ûÁĞ±í_ÀîËÄ.pdf', '/uploads/users/7/publications.pdf', '2024-02-18 11:00:00', NULL, 7),
 
--- ç¼–è¾‘ä¸Šä¼ çš„æ–‡ä»¶
-('ç¨¿ä»¶åˆ†é…è®°å½•.xlsx', '/uploads/editors/assignment_records.xlsx', '2024-03-01 09:00:00', NULL, 4),
-('å®¡ç¨¿äººåå•_AIé¢†åŸŸ.pdf', '/uploads/editors/reviewer_list_ai.pdf', '2024-03-05 10:00:00', NULL, 4);
+-- ±à¼­ÉÏ´«µÄÎÄ¼ş
+('¸å¼ş·ÖÅä¼ÇÂ¼.xlsx', '/uploads/editors/assignment_records.xlsx', '2024-03-01 09:00:00', NULL, 4),
+('Éó¸åÈËÃûµ¥_AIÁìÓò.pdf', '/uploads/editors/reviewer_list_ai.pdf', '2024-03-05 10:00:00', NULL, 4);

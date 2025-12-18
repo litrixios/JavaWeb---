@@ -1,12 +1,12 @@
 INSERT INTO Editorial_Board (UserID, Position, Introduction, Section)
 VALUES
-    (2, 'Editor-in-Chief', '清华大学计算机科学与技术学院教授，博士生导师，IEEE Fellow。主要从事人工智能、计算机视觉研究，发表论文200余篇，引用超过10000次。担任多个国际期刊编委，具有丰富的期刊编辑经验。', '人工智能与计算机科学'),
-    (4, 'Associate Editor', '北京大学人工智能研究院副教授，博士生导师。研究方向包括机器学习、深度学习、自然语言处理。在NeurIPS、ICML、ACL等顶会发表论文50余篇。担任多个国际会议程序委员会委员。', '人工智能与机器学习'),
-    (5, 'Associate Editor', '中国科学院材料研究所研究员，国家杰出青年科学基金获得者。长期从事纳米材料、功能材料研究，在Advanced Materials、Nature Communications等期刊发表论文100余篇。', '材料科学与工程'),
-    (8, 'Associate Editor', '浙江大学计算机学院教授，国家优秀青年科学基金获得者。研究方向为计算机视觉、图像处理、模式识别。在CVPR、ICCV、TPAMI等发表多篇论文，担任多个国际期刊审稿人。', '计算机视觉与图像处理'),
-    (9, 'Associate Editor', '武汉大学信息管理学院副教授，硕士生导师。研究方向为信息检索、文本挖掘、数字图书馆。在SIGIR、WWW、CIKM等会议发表论文30余篇，具有丰富的审稿经验。', '信息科学与技术'),
-    (3, 'Managing Editor', '期刊管理办公室主任，具有10年期刊管理经验。负责稿件流程管理、作者服务、编委会协调等工作，确保期刊出版流程高效运行。', '编辑部管理'),
-    (6, 'Associate Editor', '复旦大学计算机科学学院教授，长江学者特聘教授。研究方向为数据挖掘、推荐系统、人工智能。在KDD、WWW、TKDE等发表论文80余篇，引用超过8000次。', '数据挖掘与知识发现'),
-    (7, 'Associate Editor', '南开大学数学科学学院副教授，硕士生导师。研究方向为计算数学、优化算法、数值分析。在SIAM系列期刊发表论文20余篇，具有扎实的理论基础。', '计算数学与优化'),
-    (1, 'Technical Editor', '期刊管理系统技术负责人，负责期刊投稿系统的开发与维护。具有丰富的软件开发和系统架构经验，确保系统稳定运行。', '技术支持与管理');
+    (2, 'Editor-in-Chief', '�廪��ѧ�������ѧ�뼼��ѧԺ���ڣ���ʿ����ʦ��IEEE Fellow����Ҫ�����˹����ܡ�������Ӿ��о�����������200��ƪ�����ó���10000�Ρ����ζ�������ڿ���ί�����зḻ���ڿ��༭���顣', '�˹�������������ѧ'),
+    (4, 'Associate Editor', '������ѧ�˹������о�Ժ�����ڣ���ʿ����ʦ���о������������ѧϰ�����ѧϰ����Ȼ���Դ�������NeurIPS��ICML��ACL�ȶ��ᷢ������50��ƪ�����ζ�����ʻ������ίԱ��ίԱ��', '�˹����������ѧϰ'),
+    (5, 'Associate Editor', '�й���ѧԺ�����о����о�Ա�����ҽܳ������ѧ�������ߡ����ڴ������ײ��ϡ����ܲ����о�����Advanced Materials��Nature Communications���ڿ���������100��ƪ��', '���Ͽ�ѧ�빤��'),
+    (8, 'Associate Editor', '�㽭��ѧ�����ѧԺ���ڣ��������������ѧ�������ߡ��о�����Ϊ������Ӿ���ͼ������ģʽʶ����CVPR��ICCV��TPAMI�ȷ�����ƪ���ģ����ζ�������ڿ�����ˡ�', '������Ӿ���ͼ����'),
+    (9, 'Associate Editor', '�人��ѧ��Ϣ����ѧԺ�����ڣ�˶ʿ����ʦ���о�����Ϊ��Ϣ�������ı��ھ�����ͼ��ݡ���SIGIR��WWW��CIKM�Ȼ��鷢������30��ƪ�����зḻ����徭�顣', '��Ϣ��ѧ�뼼��'),
+    (3, 'Managing Editor', '�ڿ������칫�����Σ�����10���ڿ��������顣���������̹��������߷��񡢱�ί��Э���ȹ�����ȷ���ڿ��������̸�Ч���С�', '�༭������'),
+    (6, 'Associate Editor', '������ѧ�������ѧѧԺ���ڣ�����ѧ����Ƹ���ڡ��о�����Ϊ�����ھ��Ƽ�ϵͳ���˹����ܡ���KDD��WWW��TKDE�ȷ�������80��ƪ�����ó���8000�Ρ�', '�����ھ���֪ʶ����'),
+    (7, 'Associate Editor', '�Ͽ���ѧ��ѧ��ѧѧԺ�����ڣ�˶ʿ����ʦ���о�����Ϊ������ѧ���Ż��㷨����ֵ��������SIAMϵ���ڿ���������20��ƪ��������ʵ�����ۻ�����', '������ѧ���Ż�'),
+    (1, 'Technical Editor', '�ڿ�����ϵͳ���������ˣ������ڿ�Ͷ��ϵͳ�Ŀ�����ά�������зḻ������������ϵͳ�ܹ����飬ȷ��ϵͳ�ȶ����С�', '����֧�������');
 GO
