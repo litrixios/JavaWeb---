@@ -50,10 +50,12 @@ CREATE TABLE Manuscript (
                             SubStatus NVARCHAR(50) CONSTRAINT CK_Manuscript_SubStatus CHECK (SubStatus IN ('TechCheck','PendingAssign','WithEditor','UnderReview','Accepted','Rejected')),
                             SubmissionTime DATETIME DEFAULT GETDATE(),  -- 提交时间
                             Decision NVARCHAR(50),                      -- 最终决策 (Accept, Reject, Revise)
+                            DecisionReason NVARCHAR(MAX) NULL,    -- 【新增】主编发给作者的官方理由
                             DecisionTime DATETIME,                      -- 决策时间
                             EditorRecommendation NVARCHAR(50) NULL, -- 编辑给主编的建议 (如: Suggest Acceptance, Suggest Rejection)
                             EditorSummaryReport NVARCHAR(MAX) NULL, -- 编辑撰写的总结报告
                             RecommendationDate DATETIME NULL,       -- 提交建议的时间
+                            RevisionDeadline DATETIME NULL,       -- 【新增】修改截止日期
                             CONSTRAINT CK_Status_Logic CHECK (
                                 (Status = 'Processing' AND SubStatus IN ('TechCheck', 'PendingAssign', 'WithEditor', 'UnderReview')) OR
                                 (Status = 'Decided'    AND SubStatus IN ('Accepted', 'Rejected'))OR
