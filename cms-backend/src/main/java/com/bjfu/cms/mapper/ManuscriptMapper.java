@@ -7,12 +7,38 @@ import java.util.List;
 
 @Mapper
 public interface ManuscriptMapper {
-    // 1. 插入新稿件 (投稿)
+    // 插入新稿件
     int insertManuscript(Manuscript manuscript);
 
-    // 2. 根据用户ID查找稿件 (作者看自己的稿件列表)
+    // 作者查询
     List<Manuscript> selectByAuthorId(@Param("authorId") Integer authorId);
 
-//    // 3. 根据ID查详情
-//    Manuscript selectById(@Param("id") Integer id);
+    // 获取所有稿件 (主编全览)
+    List<Manuscript> selectAllManuscripts(@Param("status") String status);
+
+    // 获取详情
+    Manuscript selectById(Integer id);
+
+    // 更新状态
+    void updateStatus(@Param("id") Integer id,
+                      @Param("status") String status,
+                      @Param("subStatus") String subStatus);
+
+    // 指派编辑
+    void updateCurrentEditor(@Param("id") Integer id,
+                             @Param("editorId") Integer editorId,
+                             @Param("subStatus") String subStatus);
+
+    // 终审决策
+    void updateFinalDecision(@Param("id") Integer id,
+                             @Param("decision") String decision,
+                             @Param("status") String status,
+                             @Param("subStatus") String subStatus,
+                             @Param("decisionTime") String decisionTime,
+                             @Param("editorSummary") String editorSummary);
+
+    // 🔥 新增：特殊权限操作（如撤稿、撤销决定）
+    void updateManuscriptSpecial(@Param("id") Integer id,
+                                 @Param("status") String status,
+                                 @Param("subStatus") String subStatus);
 }

@@ -16,15 +16,17 @@ public class Manuscript {
     private String keywords;
     private String authorList;
     private String fundingInfo;
-    private String status;       // 大状态
-    private String subStatus;    // 小状态
+
+    // 状态: Submitted, With Editor, Under Review...
+    private String status;
+    private String subStatus; // 必须添加，否则 XML 映射失败
+    private String editorRecommendation;
+    private String editorSummaryReport; // 必须添加，对应 XML 中的 updateFinalDecision
+    private Date recommendationDate;
     private Date submissionTime;
     private String decision;
     private String decisionReason;
     private Date decisionTime;
-    private String editorRecommendation;
-    private String editorSummaryReport;
-    private Date recommendationDate;
     private Date revisionDeadline;
 }
 

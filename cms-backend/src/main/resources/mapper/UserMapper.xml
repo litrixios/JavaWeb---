@@ -28,14 +28,27 @@
         WHERE u.Username = #{username}
     </select>
 
-    <insert id="insertUser" useGeneratedKeys="true" keyProperty="userId" keyColumn="UserID">
-        INSERT INTO Users (Username, Password, Role, Email, FullName, Status)
-        VALUES (#{username}, #{password}, #{role}, #{email}, #{fullName}, #{status})
-    </insert>
+
 
     <insert id="insertPermissions">
         INSERT INTO UserPermissions (UserID, CanSubmitManuscript, CanMakeDecision)
         VALUES (#{userId}, #{canSubmitManuscript}, #{canMakeDecision})
+    </insert>
+
+    <update id="updateUserStatus">
+        UPDATE Users
+        SET Status = #{status}
+        WHERE UserID = #{userId}
+    </update>
+
+    <insert id="insertUser" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO Users (Username, Password, Role, Email, FullName, ResearchDirection, Status, RegisterTime)
+        VALUES (#{username}, '123456', 'Reviewer', #{email}, #{fullName}, #{researchDirection}, #{status}, #{registerTime})
+    </insert>
+
+    <insert id="insertLog">
+        INSERT INTO Logs (OperationTime, OperatorID, OperationType, ManuscriptID, Description)
+        VALUES (#{operationTime}, #{operatorId}, #{operationType}, #{manuscriptId}, #{description})
     </insert>
 
 </mapper>
