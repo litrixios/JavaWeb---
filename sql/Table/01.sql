@@ -143,8 +143,12 @@ CREATE TABLE Files (
                        FileName NVARCHAR(100) NOT NULL,            -- 文件原始名称
                        FilePath NVARCHAR(255) NOT NULL,            -- 服务器存储路径
                        UploadTime DATETIME DEFAULT GETDATE(),      -- 上传时间
-                       ManuscriptID INT,                           -- 关联稿件ID (可为空，如果是新闻附件则为空)
-                       UploaderID INT                              -- 上传者ID
+                       ManuscriptID INT,                          -- 关联稿件ID (可为空，如果是新闻附件则为空)
+                       NewsID INT NULL,                            -- 关联新闻ID(可为空，如果是稿件附件则为空)
+                       UploaderID INT,                              -- 上传者ID
+                       CONSTRAINT FK_Files_News FOREIGN KEY (NewsID) REFERENCES News(NewsID),
+                       CONSTRAINT FK_Files_Manuscript FOREIGN KEY (ManuscriptID) REFERENCES Manuscript(ManuscriptID),
+                       CONSTRAINT FK_Files_Uploader FOREIGN KEY (UploaderID) REFERENCES Users(UserID)
 );
 GO
 
