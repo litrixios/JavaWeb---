@@ -70,8 +70,10 @@ public class EditorInChiefServiceImpl implements EditorInChiefService {
         // 示范操作：输入姓名“Wang Wu”、邮箱“wangwu@example.com”、领域“机器学习”
         newUser.setUsername(dto.getEmail()); // 账号名默认用邮箱
         newUser.setEmail(dto.getEmail());
-        newUser.setFullName(dto.getComments()); // 对应示范中的 姓名
-        newUser.setResearchDirection(dto.getDecision()); // 对应示范中的 领域
+        //newUser.setFullName(dto.getComments()); // 对应示范中的 姓名
+        //newUser.setResearchDirection(dto.getDecision()); // 对应示范中的 领域
+        newUser.setFullName(dto.getFullName());             // 对应 JSON 的 "fullName"
+        newUser.setResearchDirection(dto.getResearchDirection()); // 对应 JSON 的 "researchDirection"
         newUser.setRole("Reviewer");
         newUser.setStatus(0); // 待审核状态
         newUser.setRegisterTime(new Date());

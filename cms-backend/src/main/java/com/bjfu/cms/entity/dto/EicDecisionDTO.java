@@ -15,6 +15,7 @@ public class EicDecisionDTO {
 
     // 用于分配编辑
     private Integer editorId;     // 被指派的编辑ID
-
+    private String fullName;          // 必须有这个
+    private String researchDirection; // 必须有这个
     private String email;
 }
