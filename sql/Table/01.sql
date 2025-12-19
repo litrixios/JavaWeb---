@@ -115,6 +115,7 @@ CREATE TABLE Editorial_Board (
                                  Position NVARCHAR(50),                      -- 职位 (Editor-in-Chief, Associate Editor)
                                  Introduction NVARCHAR(MAX),                 -- 个人简介
                                  Section NVARCHAR(100),                      -- 所属栏目/领域
+                                 IsVisible BIT DEFAULT 1,                    --是否显示
                                  CONSTRAINT FK_Board_User FOREIGN KEY (UserID) REFERENCES Users(UserID)
 );
 GO

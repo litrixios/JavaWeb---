@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bjfu.cms.mapper.EditorialBoardMapper">
+
+    <select id="selectVisibleForPublic" resultType="map">
+        SELECT b.Position, b.Introduction, b.Section, u.FullName, u.AvatarUrl
+        FROM Editorial_Board b
+                 JOIN Users u ON b.UserID = u.UserID
+        WHERE b.IsVisible = 1
+        ORDER BY b.BoardID ASC
+    </select>
+
+    <select id="selectAllForAdmin" resultType="map">
+        SELECT b.*, u.FullName, u.Email
+        FROM Editorial_Board b
+                 JOIN Users u ON b.UserID = u.UserID
+    </select>
+
+    <insert id="insert">
+        INSERT INTO Editorial_Board (UserID, Position, Introduction, Section, IsVisible)
+        VALUES (#{userId}, #{position}, #{introduction}, #{section}, #{isVisible})
+    </insert>
+
+    <update id="update">
+        UPDATE Editorial_Board
+        SET Position = #{position},
+            Introduction = #{introduction},
+            Section = #{section},
+            IsVisible = #{isVisible}
+        WHERE BoardID = #{boardId}
+    </update>
+
+    <update id="updateVisibility">
+        UPDATE Editorial_Board SET IsVisible = #{isVisible} WHERE BoardID = #{boardId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM Editorial_Board WHERE BoardID = #{boardId}
+    </delete>
+
+</mapper>
