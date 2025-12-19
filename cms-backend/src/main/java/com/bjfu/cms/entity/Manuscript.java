@@ -30,7 +30,10 @@ public class Manuscript {
 
     // 状态: Submitted, With Editor, Under Review...
     private String status;
-
+    private String subStatus; // 必须添加，否则 XML 映射失败
+    private String editorRecommendation;
+    private String editorSummaryReport; // 必须添加，对应 XML 中的 updateFinalDecision
+    private Date recommendationDate;
     private Date submissionTime;
     private String decision;
     private Date decisionTime;

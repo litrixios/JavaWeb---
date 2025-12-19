@@ -11,6 +11,17 @@
         <result property="abstractText" column="Abstract"/>
         <result property="status" column="Status"/>
         <result property="submissionTime" column="SubmissionTime"/>
+
+        <result property="keywords" column="Keywords"/>
+        <result property="authorList" column="AuthorList"/>
+        <result property="fundingInfo" column="FundingInfo"/>
+        <result property="currentEditorId" column="CurrentEditorID"/>
+        <result property="subStatus" column="SubStatus"/>
+        <result property="decision" column="Decision"/>
+        <result property="decisionTime" column="DecisionTime"/>
+        <result property="editorRecommendation" column="EditorRecommendation"/>
+        <result property="editorSummaryReport" column="EditorSummaryReport"/>
+        <result property="recommendationDate" column="RecommendationDate"/>
     </resultMap>
 
     <insert id="insertManuscript" useGeneratedKeys="true" keyProperty="manuscriptId" keyColumn="ManuscriptID">
@@ -24,8 +35,51 @@
         SELECT * FROM Manuscript WHERE AuthorID = #{authorId} ORDER BY SubmissionTime DESC
     </select>
 
-<!--    <select id="selectById" resultMap="ManuscriptMap">-->
-<!--        SELECT * FROM Manuscript WHERE ID = #-->
-<!--    </select>-->
+    <select id="selectById" resultMap="ManuscriptMap">
+        SELECT * FROM Manuscript WHERE ManuscriptID = #{id}
+    </select>
+
+    <select id="selectAllManuscripts" resultMap="ManuscriptMap">
+        SELECT * FROM Manuscript
+        <where>
+            <if test="status != null and status != ''">
+                AND Status = #{status}
+            </if>
+        </where>
+        ORDER BY SubmissionTime DESC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE Manuscript
+        SET Status = #{status}, SubStatus = #{subStatus}
+        WHERE ManuscriptID = #{id}
+    </update>
+
+    <update id="updateCurrentEditor">
+        UPDATE Manuscript
+        SET CurrentEditorID = #{editorId}, SubStatus = #{subStatus}
+        WHERE ManuscriptID = #{id}
+    </update>
+
+    <update id="updateFinalDecision">
+        UPDATE Manuscript
+        SET Decision = #{decision},
+            Status = #{status},
+            SubStatus = #{subStatus},
+            DecisionTime = #{decisionTime},
+            EditorSummaryReport = #{editorSummary}
+        WHERE ManuscriptID = #{id}
+    </update>
+
+    <update id="updateManuscriptSpecial">
+        UPDATE Manuscript
+        SET Status = #{status}, SubStatus = #{subStatus}
+        WHERE ManuscriptID = #{id}
+    </update>
+
+    <insert id="insertLog">
+        INSERT INTO Logs (OperationTime, OperatorID, OperationType, ManuscriptID, Description)
+        VALUES (#{time}, #{operatorId}, #{type}, #{manuscriptId}, #{description})
+    </insert>
 
 </mapper>
