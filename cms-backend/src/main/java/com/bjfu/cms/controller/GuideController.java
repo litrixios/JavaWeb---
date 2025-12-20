@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class GuideController {
 
     @GetMapping("/guide")
-    public String hello(Model model) {
+    public String GuidePage(Model model) {
         model.addAttribute("name", "张三");
         // 返回字符串 "hello"，配合配置的前后缀，实际寻找 /WEB-INF/jsp/hello.jsp
         return "guide";

@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>首页 - 国际人工智能研究</title>
   <style>
-    /* 基础样式 */
+    /* 原有的CSS样式保持不变 */
     * {
       margin: 0;
       padding: 0;
@@ -234,22 +234,62 @@
     }
 
     .news-item {
-      padding: 1rem 0;
+      padding: 1.2rem 0;
       border-bottom: 1px solid #eee;
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
+      transition: background-color 0.3s ease;
+    }
+
+    .news-item:hover {
+      background-color: #f8f9fa;
+      padding-left: 10px;
+      padding-right: 10px;
+      margin: 0 -10px;
+      border-radius: 5px;
     }
 
     .news-date {
       color: #3498db;
       font-weight: 600;
-      min-width: 100px;
+      min-width: 120px;
+      font-size: 0.9rem;
+    }
+
+    .news-content {
+      flex: 1;
+      margin-left: 1.5rem;
     }
 
     .news-title {
-      flex: 1;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 0.5rem;
+      display: block;
+      text-decoration: none;
+    }
+
+    .news-title:hover {
+      color: #3498db;
+    }
+
+    .news-preview {
+      color: #666;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .news-more {
+      color: #3498db;
+      text-decoration: none;
+      font-size: 0.9rem;
+      white-space: nowrap;
       margin-left: 1rem;
+    }
+
+    .news-more:hover {
+      text-decoration: underline;
     }
 
     /* 征稿通知样式 */
@@ -264,17 +304,30 @@
       padding: 1.5rem;
       border-radius: 8px;
       border-left: 4px solid #e74c3c;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .cfp-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
 
     .cfp-title {
       color: #2c3e50;
       margin-bottom: 1rem;
+      font-size: 1.2rem;
     }
 
     .cfp-deadline {
       color: #e74c3c;
       font-weight: 600;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.8rem;
+      font-size: 0.9rem;
+    }
+
+    .cfp-content {
+      color: #555;
+      line-height: 1.5;
     }
 
     /* 响应式设计 */
@@ -303,6 +356,22 @@
         margin-right: 0;
         margin-bottom: 1rem;
       }
+
+      .news-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .news-content {
+        margin-left: 0;
+        margin-top: 0.5rem;
+      }
+
+      .news-more {
+        margin-left: 0;
+        margin-top: 0.5rem;
+        align-self: flex-end;
+      }
     }
   </style>
 </head>
@@ -318,7 +387,7 @@
         <li><a href="submit">论文发表</a></li>
         <li><a href="articles">文章与专刊</a></li>
         <li><a href="guide">用户指南</a></li>
-        <li><a href="login">登录/注册</a></li>
+        <li><a href="http://localhost:5173/login">登录/注册</a></li>
       </ul>
     </div>
   </div>
@@ -366,7 +435,6 @@
           <c:forEach var="editor" items="${editorialBoard}" varStatus="status">
             <div class="editor-card">
               <div class="editor-header">
-                <!-- 添加头像占位符 -->
                 <div class="editor-photo" style="background: #3498db; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">
                     ${editor.FullName.charAt(0)}
                 </div>
@@ -460,40 +528,67 @@
     </div>
   </section>
 
-  <!-- 新闻列表 -->
+  <!-- 新闻列表（保持静态） -->
   <section class="section">
     <h2 class="section-title">最新新闻</h2>
-    <ul class="news-list">
-      <li class="news-item">
+    <div class="news-list">
+      <div class="news-item">
         <span class="news-date">2024-12-01</span>
-        <span class="news-title">期刊影响因子提升至8.5，创历史新高</span>
-        <a href="#" style="color: #3498db;">详情</a>
-      </li>
-      <li class="news-item">
+        <div class="news-content">
+          <a href="#" class="news-title">期刊影响因子提升至8.5，创历史新高</a>
+          <div class="news-preview">本期刊2024年度影响因子大幅提升，达到8.5，在人工智能领域期刊中排名前列...</div>
+        </div>
+        <a href="#" class="news-more">查看详情</a>
+      </div>
+      <div class="news-item">
         <span class="news-date">2024-11-25</span>
-        <span class="news-title">2025年度特刊征稿通知发布</span>
-        <a href="#" style="color: #3498db;">详情</a>
-      </li>
-      <li class="news-item">
+        <div class="news-content">
+          <a href="#" class="news-title">2025年度特刊征稿通知发布</a>
+          <div class="news-preview">2025年度"人工智能前沿技术"特刊现面向全球学者征稿，截稿日期2025年3月31日...</div>
+        </div>
+        <a href="#" class="news-more">查看详情</a>
+      </div>
+      <div class="news-item">
         <span class="news-date">2024-11-15</span>
-        <span class="news-title">期刊入选SCI核心数据库</span>
-        <a href="#" style="color: #3498db;">详情</a>
-      </li>
-    </ul>
+        <div class="news-content">
+          <a href="#" class="news-title">期刊入选SCI核心数据库</a>
+          <div class="news-preview">本期刊正式被SCI核心数据库收录，标志着期刊国际影响力的进一步提升...</div>
+        </div>
+        <a href="#" class="news-more">查看详情</a>
+      </div>
+    </div>
   </section>
 
-  <!-- 征稿通知 -->
+  <!-- 征稿通知（动态展示） -->
   <section class="section">
     <h2 class="section-title">征稿通知 (Call for Papers)</h2>
     <div class="call-for-papers">
-      <!-- 动态生成征稿通知 -->
-      <c:forEach var="cfp" items="${callForPapers}">
-        <div class="cfp-card">
-          <h3 class="cfp-title">${cfp.title}</h3>
-          <div class="cfp-deadline">${cfp.deadline}</div>
-          <p>${cfp.description}</p>
-        </div>
-      </c:forEach>
+      <c:choose>
+        <c:when test="${not empty callForPapers}">
+          <c:forEach var="cfp" items="${callForPapers}">
+            <div class="cfp-card">
+              <h3 class="cfp-title">${cfp.title}</h3>
+              <div class="cfp-deadline">
+                <c:choose>
+                  <c:when test="${not empty cfp.publishDate}">
+                    发布时间: ${cfp.publishDate}
+                  </c:when>
+                  <c:otherwise>
+                    发布时间: 待定
+                  </c:otherwise>
+                </c:choose>
+              </div>
+              <div class="cfp-content">
+                <p>${cfp.content}</p>
+              </div>
+            </div>
+          </c:forEach>
+        </c:when>
+        <c:otherwise>
+          <!-- 如果没有征稿数据，显示静态内容 -->
+          <p>暂无任何通知</p>
+        </c:otherwise>
+      </c:choose>
     </div>
   </section>
 </div>
