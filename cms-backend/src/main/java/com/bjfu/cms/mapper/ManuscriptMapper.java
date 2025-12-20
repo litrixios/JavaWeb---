@@ -1,6 +1,7 @@
 package com.bjfu.cms.mapper;
 
 import com.bjfu.cms.entity.Manuscript;
+import com.bjfu.cms.entity.Version; // 需新建 Version 实体，或直接用 Map 传参，这里建议新建实体
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import java.util.List;
@@ -11,13 +12,21 @@ public interface ManuscriptMapper {
     int insertManuscript(Manuscript manuscript);
 
     // 作者查询
+    // 新增：更新稿件信息（用于编辑草稿）
+    int updateManuscript(Manuscript manuscript);
+
+    // 新增：插入版本记录 (对应 Versions 表)
+    int insertVersion(@Param("manuscriptId") Integer manuscriptId,
+                      @Param("versionNumber") Integer versionNumber,
+                      @Param("originalFilePath") String originalFilePath,
+                      @Param("anonymousFilePath") String anonymousFilePath,
+                      @Param("coverLetterPath") String coverLetterPath);
+
     List<Manuscript> selectByAuthorId(@Param("authorId") Integer authorId);
 
     // 获取所有稿件 (主编全览)
     List<Manuscript> selectAllManuscripts(@Param("status") String status);
 
-    // 获取详情
-    Manuscript selectById(Integer id);
 
     // 更新状态
     void updateStatus(@Param("id") Integer id,
@@ -41,4 +50,6 @@ public interface ManuscriptMapper {
     void updateManuscriptSpecial(@Param("id") Integer id,
                                  @Param("status") String status,
                                  @Param("subStatus") String subStatus);
+    // 新增：根据ID查询，方便校验归属
+    Manuscript selectById(@Param("id") Integer id);
 }

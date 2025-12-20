@@ -9,6 +9,9 @@
         <result property="authorId" column="AuthorID"/>
         <result property="title" column="Title"/>
         <result property="abstractText" column="Abstract"/>
+        <result property="keywords" column="Keywords"/>
+        <result property="authorList" column="AuthorList"/>
+        <result property="fundingInfo" column="FundingInfo"/>
         <result property="status" column="Status"/>
         <result property="submissionTime" column="SubmissionTime"/>
 
@@ -28,7 +31,26 @@
         INSERT INTO Manuscript
         (AuthorID, Title, Abstract, Keywords, AuthorList, FundingInfo, Status, SubmissionTime)
         VALUES
-            (#{authorId}, #{title}, #{abstractText}, #{keywords}, #{authorList}, #{fundingInfo}, #{status}, #{submissionTime})
+        (#{authorId}, #{title}, #{abstractText}, #{keywords}, #{authorList}, #{fundingInfo}, #{status}, #{submissionTime})
+    </insert>
+
+    <update id="updateManuscript">
+        UPDATE Manuscript
+        SET Title = #{title},
+        Abstract = #{abstractText},
+        Keywords = #{keywords},
+        AuthorList = #{authorList},
+        FundingInfo = #{fundingInfo},
+        Status = #{status},
+        SubmissionTime = #{submissionTime}
+        WHERE ManuscriptID = #{manuscriptId}
+    </update>
+
+    <insert id="insertVersion">
+        INSERT INTO Versions
+        (ManuscriptID, VersionNumber, OriginalFilePath, AnonymousFilePath, CoverLetterPath, UploadTime)
+        VALUES
+        (#{manuscriptId}, #{versionNumber}, #{originalFilePath}, #{anonymousFilePath}, #{coverLetterPath}, GETDATE())
     </insert>
 
     <select id="selectByAuthorId" resultMap="ManuscriptMap">
@@ -81,5 +103,6 @@
         INSERT INTO Logs (OperationTime, OperatorID, OperationType, ManuscriptID, Description)
         VALUES (#{time}, #{operatorId}, #{type}, #{manuscriptId}, #{description})
     </insert>
+
 
 </mapper>
