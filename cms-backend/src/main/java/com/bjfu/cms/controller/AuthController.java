@@ -23,9 +23,15 @@ public class AuthController {
         // 1. 查询用户
         User user = userMapper.findByUsername(loginDTO.getUsername());
 
+
+
         // 2. 校验用户是否存在
         if (user == null) {
             return Result.error("用户不存在");
+        }
+
+        if(!user.getRole().equals(loginDTO.getRole())){
+            return Result.error("身份错误");
         }
 
         // 3. 校验密码 (课设初期用明文比对，后期可以用 BCryptPasswordEncoder)
