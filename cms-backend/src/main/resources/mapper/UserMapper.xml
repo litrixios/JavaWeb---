@@ -51,4 +51,11 @@
         VALUES (#{operationTime}, #{operatorId}, #{operationType}, #{manuscriptId}, #{description})
     </insert>
 
+    <select id="selectById" resultMap="UserMap">
+        SELECT u.*, p.*
+        FROM Users u
+                 LEFT JOIN UserPermissions p ON u.UserID = p.UserID
+        WHERE u.UserID = #{userId}
+    </select>
+
 </mapper>

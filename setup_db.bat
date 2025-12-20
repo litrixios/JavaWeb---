@@ -48,7 +48,7 @@ if exist "sql\Init\01.sql" (
     sqlcmd -S "%ServerName%" -E -b -i "sql\Init\01.sql"
 
     if !errorlevel! neq 0 (
-        echo [ERROR] Failed to execute Init script.
+        echo [ERROR] Failed to execute Inijavat script.
         goto Error
     )
 ) else (

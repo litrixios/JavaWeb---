@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bjfu.cms.mapper.InternalMessageMapper">
+
+    <resultMap id="MessageMap" type="com.bjfu.cms.entity.InternalMessage">
+        <id property="messageId" column="MessageID"/>
+        <result property="senderId" column="SenderID"/>
+        <result property="receiverId" column="ReceiverID"/>
+        <result property="topic" column="Topic"/>
+        <result property="title" column="Title"/>
+        <result property="content" column="Content"/>
+        <result property="isRead" column="IsRead"/>
+        <result property="sendTime" column="SendTime"/>
+
+        <result property="senderName" column="SenderName"/>
+        <result property="senderRole" column="SenderRole"/>
+    </resultMap>
+
+    <select id="selectByReceiverId" resultMap="MessageMap">
+        SELECT
+            m.*,
+            u.FullName AS SenderName,
+            u.Role AS SenderRole
+        FROM InternalMessage m
+                 LEFT JOIN Users u ON m.SenderID = u.UserID
+        WHERE m.ReceiverID = #{receiverId}
+        ORDER BY m.SendTime DESC
+    </select>
+
+    <insert id="insertMessage" useGeneratedKeys="true" keyProperty="messageId">
+        INSERT INTO InternalMessage (SenderID, ReceiverID, Topic, Title, Content, IsRead, SendTime)
+        VALUES (#{senderId}, #{receiverId}, #{topic}, #{title}, #{content}, 0, GETDATE())
+    </insert>
+
+    <update id="markAsRead">
+        UPDATE InternalMessage SET IsRead = 1 WHERE MessageID = #{messageId}
+    </update>
+
+</mapper>
