@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bjfu.cms.mapper.NewsMapper">
+
+    <select id="selectAllNews" resultType="com.bjfu.cms.entity.News">
+        SELECT * FROM News
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND Title LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND PublishDate &gt;= #{startDate}  <!-- 修改这里：>= 改为 &gt;= -->
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND PublishDate &lt;= #{endDate}    <!-- 修改这里：<= 改为 &lt;= -->
+            </if>
+        </where>
+        ORDER BY PublishDate DESC
+    </select>
+
+    <select id="selectNewsById" parameterType="int" resultType="com.bjfu.cms.entity.News">
+        SELECT * FROM News
+        WHERE NewsID = #{newsId}
+    </select>
+
+    <insert id="insertNews" useGeneratedKeys="true" keyProperty="newsId" keyColumn="NewsID">
+        INSERT INTO News (Title, Content, PublishDate, PublisherID, IsActive, ScheduledPublishDate)
+        VALUES (#{title}, #{content}, #{publishDate}, #{publisherId}, #{isActive}, #{scheduledPublishDate})
+    </insert>
+
+    <update id="updateNews" parameterType="com.bjfu.cms.entity.News">
+        UPDATE News
+        SET Title = #{title},
+            Content = #{content},
+            PublishDate = #{publishDate},
+            IsActive = #{isActive},
+            ScheduledPublishDate = #{scheduledPublishDate}
+        WHERE NewsID = #{newsId}
+    </update>
+
+    <delete id="deleteNews" parameterType="int">
+        DELETE FROM News
+        WHERE NewsID = #{newsId}
+    </delete>
+
+    <!-- 插入新闻附件：新增NewsID字段赋值 -->
+    <insert id="insertNewsFile">
+        INSERT INTO Files (FileName, FilePath, UploadTime, UploaderID, NewsID)
+        VALUES (#{file.fileName}, #{file.filePath}, #{file.uploadTime}, #{file.uploaderId}, #{newsId})
+    </insert>
+
+    <!-- 根据新闻ID查询附件：关联NewsID字段 -->
+    <select id="selectFilesByNewsId" parameterType="int" resultType="com.bjfu.cms.entity.File">
+        SELECT * FROM Files
+        WHERE NewsID = #{newsId}
+    </select>
+
+    <delete id="deleteNewsFile" parameterType="int">
+        DELETE FROM Files
+        WHERE FileID = #{fileId}
+    </delete>
+
+    <select id="selectFileById" parameterType="int" resultType="com.bjfu.cms.entity.File">
+        SELECT * FROM Files WHERE FileID = #{fileId}
+    </select>
+</mapper>
