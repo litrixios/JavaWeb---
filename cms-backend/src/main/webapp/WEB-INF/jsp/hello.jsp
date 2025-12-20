@@ -29,7 +29,7 @@
     <p>后端传来的名字是：<strong style="color: red; font-size: 24px;">${name}</strong></p>
 
     <p>当前时间：<%= new java.util.Date() %></p>
-</div>
+    <a href="http://localhost:5176/manuscript/list">点击跳转到 Vue 前端</a></div>
 
 </body>
 </html>
