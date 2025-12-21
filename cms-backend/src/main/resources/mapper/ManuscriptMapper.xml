@@ -125,5 +125,16 @@
         VALUES (#{time}, #{operatorId}, #{type}, #{manuscriptId}, #{description})
     </insert>
 
+    <select id="selectTechCheckManuscripts" resultMap="ManuscriptMap">
+        SELECT * FROM Manuscript
+        WHERE Status = 'Processing' AND SubStatus = 'TechCheck'
+        ORDER BY SubmissionTime DESC
+    </select>
 
+    <select id="selectLatestOriginalFilePath" resultType="java.lang.String">
+        SELECT TOP 1 OriginalFilePath
+        FROM Versions
+        WHERE ManuscriptID = #{manuscriptId}
+        ORDER BY VersionNumber DESC
+    </select>
 </mapper>
