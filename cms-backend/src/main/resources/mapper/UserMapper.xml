@@ -42,8 +42,8 @@
     </update>
 
     <insert id="insertUser" useGeneratedKeys="true" keyProperty="userId">
-        INSERT INTO Users (Username, Password, Role, Email, FullName, ResearchDirection, Status, RegisterTime)
-        VALUES (#{username}, '123456', 'Reviewer', #{email}, #{fullName}, #{researchDirection}, #{status}, #{registerTime})
+        INSERT INTO Users (Username, Password, Role, Email, FullName, ResearchDirection,Affiliation, Status, RegisterTime)
+        VALUES (#{username},#{password},#{role}, #{email}, #{fullName}, #{researchDirection},#{affiliation}, #{status}, #{registerTime})
     </insert>
 
     <insert id="insertLog">
@@ -58,4 +58,21 @@
         WHERE u.UserID = #{userId}
     </select>
 
+
+    <!-- 根据邮箱查询用户 -->
+    <select id="findByEmail" resultType="com.bjfu.cms.entity.User">
+        SELECT * FROM Users WHERE Email = #{email}
+    </select>
+
+    <!-- 插入新用户 -->
+<!--    <insert id="insertUser" parameterType="com.bjfu.cms.entity.User" useGeneratedKeys="true" keyProperty="userId">-->
+<!--        INSERT INTO Users (Username, Password, Email, FullName, Role, Affiliation, ResearchDirection, RegisterTime, Status)-->
+<!--        VALUES (#{username}, #{password}, #{email}, #{fullName}, #{role}, #{affiliation}, #{researchDirection}, #{registerTime}, #{status})-->
+<!--    </insert>-->
+
+    <!-- 插入用户权限 -->
+    <insert id="insertUserPermissions" parameterType="com.bjfu.cms.entity.UserPermission">
+        INSERT INTO UserPermissions (UserID, CanSubmitManuscript, CanViewAllManuscripts, CanAssignReviewer, CanViewReviewerIdentity, CanWriteReview, CanMakeDecision, CanModifySystemConfig, CanTechCheck, CanPublishNews)
+        VALUES (#{userId}, #{canSubmitManuscript}, #{canViewAllManuscripts}, #{canAssignReviewer}, #{canViewReviewerIdentity}, #{canWriteReview}, #{canMakeDecision}, #{canModifySystemConfig}, #{canTechCheck}, #{canPublishNews})
+    </insert>
 </mapper>
