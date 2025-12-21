@@ -80,6 +80,18 @@ public class SftpService {
         try {
             sftp = connect();
             String fileName = remoteFile.substring(remoteFile.lastIndexOf("/") + 1);
+
+            // 检查远程文件是否存在
+            try {
+                sftp.stat(remoteFile); // 调用stat方法检查文件是否存在
+            } catch (SftpException e) {
+                if (e.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) {
+                    throw new FileNotFoundException("远程文件不存在: " + remoteFile);
+                } else {
+                    throw new RuntimeException("检查文件存在性失败: " + e.getMessage(), e);
+                }
+            }
+
             sftp.get(remoteFile, new FileOutputStream(localDir + File.separator + fileName));
             System.out.println("✅ 下载成功: " + fileName);
         } catch (Exception e) {

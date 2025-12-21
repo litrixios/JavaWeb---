@@ -125,7 +125,18 @@
         VALUES (#{time}, #{operatorId}, #{type}, #{manuscriptId}, #{description})
     </insert>
 
+    <select id="selectTechCheckManuscripts" resultMap="ManuscriptMap">
+        SELECT * FROM Manuscript
+        WHERE Status = 'Processing' AND SubStatus = 'TechCheck'
+        ORDER BY SubmissionTime DESC
+    </select>
 
+    <select id="selectLatestOriginalFilePath" resultType="java.lang.String">
+        SELECT TOP 1 OriginalFilePath
+        FROM Versions
+        WHERE ManuscriptID = #{manuscriptId}
+        ORDER BY VersionNumber DESC
+    </select>
     <resultMap id="LogMap" type="com.bjfu.cms.entity.SystemLog">
         <id property="logId" column="LogID"/>
         <result property="operationTime" column="OperationTime"/>

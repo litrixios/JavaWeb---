@@ -69,5 +69,11 @@ public interface ManuscriptMapper {
     // 新增：根据ID查询，方便校验归属
     Manuscript selectById(@Param("id") Integer id);
 
+    // 获取待形式审查的稿件
+    List<Manuscript> selectTechCheckManuscripts();
+    /**
+     * 获取稿件最新版本的OriginalFilePath
+     */
+    String selectLatestOriginalFilePath(Integer manuscriptId);
     List<SystemLog> selectLogsByManuscriptId(Integer manuscriptId);
 }
