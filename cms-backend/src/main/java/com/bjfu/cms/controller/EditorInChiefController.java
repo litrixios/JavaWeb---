@@ -66,6 +66,14 @@ public class EditorInChiefController {
         return Result.success("审核操作成功");
     }
 
+    @PostMapping("/reviewer/remove")
+    @Operation(summary = "移除审稿人", description = "将审稿人移出库（加入黑名单），需填写理由")
+    public Result<String> removeReviewer(@RequestParam Integer userId, @RequestParam String reason) {
+        // 移除审稿人：选择目标，点击“移除”，填写理由
+        eicService.removeReviewer(userId, reason);
+        return Result.success("审稿人已移除");
+    }
+
     @PostMapping("/retract")
     @Operation(summary = "撤稿")
     public Result<String> retract(@RequestBody EicDecisionDTO dto) {

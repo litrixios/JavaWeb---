@@ -22,4 +22,8 @@ public class Result<T> {
         r.msg = msg;
         return r;
     }
+
+    public boolean isSuccess() {
+        return this.code == 200;
+    }
 }

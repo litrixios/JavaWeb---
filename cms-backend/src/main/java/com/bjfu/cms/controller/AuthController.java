@@ -27,6 +27,8 @@ public class AuthController {
        // System.out.println(loginDTO);
         User user = userMapper.findByUsername(loginDTO.getUsername());
 
+
+
         // 2. 校验用户是否存在
         if (user == null) {
             System.out.println("用户不存在");
@@ -34,6 +36,10 @@ public class AuthController {
         }
         if(!user.getRole().equals(loginDTO.getRole())){
             System.out.println("身份错误");
+            return Result.error("身份错误");
+        }
+
+        if(!user.getRole().equals(loginDTO.getRole())){
             return Result.error("身份错误");
         }
 
