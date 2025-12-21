@@ -1,6 +1,7 @@
 package com.bjfu.cms.mapper;
 
 import com.bjfu.cms.entity.Manuscript;
+import com.bjfu.cms.entity.SystemLog;
 import com.bjfu.cms.entity.Version; // 需新建 Version 实体，或直接用 Map 传参，这里建议新建实体
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -67,4 +68,6 @@ public interface ManuscriptMapper {
                                  @Param("subStatus") String subStatus);
     // 新增：根据ID查询，方便校验归属
     Manuscript selectById(@Param("id") Integer id);
+
+    List<SystemLog> selectLogsByManuscriptId(Integer manuscriptId);
 }
