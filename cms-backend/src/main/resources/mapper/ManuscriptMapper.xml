@@ -137,4 +137,24 @@
         WHERE ManuscriptID = #{manuscriptId}
         ORDER BY VersionNumber DESC
     </select>
+    <resultMap id="LogMap" type="com.bjfu.cms.entity.SystemLog">
+        <id property="logId" column="LogID"/>
+        <result property="operationTime" column="OperationTime"/>
+        <result property="operatorId" column="OperatorID"/>
+        <result property="operationType" column="OperationType"/>
+        <result property="manuscriptId" column="ManuscriptID"/>
+        <result property="description" column="Description"/>
+        <result property="operatorName" column="OperatorName"/>
+    </resultMap>
+
+    <select id="selectLogsByManuscriptId" resultMap="LogMap">
+        SELECT
+            l.*,
+            u.UserName as OperatorName
+        FROM Logs l
+                 LEFT JOIN User u ON l.OperatorID = u.UserID
+        WHERE l.ManuscriptID = #{manuscriptId}
+        ORDER BY l.OperationTime DESC
+    </select>
+
 </mapper>

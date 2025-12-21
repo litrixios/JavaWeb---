@@ -3,6 +3,7 @@ package com.bjfu.cms.controller;
 import com.bjfu.cms.common.result.Result;
 import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.dto.ManuscriptDTO;
+import com.bjfu.cms.entity.dto.ManuscriptTrackDTO;
 import com.bjfu.cms.service.ManuscriptService;
 import com.github.pagehelper.PageInfo;
 import io.swagger.v3.oas.annotations.Operation;
@@ -70,5 +71,11 @@ public class ManuscriptController {
         manuscriptService.submitRevision(manuscriptDTO);
 
         return Result.success("修回版本提交成功，已通知编辑部");
+    }
+
+    @GetMapping("/track/{manuscriptId}")
+    @Operation(summary = "追踪稿件状态", description = "获取稿件详情及历史操作日志")
+    public Result<ManuscriptTrackDTO> track(@PathVariable Integer manuscriptId) {
+        return Result.success(manuscriptService.trackManuscript(manuscriptId));
     }
 }

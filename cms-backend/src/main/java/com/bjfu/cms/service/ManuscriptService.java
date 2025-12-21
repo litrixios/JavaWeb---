@@ -2,6 +2,7 @@ package com.bjfu.cms.service;
 
 import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.dto.ManuscriptDTO; // 记得引入你刚才建的DTO
+import com.bjfu.cms.entity.dto.ManuscriptTrackDTO;
 import com.github.pagehelper.PageInfo;
 import com.github.pagehelper.PageHelper;
 
@@ -23,4 +24,6 @@ public interface ManuscriptService {
 
     // 提交修回
     void submitRevision(ManuscriptDTO dto);
+
+    ManuscriptTrackDTO trackManuscript(Integer manuscriptId);
 }
