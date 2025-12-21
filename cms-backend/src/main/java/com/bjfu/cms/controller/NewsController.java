@@ -7,9 +7,18 @@ import com.bjfu.cms.service.NewsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.FileSystemResource;
 
 @Tag(name = "新闻管理接口")
 @RestController
@@ -70,5 +79,30 @@ public class NewsController {
     @DeleteMapping("/files/delete/{fileId}")
     public Result<String> deleteNewsFile(@PathVariable Integer fileId) {
         return newsService.deleteNewsFile(fileId);
+    }
+
+    @Operation(summary = "下载新闻附件")
+    @GetMapping("/files/download/{fileId}")
+    public ResponseEntity<Resource> downloadNewsFile(@PathVariable Integer fileId) {
+        Result<Resource> result = newsService.downloadNewsFile(fileId);
+        if (result.isSuccess()) {
+            Resource resource = result.getData();
+            String fileName = resource.getFilename();
+            try {
+                // 处理文件名编码，避免中文乱码
+                String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8.name())
+                        .replaceAll("\\+", "%20");
+
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION,
+                                "attachment; filename*=UTF-8''" + encodedFileName)
+                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                        .body(resource);
+            } catch (UnsupportedEncodingException e) {
+                return ResponseEntity.internalServerError().build();
+            }
+        } else {
+            return ResponseEntity.badRequest().body(null);
+        }
     }
 }
