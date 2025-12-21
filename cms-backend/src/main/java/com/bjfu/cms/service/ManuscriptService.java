@@ -2,6 +2,9 @@ package com.bjfu.cms.service;
 
 import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.dto.ManuscriptDTO; // 记得引入你刚才建的DTO
+import com.github.pagehelper.PageInfo;
+import com.github.pagehelper.PageHelper;
+
 import java.util.List;
 
 public interface ManuscriptService {
@@ -15,5 +18,9 @@ public interface ManuscriptService {
      * 获取当前登录用户的稿件列表
      * @return 稿件列表
      */
-    List<Manuscript> getMyManuscripts();
+
+    PageInfo<Manuscript> getManuscriptList(Integer pageNum, Integer pageSize, String status, String subStatus);
+
+    // 提交修回
+    void submitRevision(ManuscriptDTO dto);
 }

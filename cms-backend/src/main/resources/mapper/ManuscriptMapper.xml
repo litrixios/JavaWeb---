@@ -27,11 +27,29 @@
         <result property="recommendationDate" column="RecommendationDate"/>
     </resultMap>
 
+    <select id="selectManuscripts" resultMap="ManuscriptMap">
+        SELECT * FROM Manuscript
+        <where>
+            <if test="authorId != null">
+                AND AuthorID = #{authorId}
+            </if>
+
+            <if test="status != null and status != ''">
+                AND Status = #{status}
+            </if>
+
+            <if test="subStatus != null and subStatus != ''">
+                AND SubStatus = #{subStatus}
+            </if>
+        </where>
+        ORDER BY SubmissionTime DESC
+    </select>
+
     <insert id="insertManuscript" useGeneratedKeys="true" keyProperty="manuscriptId" keyColumn="ManuscriptID">
         INSERT INTO Manuscript
-        (AuthorID, Title, Abstract, Keywords, AuthorList, FundingInfo, Status, SubmissionTime)
+        (AuthorID, Title, Abstract, Keywords, AuthorList, FundingInfo, Status, SubStatus, SubmissionTime)
         VALUES
-        (#{authorId}, #{title}, #{abstractText}, #{keywords}, #{authorList}, #{fundingInfo}, #{status}, #{submissionTime})
+            (#{authorId}, #{title}, #{abstractText}, #{keywords}, #{authorList}, #{fundingInfo}, #{status}, #{subStatus}, GETDATE())
     </insert>
 
     <update id="updateManuscript">
@@ -48,14 +66,17 @@
 
     <insert id="insertVersion">
         INSERT INTO Versions
-        (ManuscriptID, VersionNumber, OriginalFilePath, AnonymousFilePath, CoverLetterPath, UploadTime)
+        (ManuscriptID, VersionNumber, OriginalFilePath, AnonymousFilePath,
+         CoverLetterPath, MarkedFilePath, ResponseLetterPath, UploadTime)
         VALUES
-        (#{manuscriptId}, #{versionNumber}, #{originalFilePath}, #{anonymousFilePath}, #{coverLetterPath}, GETDATE())
+            (#{manuscriptId}, #{versionNumber}, #{originalFilePath}, #{anonymousFilePath},
+             #{coverLetterPath}, #{markedFilePath}, #{responseLetterPath}, GETDATE())
     </insert>
 
-    <select id="selectByAuthorId" resultMap="ManuscriptMap">
-        SELECT * FROM Manuscript WHERE AuthorID = #{authorId} ORDER BY SubmissionTime DESC
+    <select id="selectMaxVersion" resultType="java.lang.Integer">
+        SELECT MAX(VersionNumber) FROM Versions WHERE ManuscriptID = #{manuscriptId}
     </select>
+
 
     <select id="selectById" resultMap="ManuscriptMap">
         SELECT * FROM Manuscript WHERE ManuscriptID = #{id}

@@ -36,3 +36,19 @@ INSERT INTO SystemConfig (ConfigKey, ConfigValue) VALUES
                                                       ('mail_password', 'VMetRp2N8tV5Q94A');       -- 系统的授权码
 END
 GO
+
+-- =============================================
+-- 新增：稿件扩展信息表 (ManuscriptMeta)
+-- 用于存放不方便修改主表时的新增字段
+-- =============================================
+CREATE TABLE ManuscriptMeta (
+                                MetaID INT PRIMARY KEY IDENTITY(1,1),
+                                ManuscriptID INT NOT NULL UNIQUE,           -- 关联主表ID
+                                Topic NVARCHAR(200),                        -- [新增] 研究主题
+                                RecommendedReviewers NVARCHAR(MAX),         -- [新增] 推荐审稿人 (存JSON字符串)
+                                CoverLetterContent NVARCHAR(MAX),           -- [新增] Cover Letter 富文本内容 (HTML)
+
+    -- 建立外键约束，确保数据一致性
+                                CONSTRAINT FK_ManuscriptMeta_Manuscript FOREIGN KEY (ManuscriptID) REFERENCES Manuscript(ManuscriptID) ON DELETE CASCADE
+);
+GO
