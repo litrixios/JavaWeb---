@@ -20,9 +20,24 @@ public interface ManuscriptMapper {
                       @Param("versionNumber") Integer versionNumber,
                       @Param("originalFilePath") String originalFilePath,
                       @Param("anonymousFilePath") String anonymousFilePath,
-                      @Param("coverLetterPath") String coverLetterPath);
+                      @Param("coverLetterPath") String coverLetterPath,
+                      @Param("markedFilePath") String markedFilePath,       // 新增
+                      @Param("responseLetterPath") String responseLetterPath // 新增
+    );
 
-    List<Manuscript> selectByAuthorId(@Param("authorId") Integer authorId);
+    Integer selectMaxVersion(@Param("manuscriptId") Integer manuscriptId);
+
+    /**
+     * 根据数据库字段直接筛选
+     * @param authorId 作者ID (null查所有)
+     * @param status 大状态 (Incomplete/Processing/Revision/Decided)
+     * @param subStatus 小状态 (TechCheck/WithEditor/...)
+     */
+    List<Manuscript> selectManuscripts(
+            @Param("authorId") Integer authorId,
+            @Param("status") String status,
+            @Param("subStatus") String subStatus
+    );
 
     // 获取所有稿件 (主编全览)
     List<Manuscript> selectAllManuscripts(@Param("status") String status);

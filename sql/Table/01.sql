@@ -78,6 +78,7 @@ CREATE TABLE Versions (
                           AnonymousFilePath NVARCHAR(255),            -- 匿名版文件路径 (PDF)
                           OriginalFilePath NVARCHAR(255),             -- 原版文件路径 (PDF)
                           CoverLetterPath NVARCHAR(255),              -- Cover Letter路径
+                          MarkerFilePath NVARCHAR(255),
                           ResponseLetterPath NVARCHAR(255),           -- 回复信路径 (修回时使用)
                           UploadTime DATETIME DEFAULT GETDATE(),      -- 上传时间
                           CONSTRAINT FK_Versions_Manuscript FOREIGN KEY (ManuscriptID) REFERENCES Manuscript(ManuscriptID)

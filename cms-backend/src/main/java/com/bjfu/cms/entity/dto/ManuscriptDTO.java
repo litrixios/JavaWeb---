@@ -1,23 +1,51 @@
 package com.bjfu.cms.entity.dto;
 
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class ManuscriptDTO {
-    // 稿件基本信息
-    private Integer manuscriptId; // 如果是修改草稿，会带上ID
+    // === 1. 对应 Manuscript 原表字段 ===
+    private Integer manuscriptId;
+    private String actionType;    // "SUBMIT" | "SAVE"
     private String title;
     private String abstractText;
     private String keywords;
-    private String authorList;
     private String fundingInfo;
 
-    // 文件路径 (前端上传文件后获得的路径)
-    // 根据 SQL Schema 中的 Versions 表定义 [cite: 524]
-    private String originalFilePath;   // 原稿路径
-    private String anonymousFilePath;  // 匿名稿路径 (可选)
-    private String coverLetterPath;    // Cover Letter路径
+    // 我们约定：authors 列表在 Service 层会被转成 JSON 字符串，存入 Manuscript 表原本的 AuthorList 字段中
+    private List<AuthorItem> authors;
 
-    // 操作类型: "SAVE" (保存草稿) 或 "SUBMIT" (正式提交)
-    private String actionType;
+    // === 2. 对应 ManuscriptMeta 扩展表字段 ===
+    private String topic;
+
+    private List<ReviewerRecommend> recommendedReviewers;
+
+    private String coverLetterContent;
+
+    // === 3. 对应 Versions 表或文件系统 ===
+    private String originalFilePath;
+    private String anonymousFilePath;
+    private String markedFilePath;
+    private String coverLetterPath;
+    private String responseLetterPath;
+
+    // --- 内部类 ---
+    @Data
+    public static class AuthorItem {
+        private String name;
+        private String email;
+        private String unit;
+        private String degree;
+        private String title;
+        private String position;
+        private boolean isCorresponding;
+    }
+
+    @Data
+    public static class ReviewerRecommend {
+        private String name;
+        private String email;
+        private String reason;
+    }
 }
