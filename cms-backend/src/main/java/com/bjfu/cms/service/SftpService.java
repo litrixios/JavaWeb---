@@ -4,13 +4,12 @@ import com.jcraft.jsch.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.util.Properties;
 
 @Service
 public class SftpService {
+
 
     @Value("${aliyun.ecs.ip}")
     private String host;
@@ -23,6 +22,13 @@ public class SftpService {
 
     @Value("${aliyun.ecs.port}")
     private int port;
+
+    //注入远程目录配置
+    @Value("${aliyun.ecs.remote-dir}")
+    private String remoteBaseDir;
+    @Value("${file.temp.path}")
+    private String localTempPath;  // 本地临时目录
+
 
     // 获取连接
     private ChannelSftp connect() throws JSchException {
@@ -91,4 +97,60 @@ public class SftpService {
             } catch (Exception e) { e.printStackTrace(); }
         }
     }
+
+    // 新增：创建远程目录（支持多级目录）
+    private void createRemoteDir(ChannelSftp sftp, String remoteDir) throws SftpException {
+        String[] dirs = remoteDir.split("/");
+        String currentDir = "";
+        for (String dir : dirs) {
+            if (dir.isEmpty()) continue;
+            currentDir += "/" + dir;
+            try {
+                sftp.cd(currentDir);
+            } catch (SftpException e) {
+                sftp.mkdir(currentDir);
+                sftp.cd(currentDir);
+            }
+        }
+    }
+
+    // 优化上传方法：自动创建目录，支持通过输入流上传
+    public void upload(InputStream inputStream, String remoteFileName, String remoteDir) {
+        ChannelSftp sftp = null;
+        try {
+            sftp = connect();
+            // 自动创建远程目录（如果不存在）
+            createRemoteDir(sftp, remoteDir);
+            sftp.cd(remoteDir);
+            // 上传文件
+            sftp.put(inputStream, remoteFileName);
+            System.out.println("✅ 上传成功: " + remoteDir + "/" + remoteFileName);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("文件上传失败: " + e.getMessage());
+        } finally {
+            close(sftp);
+            try {
+                inputStream.close(); // 关闭输入流
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // 新增：删除远程文件
+    public void deleteRemoteFile(String remoteFilePath) {
+        ChannelSftp sftp = null;
+        try {
+            sftp = connect();
+            sftp.rm(remoteFilePath);
+            System.out.println("✅ 删除远程文件成功: " + remoteFilePath);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("删除远程文件失败: " + e.getMessage());
+        } finally {
+            close(sftp);
+        }
+    }
+
 }
