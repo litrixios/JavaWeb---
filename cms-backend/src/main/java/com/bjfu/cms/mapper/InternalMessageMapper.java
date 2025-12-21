@@ -18,5 +18,5 @@ public interface InternalMessageMapper {
     void markAsRead(@Param("messageId") Integer messageId);
 
     // 查询某人的未读消息数量
-    int countUnread(@Param("receiverId") Integer receiverId);
-}
+// 在接口中添加：
+    List<InternalMessage> selectByTopicAndUser(@Param("topic") String topic, @Param("userId") Integer userId);}

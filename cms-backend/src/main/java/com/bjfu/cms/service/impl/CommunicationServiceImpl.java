@@ -67,4 +67,11 @@ public class CommunicationServiceImpl implements CommunicationService {
     public void markRead(Integer messageId) {
         messageMapper.markAsRead(messageId);
     }
+
+    @Override
+    public List<InternalMessage> getMessagesByTopic(String topic) {
+        Integer currentUserId = UserContext.getUserId();
+        // 调用 Mapper 新增的方法，查询 topic 匹配且与当前用户有关（发件人或收件人）的消息
+        return messageMapper.selectByTopicAndUser(topic, currentUserId);
+    }
 }
