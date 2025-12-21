@@ -30,4 +30,11 @@ public interface UserMapper {
                    @Param("operationType") String operationType,
                    @Param("manuscriptId") Integer manuscriptId,
                    @Param("description") String description);
+
+
+
+    // 根据邮箱查询用户
+    User findByEmail(String email);
+    // 插入用户权限
+    void insertUserPermissions(UserPermission permissions);
 }
