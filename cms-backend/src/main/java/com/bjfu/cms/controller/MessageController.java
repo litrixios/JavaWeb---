@@ -35,6 +35,14 @@ public class MessageController {
         return Result.success(communicationService.getMyMessages());
     }
 
+    @GetMapping("/history/{manuscriptId}")
+    public Result<List<InternalMessage>> getManuscriptHistory(@PathVariable Integer manuscriptId) {
+        // 约定：Topic 格式为 "MS-" + 稿件ID
+        String topic = "MS-" + manuscriptId;
+        List<InternalMessage> history = communicationService.getMessagesByTopic(topic);
+        return Result.success(history);
+    }
+
     // DTO 内部类
     public static class MessageSendDTO {
         private Integer receiverId;
@@ -50,5 +58,7 @@ public class MessageController {
         public void setTitle(String title) { this.title = title; }
         public String getContent() { return content; }
         public void setContent(String content) { this.content = content; }
+
+
     }
 }
