@@ -4,9 +4,10 @@ import com.bjfu.cms.common.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+//import javax.servlet.http.HttpServletRequest;
+//import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest; // SpringBoot 3用jakarta，2用javax
+import jakarta.servlet.http.HttpServletResponse;
 public class SuperAdminInterceptor implements HandlerInterceptor {
 
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {

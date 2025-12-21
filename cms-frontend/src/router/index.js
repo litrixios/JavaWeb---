@@ -9,7 +9,12 @@ const routes = [
         component: () => import('@/views/login/index.vue'),
         hidden: true
     }, // <--- 注意这里要有逗号
-
+    //注册页
+    {
+        path: '/register',
+        name: 'register',
+        component: () => import('@/views/login/register.vue')
+    },
     // 2. 首页 (Dashboard)
     {
         path: '/',

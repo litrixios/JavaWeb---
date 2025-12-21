@@ -357,7 +357,7 @@
         <li><a href="submit">论文发表</a></li>
         <li><a href="articles" class="active">文章与专刊</a></li>
         <li><a href="guide">用户指南</a></li>
-        <li><a href="login">登录/注册</a></li>
+        <li><a href="http://localhost:5173/login">登录/注册</a></li>
       </ul>
     </div>
   </div>
