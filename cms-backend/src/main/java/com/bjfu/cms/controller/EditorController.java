@@ -55,3 +55,4 @@ public class EditorController {
         return Result.success(manuscript);
     }
 }
+

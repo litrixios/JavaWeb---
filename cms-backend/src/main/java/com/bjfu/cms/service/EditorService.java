@@ -11,4 +11,5 @@ public interface EditorService {
     Manuscript getById(Integer id);
     // --- 新增 ---
     List<User> getAllReviewers();
+    void sendRemindMail(Integer reviewId, String content);
 }
