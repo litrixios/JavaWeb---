@@ -38,15 +38,16 @@
         UPDATE InternalMessage SET IsRead = 1 WHERE MessageID = #{messageId}
     </update>
 
-    <select id="selectByTopicAndUser" resultType="com.bjfu.cms.entity.InternalMessage">
-        SELECT m.*,
-               sender.username AS senderName,
-               sender.role AS senderRole
-        FROM internal_message m
-                 LEFT JOIN user sender ON m.sender_id = sender.user_id
-        WHERE m.topic = #{topic}
-          AND (m.sender_id = #{userId} OR m.receiver_id = #{userId})
-        ORDER BY m.send_time DESC
+    <select id="selectByTopicAndUser" resultMap="MessageMap">
+        SELECT
+            m.*,
+            sender.Username AS SenderName,
+            sender.Role AS SenderRole
+        FROM InternalMessage m
+                 LEFT JOIN Users sender ON m.SenderID = sender.UserID
+        WHERE m.Topic = #{topic}
+          AND (m.SenderID = #{userId} OR m.ReceiverID = #{userId})
+        ORDER BY m.SendTime DESC
     </select>
 
 </mapper>
