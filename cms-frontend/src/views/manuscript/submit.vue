@@ -1,43 +1,52 @@
 <template>
   <div class="app-container">
-    <el-steps :active="activeStep" finish-status="success" simple style="margin-bottom: 20px">
-      <el-step title="1. 基本信息" />
-      <el-step title="2. 作者信息" />
-      <el-step title="3. 文件上传" />
-    </el-steps>
+    <el-card>
+      <template #header>
+        <span>{{ isEdit ? '编辑稿件' : '新建投稿' }}</span>
+      </template>
 
-    <el-form :model="form" ref="formRef" label-width="120px" :rules="rules">
+      <el-form :model="form" ref="formRef" :rules="rules" label-width="120px">
 
-      <div v-show="activeStep === 0">
+        <el-divider content-position="left">基本信息 (Metadata)</el-divider>
         <el-form-item label="稿件标题" prop="title">
-          <el-input v-model="form.title" placeholder="请输入论文标题" />
+          <el-input v-model="form.title" placeholder="请输入稿件标题" />
         </el-form-item>
-        <el-form-item label="摘要" prop="abstract">
-          <el-input type="textarea" v-model="form.abstract" :rows="6" placeholder="请输入摘要" />
-        </el-form-item>
-        <el-form-item label="关键词" prop="keywords">
-          <el-select
-              v-model="form.keywords"
-              multiple
-              filterable
-              allow-create
-              default-first-option
-              placeholder="输入关键词并回车">
-          </el-select>
-        </el-form-item>
-      </div>
 
-      <div v-show="activeStep === 1">
-        <el-button type="primary" size="small" @click="addAuthor" style="margin-bottom:10px;">添加作者</el-button>
-        <el-table :data="form.authors" border>
-          <el-table-column label="姓名">
+        <el-form-item label="摘要" prop="abstractText">
+          <el-input type="textarea" :rows="5" v-model="form.abstractText" placeholder="请输入摘要 (Abstract)" />
+        </el-form-item>
+
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="关键词" prop="keywords">
+              <el-input v-model="form.keywords" placeholder="逗号分隔, 如: AI, Deep Learning" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="研究主题" prop="topic">
+              <el-select v-model="form.topic" placeholder="请选择主题" style="width: 100%">
+                <el-option label="人工智能" value="AI" />
+                <el-option label="大数据" value="BigData" />
+                <el-option label="网络安全" value="Security" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-form-item label="项目资助" prop="fundingInfo">
+          <el-input v-model="form.fundingInfo" placeholder="如：国家自然科学基金 (No. 123456)" />
+        </el-form-item>
+
+        <el-divider content-position="left">作者列表 (Authors)</el-divider>
+        <el-table :data="form.authors" border style="margin-bottom: 10px">
+          <el-table-column prop="name" label="姓名" width="120">
             <template #default="{ row }"><el-input v-model="row.name" /></template>
           </el-table-column>
-          <el-table-column label="邮箱">
+          <el-table-column prop="email" label="邮箱">
             <template #default="{ row }"><el-input v-model="row.email" /></template>
           </el-table-column>
-          <el-table-column label="单位">
-            <template #default="{ row }"><el-input v-model="row.affiliation" /></template>
+          <el-table-column prop="unit" label="单位">
+            <template #default="{ row }"><el-input v-model="row.unit" /></template>
           </el-table-column>
           <el-table-column label="通讯作者" width="100" align="center">
             <template #default="{ row }">
@@ -46,112 +55,163 @@
           </el-table-column>
           <el-table-column label="操作" width="80">
             <template #default="{ $index }">
-              <el-button link type="danger" @click="form.authors.splice($index, 1)">删除</el-button>
+              <el-button type="danger" link @click="removeAuthor($index)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
-      </div>
+        <el-button type="primary" plain size="small" @click="addAuthor">添加作者</el-button>
 
-      <div v-show="activeStep === 2">
-        <el-form-item label="Manuscript (PDF)" required>
+        <el-divider content-position="left">文件上传 (Files)</el-divider>
+        <el-form-item label="手稿文件" prop="originalFilePath">
           <el-upload
               class="upload-demo"
-              action="/api/file/upload"
+              action="/api/common/upload"
               :limit="1"
-              :on-success="(res) => handleFileSuccess(res, 'manuscriptPath')">
-            <el-button type="primary">点击上传原稿</el-button>
+              :on-success="handleManuscriptSuccess"
+              :file-list="manuscriptFileList"
+          >
+            <el-button type="primary">点击上传 PDF/Word</el-button>
+          </el-upload>
+          <div class="tip">请上传包含完整作者信息的原稿</div>
+        </el-form-item>
+
+        <el-form-item label="Cover Letter" prop="coverLetterPath">
+          <el-upload
+              class="upload-demo"
+              action="/api/common/upload"
+              :limit="1"
+              :on-success="handleCoverLetterSuccess"
+              :file-list="coverLetterFileList"
+          >
+            <el-button type="primary">点击上传 Cover Letter</el-button>
           </el-upload>
         </el-form-item>
 
-        <el-form-item label="Cover Letter">
-          <el-upload
-              class="upload-demo"
-              action="/api/file/upload"
-              :limit="1"
-              :on-success="(res) => handleFileSuccess(res, 'coverLetterPath')">
-            <el-button>点击上传 Cover Letter</el-button>
-          </el-upload>
-        </el-form-item>
-      </div>
+        <el-divider content-position="left">推荐审稿人 (Recommended Reviewers)</el-divider>
+        <div v-for="(reviewer, index) in form.recommendedReviewers" :key="index" class="reviewer-card">
+          <el-row :gutter="20">
+            <el-col :span="6"><el-input v-model="reviewer.name" placeholder="姓名" /></el-col>
+            <el-col :span="8"><el-input v-model="reviewer.email" placeholder="邮箱" /></el-col>
+            <el-col :span="8"><el-input v-model="reviewer.reason" placeholder="推荐理由" /></el-col>
+            <el-col :span="2"><el-button type="danger" icon="Delete" circle @click="removeReviewer(index)" /></el-col>
+          </el-row>
+        </div>
+        <el-button type="primary" plain size="small" @click="addReviewer" style="margin-top: 10px">添加推荐审稿人</el-button>
 
-      <div style="margin-top: 30px; text-align: center;">
-        <el-button v-if="activeStep > 0" @click="activeStep--">上一步</el-button>
-        <el-button v-if="activeStep < 2" type="primary" @click="nextStep">下一步</el-button>
+        <div class="form-footer">
+          <el-button @click="handleSubmit('SAVE')">保存草稿</el-button>
+          <el-button type="primary" @click="handleSubmit('SUBMIT')">正式提交</el-button>
+        </div>
 
-        <template v-if="activeStep === 2">
-          <el-button type="warning" @click="handleSubmit('SAVE')">保存草稿</el-button>
-          <el-button type="success" @click="handleSubmit('SUBMIT')">正式提交</el-button>
-        </template>
-      </div>
-    </el-form>
+      </el-form>
+    </el-card>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { submitManuscript } from '@/api/author'
+import { submitManuscript } from '@/api/manuscript'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const activeStep = ref(0)
 const formRef = ref(null)
+const isEdit = ref(false) // 这里可以根据路由 query.id 判断是否为编辑模式
 
-// 这里的数据结构要对应后端的 ManuscriptDTO
 const form = reactive({
+  manuscriptId: null,
   title: '',
-  abstract: '',
-  keywords: [],
+  abstractText: '',
+  keywords: '',
+  topic: '',
+  fundingInfo: '',
   authors: [
-    { name: '', email: '', affiliation: '', isCorresponding: true } // 默认有一个作者
+    { name: '', email: '', unit: '', isCorresponding: true }
   ],
-  manuscriptPath: '', // 文件路径
-  coverLetterPath: '',
-  actionType: '' // SUBMIT 或 SAVE
+  recommendedReviewers: [],
+  originalFilePath: '',
+  coverLetterPath: ''
 })
+
+const manuscriptFileList = ref([])
+const coverLetterFileList = ref([])
 
 const rules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
-  abstract: [{ required: true, message: '请输入摘要', trigger: 'blur' }]
+  abstractText: [{ required: true, message: '请输入摘要', trigger: 'blur' }],
+  topic: [{ required: true, message: '请选择研究主题', trigger: 'change' }],
+  originalFilePath: [{ required: true, message: '请上传手稿文件', trigger: 'change' }]
 }
 
+// 作者操作
 const addAuthor = () => {
-  form.authors.push({ name: '', email: '', affiliation: '', isCorresponding: false })
+  form.authors.push({ name: '', email: '', unit: '', isCorresponding: false })
+}
+const removeAuthor = (index) => {
+  form.authors.splice(index, 1)
 }
 
-const handleFileSuccess = (response, field) => {
-  // 假设后端返回 Result<String>，data 是文件路径或ID
-  if(response.code === 200) {
-    form[field] = response.data
-    ElMessage.success('上传成功')
+// 审稿人操作
+const addReviewer = () => {
+  form.recommendedReviewers.push({ name: '', email: '', reason: '' })
+}
+const removeReviewer = (index) => {
+  form.recommendedReviewers.splice(index, 1)
+}
+
+// 文件上传回调 (假设后端返回格式 { code: 200, data: "path/to/file" })
+const handleManuscriptSuccess = (res) => {
+  if(res.code === 200) {
+    form.originalFilePath = res.data
+    ElMessage.success('手稿上传成功')
+  }
+}
+const handleCoverLetterSuccess = (res) => {
+  if(res.code === 200) {
+    form.coverLetterPath = res.data
+    ElMessage.success('Cover Letter 上传成功')
   }
 }
 
-const nextStep = () => {
-  // 简单校验
-  if (activeStep.value === 0 && !form.title) {
-    ElMessage.warning('请先填写标题')
-    return
+// 提交或保存
+const handleSubmit = async (actionType) => {
+  if (!formRef.value) return
+
+  // 如果是保存草稿，可以不校验所有必填项，但这里为了演示，简单处理
+  if (actionType === 'SUBMIT') {
+    await formRef.value.validate()
   }
-  activeStep.value++
-}
 
-const handleSubmit = async (type) => {
-  form.actionType = type
-
-  // 数据清洗：keywords 数组转字符串（如果后端需要字符串）
-  // 这里的 data 结构必须严格符合你的 ManuscriptDTO
-  const dto = {
+  const payload = {
     ...form,
-    keywords: form.keywords.join(',') // 假设后端存的是逗号分割字符串
+    actionType // "SUBMIT" or "SAVE"
   }
 
-  try {
-    await submitManuscript(dto)
-    ElMessage.success(type === 'SUBMIT' ? '投稿成功！' : '草稿已保存')
+  const res = await submitManuscript(payload)
+  if (res.code === 200) {
+    ElMessage.success(res.data) // "投稿成功" 或 "草稿已保存"
     router.push('/manuscript/list')
-  } catch (error) {
-    console.error(error)
   }
 }
 </script>
+
+<style scoped>
+.app-container {
+  padding: 20px;
+}
+.reviewer-card {
+  margin-bottom: 10px;
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 4px;
+}
+.form-footer {
+  margin-top: 40px;
+  text-align: center;
+}
+.tip {
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
+}
+</style>

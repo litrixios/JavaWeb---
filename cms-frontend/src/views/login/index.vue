@@ -104,7 +104,7 @@ const handleLogin = async () => {
             router.push('/layout/index')
             break
           case 'Author':
-            router.push('/layout/index')
+            router.push('/manuscript/list')
             break
           case 'Reviewer':
             router.push('/layout/index')

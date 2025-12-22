@@ -25,30 +25,31 @@ const routes = [
         ]
     }, // <--- 注意这里要有逗号
 
-    // 3. 作者核心功能
+    // 作者
     {
         path: '/manuscript',
-        component: Layout,
-        redirect: '/manuscript/list',
-        meta: { title: '稿件管理', icon: 'Document' },
+        name: 'Manuscript',
+        // 假设你有 Layout 组件，这里需要包裹在 Layout 中
+        component: () => import('@/layout/index.vue'),
+        meta: { title: '稿件管理' },
         children: [
             {
-                path: 'submit',
-                name: 'SubmitManuscript',
-                component: () => import('@/views/manuscript/submit.vue'),
-                meta: { title: '在线投稿' }
-            }, // <--- 注意这里要有逗号
-            {
                 path: 'list',
-                name: 'MyManuscripts',
+                name: 'ManuscriptList',
                 component: () => import('@/views/manuscript/list.vue'),
                 meta: { title: '我的稿件' }
-            }, // <--- 注意这里要有逗号
+            },
             {
-                path: 'detail',
+                path: 'submit', // 如果是编辑草稿，可以通过 query 传参 ?id=xxx
+                name: 'ManuscriptSubmit',
+                component: () => import('@/views/manuscript/submit.vue'),
+                meta: { title: '在线投稿' }
+            },
+            {
+                path: 'detail/:id',
                 name: 'ManuscriptDetail',
                 component: () => import('@/views/manuscript/detail.vue'),
-                meta: { title: '稿件详情', hidden: true }
+                meta: { title: '稿件详情' }
             }
         ]
     }

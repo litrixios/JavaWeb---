@@ -1,98 +1,161 @@
 <template>
   <div class="app-container">
-    <el-tabs v-model="activeTab" @tab-click="handleTabClick">
-      <el-tab-pane label="全部稿件" name="all" />
-      <el-tab-pane label="待提交/草稿" name="incomplete" />
-      <el-tab-pane label="审稿中" name="processing" />
-      <el-tab-pane label="需要修回" name="revision" />
-      <el-tab-pane label="已决议" name="decision" />
-    </el-tabs>
-
     <el-card>
-      <div class="filter-container">
-        <el-button type="primary" icon="Plus" @click="$router.push('/manuscript/submit')">
-          新建投稿
-        </el-button>
-      </div>
+      <template #header>
+        <div class="header-actions">
+          <span>我的稿件</span>
+          <el-button type="primary" @click="$router.push('/manuscript/submit')">
+            <el-icon><Plus /></el-icon> 新建投稿
+          </el-button>
+        </div>
+      </template>
 
-      <el-table :data="filteredList" v-loading="loading" style="width: 100%; margin-top: 20px;">
-        <el-table-column prop="id" label="稿件ID" width="100" />
-        <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="submitTime" label="提交时间" width="180" />
+      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+        <el-tab-pane label="未完成 (Incomplete)" name="INCOMPLETE" />
+        <el-tab-pane label="处理中 (Processing)" name="PROCESSING" />
+        <el-tab-pane label="需修回 (Revision)" name="REVISION" />
+        <el-tab-pane label="已决议 (Decision)" name="DECISION" />
+      </el-tabs>
 
-        <el-table-column label="当前状态" width="150">
-          <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)">{{ row.status }}</el-tag>
+      <el-table v-loading="loading" :data="tableData" style="width: 100%; margin-top: 20px;">
+        <el-table-column prop="manuscriptId" label="ID" width="80" />
+        <el-table-column prop="title" label="标题" show-overflow-tooltip />
+        <el-table-column prop="createTime" label="提交时间" width="180">
+          <template #default="scope">
+            {{ formatDate(scope.row.createTime) }}
           </template>
         </el-table-column>
-
+        <el-table-column prop="status" label="当前状态">
+          <template #default="{ row }">
+            <el-tag :type="getStatusTag(row.status)">{{ row.status }}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button v-if="row.status === 'Incomplete'" link type="primary" @click="handleEdit(row.id)">
+            <el-button
+                v-if="activeTab === 'INCOMPLETE'"
+                link type="primary"
+                @click="handleEdit(row.manuscriptId)"
+            >
               继续编辑
             </el-button>
-            <el-button link type="primary" @click="handleTrack(row.id)">
-              追踪状态
-            </el-button>
-            <el-button v-if="row.status === 'Need Revision'" link type="danger" @click="handleRevise(row.id)">
+
+            <el-button
+                v-if="activeTab === 'REVISION'"
+                link type="warning"
+                @click="handleDetail(row.manuscriptId, 'revision')"
+            >
               提交修回
+            </el-button>
+
+            <el-button link type="primary" @click="handleDetail(row.manuscriptId, 'track')">
+              追踪状态
             </el-button>
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="pagination-container">
+        <el-pagination
+            v-model:current-page="queryParams.pageNum"
+            v-model:page-size="queryParams.pageSize"
+            :total="total"
+            layout="total, prev, pager, next"
+            @current-change="getList"
+        />
+      </div>
     </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getMyManuscripts } from '@/api/author'
+import { getMyManuscripts } from '@/api/manuscript'
+import { Plus } from '@element-plus/icons-vue'
 
 const router = useRouter()
-const list = ref([])
+const activeTab = ref('PROCESSING')
 const loading = ref(false)
-const activeTab = ref('all')
+const tableData = ref([])
+const total = ref(0)
 
-// 获取数据
-const fetchData = async () => {
+const queryParams = reactive({
+  pageNum: 1,
+  pageSize: 10,
+  status: 'PROCESSING' // 默认大状态
+})
+
+// 状态映射辅助函数
+const getStatusTag = (status) => {
+  const map = {
+    'Saved': 'info',
+    'Submitted': 'primary',
+    'Under Review': 'warning',
+    'Accepted': 'success',
+    'Rejected': 'danger',
+    'Need Revision': 'warning'
+  }
+  return map[status] || ''
+}
+
+const formatDate = (dateStr) => {
+  if(!dateStr) return '-'
+  return new Date(dateStr).toLocaleString()
+}
+
+const getList = async () => {
   loading.value = true
   try {
-    const res = await getMyManuscripts()
-    list.value = res.data || []
+    // 假设后端接收 status 参数作为大类筛选
+    // 如果后端逻辑不同，请根据后端实际情况调整参数
+    const params = {
+      pageNum: queryParams.pageNum,
+      pageSize: queryParams.pageSize,
+      status: activeTab.value // 传给后端的大状态
+    }
+    const res = await getMyManuscripts(params)
+    if (res.code === 200) {
+      tableData.value = res.data.list
+      total.value = res.data.total
+    }
   } finally {
     loading.value = false
   }
 }
 
-// 前端过滤模拟不同Tab的数据展示 (实际建议后端支持 status 参数过滤)
-const filteredList = computed(() => {
-  if (activeTab.value === 'all') return list.value
-
-  // 这里需要根据你后端具体的 Status 字符串或者字典值来过滤
-  // 假设后端返回的状态是英文单词，如 'Incomplete', 'Under Review' 等
-  return list.value.filter(item => {
-    if (activeTab.value === 'incomplete') return item.status === 'Incomplete'
-    if (activeTab.value === 'processing') return ['With Editor', 'Under Review'].includes(item.status)
-    if (activeTab.value === 'revision') return item.status === 'Need Revision'
-    if (activeTab.value === 'decision') return ['Accepted', 'Rejected'].includes(item.status)
-    return true
-  })
-})
-
-const getStatusType = (status) => {
-  const map = {
-    'Accepted': 'success',
-    'Rejected': 'danger',
-    'Incomplete': 'info',
-    'Under Review': 'warning'
-  }
-  return map[status] || ''
+const handleTabChange = (name) => {
+  queryParams.pageNum = 1
+  queryParams.status = name
+  getList()
 }
 
-const handleEdit = (id) => router.push(`/manuscript/submit?id=${id}`)
-const handleTrack = (id) => router.push(`/manuscript/detail?id=${id}`)
-const handleRevise = (id) => router.push(`/manuscript/submit?id=${id}&type=revise`)
+const handleEdit = (id) => {
+  // 跳转到 submit 页面并携带 id
+  router.push({ path: '/manuscript/submit', query: { id } })
+}
 
-onMounted(fetchData)
+const handleDetail = (id, tab = 'info') => {
+  router.push({ path: `/manuscript/detail/${id}`, query: { tab } })
+}
+
+onMounted(() => {
+  getList()
+})
 </script>
+
+<style scoped>
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+.app-container {
+  padding: 20px;
+}
+</style>
