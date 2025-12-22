@@ -10,6 +10,8 @@ import java.util.List;
 @Mapper
 public interface SuperAdminMapper {
 
+    //获取所有的用户信息
+    List<User>getUserList(AdminUserDTO queryDTO);
     // 查询所有用户（包含权限信息）
     List<User> selectAllUsersWithPermissions(AdminUserDTO queryDTO);
 
