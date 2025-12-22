@@ -45,14 +45,39 @@ public class EditorInChiefServiceImpl implements EditorInChiefService {
     @Transactional
     public void assignEditor(EicDecisionDTO dto) {
         if (dto.getEditorId() == null) throw new RuntimeException("必须选择一位编辑");
-        manuscriptMapper.updateCurrentEditor(dto.getManuscriptId(), dto.getEditorId(), "WithEditor");
+
+//        // 先查询当前稿件状态，确保符合状态流转规则
+//        Manuscript manuscript = manuscriptMapper.selectByPrimaryKey(dto.getManuscriptId());
+//        if (manuscript == null) {
+//            throw new RuntimeException("稿件不存在");
+//        }
+//
+//        // 检查当前状态是否允许指派编辑
+//        if (!"Processing".equals(manuscript.getStatus()) || !"PendingAssign".equals(manuscript.getSubStatus())) {
+//            throw new RuntimeException("当前稿件状态不允许指派编辑");
+//        }
+
+        // 更新当前编辑ID和状态，确保符合约束
+        // Status 保持为 'Processing'，SubStatus 更新为 'WithEditor'
+        manuscriptMapper.updateCurrentEditorAndStatus(dto.getManuscriptId(), dto.getEditorId(), "Processing", "WithEditor");
+
+        // 记录日志
+        saveLog("AssignEditor", dto.getManuscriptId(), "指派编辑ID: " + dto.getEditorId());
     }
 
     @Override
     @Transactional
     public void makeFinalDecision(EicDecisionDTO dto) {
-        String status = "Accept".equalsIgnoreCase(dto.getDecision()) ? "Decided" : ("Revise".equalsIgnoreCase(dto.getDecision()) ? "Revision" : "Decided");
-        String subStatus = "Accept".equalsIgnoreCase(dto.getDecision()) ? "Accepted" : ("Revise".equalsIgnoreCase(dto.getDecision()) ? "NeedRevision" : "Rejected");
+        // 严格匹配：Status='Decided' 配对 SubStatus='Accepted' 或 'Rejected'
+        String status = "Decided";
+        String subStatus = "Accept".equalsIgnoreCase(dto.getDecision()) ? "Accepted" : "Rejected";
+
+        // 如果是修改建议，Status='Revision', SubStatus 必须为 null
+        if ("Revise".equalsIgnoreCase(dto.getDecision())) {
+            status = "Revision";
+            subStatus = null;
+        }
+
         String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         manuscriptMapper.updateFinalDecision(dto.getManuscriptId(), dto.getDecision(), status, subStatus, now, dto.getComments());
     }
