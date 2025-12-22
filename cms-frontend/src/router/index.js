@@ -18,7 +18,7 @@ const routes = [
     },
 
     // ================== 新增：主编功能模块 ==================
-    {
+    /*{
         path: '/eic',
         component: Layout,
         redirect: '/eic/reviewer',
@@ -39,7 +39,7 @@ const routes = [
                 meta: { title: '稿件全览与决策' }
             }
         ]
-    },
+    },*/
     // 2. 首页 (Dashboard)
     {
         path: '/',
