@@ -50,7 +50,7 @@ const routes = [
                 meta: { title: '我的稿件' }
             }, // <--- 注意这里要有逗号
             {
-                path: 'detail',
+                path: 'detail/:id',
                 name: 'ManuscriptDetail',
                 component: () => import('@/views/manuscript/detail.vue'),
                 meta: { title: '稿件详情', hidden: true }

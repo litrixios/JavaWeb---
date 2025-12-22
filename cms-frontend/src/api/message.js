@@ -1,36 +1,27 @@
+// src/api/message.js
 import request from '@/utils/request'
 
-// 投稿或保存草稿
-export function submitManuscript(data) {
+// 1. 发送消息
+export function sendMessage(data) {
     return request({
-        url: '/api/manuscript/submit',
+        url: '/api/message/send',
         method: 'post',
         data
     })
 }
 
-// 获取我的稿件列表
-export function getMyManuscripts(params) {
+// 2. 获取某篇稿件的历史消息记录
+export function getManuscriptHistory(manuscriptId) {
     return request({
-        url: '/api/manuscript/my-manuscripts',
-        method: 'get',
-        params
-    })
-}
-
-// 获取稿件详情及追踪信息
-export function trackManuscript(manuscriptId) {
-    return request({
-        url: `/api/manuscript/track/${manuscriptId}`,
+        url: `/api/message/history/${manuscriptId}`,
         method: 'get'
     })
 }
 
-// 提交修回
-export function submitRevision(data) {
+// 3. 获取我的消息列表 (如果后面有消息中心的话会用到)
+export function getMyMessages() {
     return request({
-        url: '/api/manuscript/submit-revision',
-        method: 'post',
-        data
+        url: '/api/message/list',
+        method: 'get'
     })
 }

@@ -7,11 +7,24 @@ const service = axios.create({
     timeout: 5000
 })
 
+service.interceptors.request.use(
+    config => {
+        // 从本地存储获取 Token
+        const token = localStorage.getItem('token')
+        if (token) {
+            // 将 Token 放入请求头，键名必须与后端 JwtInterceptor 里取的一致 ('Authorization')
+            config.headers['Authorization'] = token
+        }
+        return config
+    },
+    error => {
+        return Promise.reject(error)
+    }
+)
+
 service.interceptors.response.use(
     response => {
         const res = response.data
-        // 假设后端返回格式是 { code: 200, data: ... }
-        // 如果你们后端成功不返回 code=200，请自行调整这里的逻辑
         return res
     },
     error => {
