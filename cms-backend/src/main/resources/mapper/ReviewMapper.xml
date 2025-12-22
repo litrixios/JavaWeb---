@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bjfu.cms.mapper.ReviewMapper">
+
+    <resultMap id="ReviewMap" type="com.bjfu.cms.entity.Review">
+        <id property="reviewId" column="ReviewID"/>
+        <result property="manuscriptID" column="ManuscriptID"/>
+        <result property="reviewerID" column="ReviewerID"/>
+        <result property="inviteDate" column="InviteDate"/>
+        <result property="deadline" column="Deadline"/>
+        <result property="status" column="Status"/>
+    </resultMap>
+
+    <select id="selectPendingInvitations" resultMap="ReviewMap">
+        SELECT r.ReviewID, r.ManuscriptID, r.ReviewerID, r.InviteDate, r.Deadline, r.Status,
+               m.Title, m.Abstract
+        FROM Review r
+                 LEFT JOIN Manuscript m ON r.ManuscriptID = m.ManuscriptID
+        WHERE r.ReviewerID = #{reviewerId}
+          AND r.Status = 'Invited'
+        ORDER BY r.InviteDate DESC
+    </select>
+
+    <select id="selectById" resultMap="ReviewMap">
+        SELECT * FROM Review
+        WHERE ReviewID = #{reviewId}
+    </select>
+
+    <update id="updateStatus">
+        UPDATE Review
+        SET Status = #{status},
+            SubmitTime = GETDATE()
+        WHERE ReviewID = #{reviewId}
+          AND ReviewerID = #{reviewerId}
+          AND Status = 'Invited'  -- 确保只能更新处于邀请状态的任务
+    </update>
+
+    <update id="updateRejectionReason">
+        UPDATE Review
+        SET ConfidentialComments = #{reason}  -- 使用保密意见字段存储拒绝理由
+        WHERE ReviewID = #{reviewId}
+    </update>
+
+</mapper>
