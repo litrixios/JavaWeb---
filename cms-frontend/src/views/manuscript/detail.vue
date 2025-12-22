@@ -188,6 +188,8 @@ const handleRevisionSubmit = async () => {
     ElMessage.success('修回提交成功')
     loadData() // 刷新状态
     activeTab.value = 'track'
+  } else {
+    ElMessage.error(res.msg || '修回提交失败')
   }
 }
 
@@ -198,17 +200,23 @@ const handleSendMessage = async () => {
   // 假设发给当前处理该稿件的编辑，或者系统默认接收人
   // 这里简化处理，Topic 为 MS-{id}
   const payload = {
-    receiverId: manuscript.value.currentEditorId || 1, // 需后端支持获取当前编辑ID，或者发给系统管理员
+    // 修改点 1：如果没有分配编辑，默认发给总编(ID=2)而不是管理员(ID=1)，以匹配后端默认策略
+    receiverId: manuscript.value.currentEditorId || 2,
     topic: `MS-${manuscriptId}`,
     title: `关于稿件 ${manuscriptId} 的沟通`,
     content: newMessage.value
   }
 
   const res = await sendMessage(payload)
+
+  // 修改点 2：添加 else 分支，处理后端报错
   if (res.code === 200) {
     ElMessage.success('发送成功')
     newMessage.value = ''
     loadMessages()
+  } else {
+    // 显示具体错误信息，例如 "您只能回复编辑部工作人员..."
+    ElMessage.error(res.msg || '消息发送失败，请稍后重试')
   }
 }
 
