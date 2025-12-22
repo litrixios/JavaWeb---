@@ -201,13 +201,14 @@ public class ManuscriptServiceImpl implements ManuscriptService {
         // 异步发送邮件
         emailService.sendHtmlMail(author.getEmail(), null, emailSubject, emailContent);
 
-        // 3. 发送站内信 (系统 -> 作者)
-        // 假设 SYSTEM_ADMIN_ID 为发件人
-        String msgTitle = "投稿成功通知";
-        String msgContent = "您的稿件《" + title + "》已成功提交，目前正在进行形式审查。";
-
-        // 调用站内信服务
-        communicationService.sendMessage(SYSTEM_ADMIN_ID, authorId, "Submission", msgTitle, msgContent);
+        // TODO 等待系统管理员站内信功能
+//        // 3. 发送站内信 (系统 -> 作者)
+//        // 假设 SYSTEM_ADMIN_ID 为发件人
+//        String msgTitle = "投稿成功通知";
+//        String msgContent = "您的稿件《" + title + "》已成功提交，目前正在进行形式审查。";
+//
+//        // 调用站内信服务
+//        communicationService.sendMessage(SYSTEM_ADMIN_ID, authorId, "Submission", msgTitle, msgContent);
     }
 
     /**

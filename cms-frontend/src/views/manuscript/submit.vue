@@ -66,8 +66,10 @@
           <el-upload
               class="upload-demo"
               action="/api/common/upload"
+              :headers="uploadHeaders"
               :limit="1"
               :on-success="handleManuscriptSuccess"
+              :on-error="handleUploadError"
               :file-list="manuscriptFileList"
           >
             <el-button type="primary">点击上传 PDF/Word</el-button>
@@ -79,8 +81,10 @@
           <el-upload
               class="upload-demo"
               action="/api/common/upload"
+              :headers="uploadHeaders"
               :limit="1"
               :on-success="handleCoverLetterSuccess"
+              :on-error="handleUploadError"
               :file-list="coverLetterFileList"
           >
             <el-button type="primary">点击上传 Cover Letter</el-button>
@@ -109,14 +113,14 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue' // 修改点：引入 computed
 import { submitManuscript } from '@/api/manuscript'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const formRef = ref(null)
-const isEdit = ref(false) // 这里可以根据路由 query.id 判断是否为编辑模式
+const isEdit = ref(false)
 
 const form = reactive({
   manuscriptId: null,
@@ -143,6 +147,13 @@ const rules = {
   originalFilePath: [{ required: true, message: '请上传手稿文件', trigger: 'change' }]
 }
 
+// 修改点：计算上传所需的 Headers (主要是 Authorization Token)
+const uploadHeaders = computed(() => {
+  return {
+    Authorization: localStorage.getItem('token') || ''
+  }
+})
+
 // 作者操作
 const addAuthor = () => {
   form.authors.push({ name: '', email: '', unit: '', isCorresponding: false })
@@ -159,17 +170,29 @@ const removeReviewer = (index) => {
   form.recommendedReviewers.splice(index, 1)
 }
 
-// 文件上传回调 (假设后端返回格式 { code: 200, data: "path/to/file" })
+// 修改点：处理网络或权限等上传错误
+const handleUploadError = (error) => {
+  console.error(error)
+  ElMessage.error('文件上传失败，请检查登录状态或网络连接')
+}
+
+// 文件上传回调
 const handleManuscriptSuccess = (res) => {
   if(res.code === 200) {
     form.originalFilePath = res.data
     ElMessage.success('手稿上传成功')
+  } else {
+    // 修改点：增加错误提示
+    ElMessage.error(res.msg || '手稿上传失败')
   }
 }
 const handleCoverLetterSuccess = (res) => {
   if(res.code === 200) {
     form.coverLetterPath = res.data
     ElMessage.success('Cover Letter 上传成功')
+  } else {
+    // 修改点：增加错误提示
+    ElMessage.error(res.msg || 'Cover Letter 上传失败')
   }
 }
 
@@ -177,7 +200,6 @@ const handleCoverLetterSuccess = (res) => {
 const handleSubmit = async (actionType) => {
   if (!formRef.value) return
 
-  // 如果是保存草稿，可以不校验所有必填项，但这里为了演示，简单处理
   if (actionType === 'SUBMIT') {
     await formRef.value.validate()
   }
@@ -187,10 +209,17 @@ const handleSubmit = async (actionType) => {
     actionType // "SUBMIT" or "SAVE"
   }
 
-  const res = await submitManuscript(payload)
-  if (res.code === 200) {
-    ElMessage.success(res.data) // "投稿成功" 或 "草稿已保存"
-    router.push('/manuscript/list')
+  try {
+    const res = await submitManuscript(payload)
+    if (res.code === 200) {
+      ElMessage.success(res.data)
+      router.push('/manuscript/list')
+    } else {
+      ElMessage.error(res.msg || '操作失败')
+    }
+  } catch (error) {
+    // request.js 拦截器通常已经处理了错误，但这里加 try/catch 更稳妥
+    console.error(error)
   }
 }
 </script>
