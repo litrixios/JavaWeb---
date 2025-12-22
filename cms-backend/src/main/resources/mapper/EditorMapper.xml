@@ -4,10 +4,16 @@
 
     <select id="selectMyManuscripts" resultType="com.bjfu.cms.entity.Manuscript">
         SELECT
-            ManuscriptID as manuscriptId, AuthorID as authorId,
-            CurrentEditorID as currentEditorId, Title,
-            Abstract as abstractText, Keywords, Status, SubStatus as subStatus,
-            SubmissionTime as submissionTime, RevisionDeadline as revisionDeadline
+            ManuscriptID as manuscriptId,
+            AuthorID as authorId,
+            CurrentEditorID as currentEditorId,
+            Title as title,
+            Abstract as abstractText,
+            Keywords as keywords,
+            Status as status,
+            SubStatus as subStatus,
+            SubmissionTime as submissionTime,
+            RevisionDeadline as revisionDeadline
         FROM Manuscript
         WHERE CurrentEditorID = #{editorId}
     </select>
@@ -16,14 +22,14 @@
         INSERT INTO Review (ManuscriptID, ReviewerID, Status, Deadline, InviteDate)
         VALUES
         <foreach collection="rIds" item="rId" separator=",">
-            (#{msId}, #{rId}, 'Invited', #{deadline}, GETDATE())
+            (#{msId}, #{rId}, 'Invited', #{deadline}, #{inviteDate})
         </foreach>
     </insert>
 
-    <update id="updateSubStatus">
+    <update id="updateManuscriptStatus">
         UPDATE Manuscript
-        SET SubStatus = #{sub},
-            Status = 'Processing'  -- 强制同步大状态，防止违反 CK_Status_Logic
+        SET Status = #{status},
+            SubStatus = #{subStatus}
         WHERE ManuscriptID = #{msId}
     </update>
 
@@ -32,8 +38,8 @@
         SET EditorRecommendation = #{editorRecommendation},
             EditorSummaryReport = #{editorSummaryReport},
             RecommendationDate = GETDATE(),
-            SubStatus = 'PendingEICDecision',
-            Status = 'Processing' -- 显式声明大状态，确保安全
-        WHERE ManuscriptID = #{manuscriptId} AND CurrentEditorID = #{currentEditorId}
+            SubStatus = 'WithEditor',
+            Status = 'Processing'
+        WHERE ManuscriptID = #{manuscriptId}
     </update>
 </mapper>
