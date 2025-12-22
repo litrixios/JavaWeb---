@@ -191,30 +191,30 @@ public class SuperAdminServiceImpl implements SuperAdminService {
 
         // 根据角色设置默认权限
         switch (role) {
-            case "AUTHOR":
+            case "Author":
                 permissions.setCanSubmitManuscript(true);
                 break;
-            case "REVIEWER":
+            case "Reviewer":
                 permissions.setCanWriteReview(true);
                 break;
-            case "EDITOR":
+            case "Editor":
                 permissions.setCanViewAllManuscripts(true);
                 permissions.setCanAssignReviewer(true);
                 permissions.setCanViewReviewerIdentity(true);
                 break;
-            case "EDITOR_IN_CHIEF":
+            case "EditorInchief":
                 permissions.setCanViewAllManuscripts(true);
                 permissions.setCanAssignReviewer(true);
                 permissions.setCanViewReviewerIdentity(true);
                 permissions.setCanMakeDecision(true);
                 break;
-            case "SYSTEM_ADMIN":
+            case "SystemAdmin":
                 permissions.setCanViewAllManuscripts(true);
                 permissions.setCanAssignReviewer(true);
                 permissions.setCanViewReviewerIdentity(true);
                 permissions.setCanModifySystemConfig(true);
                 break;
-            case "EDITORIAL_OFFICE_ADMIN":
+            case "EditorialAdmin":
                 permissions.setCanViewAllManuscripts(true);
                 permissions.setCanTechCheck(true);
                 permissions.setCanPublishNews(true);

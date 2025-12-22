@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 // 确保 Layout 路径正确，如果报错找不到文件，请检查 src/layout/index.vue 是否存在
 import Layout from '@/layout/index.vue'
-
+import Layout2 from '@/layout/admin_index.vue'
 const routes = [
     // 1. 登录页
     {
@@ -14,6 +14,30 @@ const routes = [
         path: '/register',
         name: 'register',
         component: () => import('@/views/login/register.vue')
+    },
+
+    // ================== 新增：主编功能模块 ==================
+    {
+        path: '/eic',
+        component: Layout,
+        redirect: '/eic/reviewer',
+        meta: { title: '主编工作台', icon: 'UserFilled' }, // 需确保引入了 UserFilled 图标，或者换成 'User'
+        children: [
+            // {
+            //     path: 'reviewer',
+            //     name: 'ReviewerManager',
+            //     // 对应下面第三步创建的文件
+            //     component: () => import('@/views/eic/ReviewerManager.vue'),
+            //     meta: { title: '审稿人管理' }
+            // },
+            {
+                path: 'audit',
+                name: 'ManuscriptAudit',
+                // 暂时预留，你可以之后再创建这个文件
+                component: () => import('@/views/eic/ManuscriptAudit.vue'),
+                meta: { title: '稿件全览与决策' }
+            }
+        ]
     },
     // 2. 首页 (Dashboard)
     {
@@ -29,7 +53,76 @@ const routes = [
             }
         ]
     }, // <--- 注意这里要有逗号
+    {
 
+        path: '/SuperAdmin', // 匹配 /dashboard/systemadmin 路径
+        component: Layout2,
+        children: [{
+
+            path: 'superadmin', // 匹配 /dashboard/systemadmin 路径
+
+            name: 'Superadmin',
+
+            component: () => import('@/views/SuperAdmin/superadmin.vue'),
+
+            meta: {
+
+                title: '系统管理',
+
+                icon: 'Setting',
+
+                roles: ['SuperAdmin']
+
+            }
+            },
+            {
+
+                path: 'superadmin_management', // 匹配 /dashboard/systemadmin 路径
+
+                name: 'Superadmin_management',
+
+                component: () => import('@/views/SuperAdmin/management.vue'),
+
+                meta: {
+
+                    title: '系统管理',
+
+                    icon: 'Setting1',
+
+                    roles: ['SuperAdmin']
+
+                }
+            }
+
+        ]
+
+    },
+    {
+
+        path: '/Systemadmin', // 匹配 /dashboard/systemadmin 路径
+       // component: Layout,
+        children: [{
+
+            path: 'systemadmin', // 匹配 /dashboard/systemadmin 路径
+
+            name: 'Systemadmin',
+
+            component: () => import('@/views/Systemadmin/systemadmin.vue'),
+
+            meta: {
+
+                title: '系统管理',
+
+                icon: 'Setting',
+
+                roles: ['SystemAdmin']
+
+            }},
+
+
+        ]
+
+    },
     // 3. 作者核心功能
     {
         path: '/manuscript',
