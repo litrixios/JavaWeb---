@@ -76,8 +76,7 @@
     <insert id="insertVersion">
         INSERT INTO Versions
         (ManuscriptID, VersionNumber, OriginalFilePath, AnonymousFilePath,
-         CoverLetterPath, MarkedFilePath, ResponseLetterPath, UploadTime)
-        VALUES
+         CoverLetterPath, MarkerFilePath, ResponseLetterPath, UploadTime) VALUES
             (#{manuscriptId}, #{versionNumber}, #{originalFilePath}, #{anonymousFilePath},
              #{coverLetterPath}, #{markedFilePath}, #{responseLetterPath}, GETDATE())
     </insert>

@@ -35,4 +35,6 @@ public class Version {
 
     // 对应 UploadTime (DATETIME)
     private Date uploadTime;
+
+    private String markerFilePath; // 标记版文件路径
 }

@@ -1,7 +1,7 @@
 INSERT INTO Users (Username, Password, Role, Email, FullName, Affiliation, ResearchDirection, RegisterTime, Status,AvatarUrl)
 VALUES
     ('admin', '123', 'SuperAdmin', 'superadmin@journal.edu', '张明', '期刊管理系统总部', '系统管理、期刊出版管理', '2024-01-15 09:00:00', 1,NULL),
-    ('editorinchief', '123456', 'EditorInChief', 'chief.editor@journal.edu', '李华', '清华大学计算机科学与技术学院', '人工智能、计算机视觉、期刊编辑管理', '2024-01-20 10:30:00', 1,NULL),
+    ('editorinchief', '123456', 'EditorInChief', '2662775049@qq.com', '李华', '清华大学计算机科学与技术学院', '人工智能、计算机视觉、期刊编辑管理', '2024-01-20 10:30:00', 1,NULL),
     ('editorialadmin1', '123456', 'EditorialAdmin', 'admin.li@journal.edu', '王芳', '期刊管理办公室', '稿件流程管理、作者服务', '2024-01-25 14:20:00', 1,NULL),
     ('editor_ai', '123456', 'Editor', '2662775049@qq.com', '陈强', '北京大学人工智能研究院', '机器学习、深度学习、自然语言处理', '2024-02-01 11:00:00', 1,NULL),
     ('editor_material', '123456', 'Editor', '2662775049@qq.com', '刘伟', '中国科学院材料研究所', '纳米材料、功能材料、复合材料', '2024-02-05 15:30:00', 1,NULL),
