@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+// ... 原有 import 保持不变
+import com.bjfu.cms.entity.User;
 
 @Tag(name = "编辑业务接口")
 @RestController
@@ -17,6 +19,13 @@ public class EditorController {
 
     @Autowired
     private EditorService editorService;
+
+    // --- 新增：获取审稿人列表接口 ---
+    @Operation(summary = "查询所有审稿人")
+    @GetMapping("/reviewers")
+    public Result<List<User>> getAllReviewers() {
+        return Result.success(editorService.getAllReviewers());
+    }
 
     @Operation(summary = "查询指派给我的稿件")
     @GetMapping("/manuscripts")
@@ -34,20 +43,15 @@ public class EditorController {
     @Operation(summary = "提交建议给主编")
     @PostMapping("/recommend")
     public Result<String> recommend(@RequestBody Manuscript manuscript) {
-        // 接收 manuscriptId, editorRecommendation, editorSummaryReport
         editorService.submitToEIC(manuscript);
         return Result.success("总结报告已提交，等待主编审批");
     }
+
     @Operation(summary = "查询稿件详情")
     @GetMapping("/detail")
     public Result<Manuscript> getDetail(@RequestParam("id") Integer id) {
-        // 调用 Service 获取单条稿件信息
-        System.out.println(">>> 接收到前端详情请求 ID: " + id);
         Manuscript manuscript = editorService.getById(id);
-
-        if (manuscript == null) {
-            return Result.error("未找到该稿件详情");
-        }
+        if (manuscript == null) return Result.error("未找到该稿件详情");
         return Result.success(manuscript);
     }
 }

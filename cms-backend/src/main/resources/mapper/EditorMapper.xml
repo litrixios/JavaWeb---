@@ -42,4 +42,15 @@
             Status = 'Processing'
         WHERE ManuscriptID = #{manuscriptId}
     </update>
+
+    <select id="selectUsersByRole" resultType="com.bjfu.cms.entity.User">
+        SELECT
+            UserID as userId,         -- 对应实体类的 id
+            Username as username, -- 对应实体类的 username
+            FullName as fullName, -- 数据库里是 FullName，映射到实体类的 realName
+            Email as email,
+            Role as role
+        FROM Users
+        WHERE Role = 'Reviewer'   -- 注意：数据库 Role 存的是 'Reviewer'，首字母大写
+    </select>
 </mapper>

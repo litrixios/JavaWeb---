@@ -1,6 +1,7 @@
 package com.bjfu.cms.mapper;
 
 import com.bjfu.cms.entity.Manuscript;
+import com.bjfu.cms.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import java.util.Date;
@@ -25,7 +26,7 @@ public interface EditorMapper {
             @Param("status") String status,
             @Param("subStatus") String subStatus
     );
-
+    List<User> selectUsersByRole(@Param("role") String role);
     // 4. 提交建议给主编
     void updateRecommendation(Manuscript manuscript);
 }
