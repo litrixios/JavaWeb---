@@ -77,12 +77,11 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Download } from '@element-plus/icons-vue' // 引入下载图标
+import { Download } from '@element-plus/icons-vue'
 
 const route = useRoute()
-const mid = route.query.id // 获取 URL 中的 manuscriptID
+const mid = route.query.id
 
-// 新增：稿件详情响应式变量
 const manuscriptDetail = ref({
   title: '',
   abstractText: '',
@@ -93,47 +92,73 @@ const manuscriptDetail = ref({
   submissionTime: ''
 })
 
-// 模拟审稿人数据
-const reviewerOptions = ref([{ id: 101, name: '张教授' }, { id: 102, name: '李专家' }])
+// --- 修改点：初始化为空，通过 API 加载 ---
+const reviewerOptions = ref([])
 const selectedReviewers = ref([])
 
 const recommendForm = ref({
-  manuscriptID: mid,
+  manuscriptId: mid, // 确保字段名与后端实体一致
   editorRecommendation: '',
   editorSummaryReport: ''
 })
 
-// 新增：页面挂载时请求稿件详情
-onMounted(async () => {
+// 1. 加载稿件详情
+const fetchDetail = async () => {
+  const res = await fetch(`http://localhost:8080/api/editor/detail?id=${mid}`, {
+    headers: { 'Authorization': localStorage.getItem('token') }
+  })
+  const result = await res.json()
+  if (result.code === 200) manuscriptDetail.value = result.data
+}
+
+// 2. 加载审稿人列表 (从数据库 users 表)
+// 2. 加载审稿人列表 (从数据库 users 表)
+const fetchReviewers = async () => {
+  try {
+    const res = await fetch(`http://localhost:8080/api/editor/reviewers`, {
+      headers: { 'Authorization': localStorage.getItem('token') }
+    })
+    const result = await res.json()
+
+    if (result.code === 200 && result.data) {
+      // 调试：请在控制台确认每个 user 的 id 是否唯一
+      console.log("审稿人原始数据:", result.data)
+
+      // 【修正点】: 强制转换 ID 类型并确保字段名匹配
+      reviewerOptions.value = result.data.map(user => ({
+        // 1. 确保取到的是 UserID (根据你的 SQL 别名是 id)
+        // 2. 使用 Number() 强制转为数字，防止字符串匹配导致多选失效
+        id: Number(user.id || user.userId),
+        // 优先显示 realName (对应 FullName)，如果没有则显示 username
+        name: user.realName || user.fullName || user.username
+      }))
+    }
+  } catch (error) {
+    console.error("加载失败:", error)
+    ElMessage.error("获取审稿人名单失败")
+  }
+}
+
+onMounted(() => {
   if (!mid) {
     ElMessage.error("未获取到稿件ID")
     return
   }
-  try {
-    const res = await fetch(`http://localhost:8080/api/editor/detail?id=${mid}`, {
-      method: 'GET',
-      headers: { 'Authorization': localStorage.getItem('token') }
-    })
-    const result = await res.json()
-    if (result.code === 200) {
-      manuscriptDetail.value = result.data
-    } else {
-      ElMessage.error("详情获取失败: " + result.message)
-    }
-  } catch (error) {
-    console.error("请求异常:", error)
-  }
+  fetchDetail()
+  fetchReviewers() // 页面加载时执行
 })
 
-// 新增：处理下载逻辑
 const handleDownload = (path) => {
-  // 注意：此处 path 建议由后端下载接口处理，直接打开后端流地址
   const downloadUrl = `http://localhost:8080/api/file/download?path=${encodeURIComponent(path)}&token=${localStorage.getItem('token')}`
   window.open(downloadUrl, '_blank')
 }
 
-// 原有功能：指派接口
 const handleInvite = async () => {
+  if (selectedReviewers.value.length === 0) {
+    ElMessage.warning("请至少选择一位审稿人")
+    return
+  }
+
   const res = await fetch('http://localhost:8080/api/editor/invite', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token') },
@@ -143,10 +168,12 @@ const handleInvite = async () => {
     })
   })
   const data = await res.json()
-  if (data.code === 200) ElMessage.success("邀请已发送")
+  if (data.code === 200) {
+    ElMessage.success("邀请已发送")
+    fetchDetail() // 刷新状态
+  }
 }
 
-// 原有功能：提交建议接口
 const handleRecommend = async () => {
   const res = await fetch('http://localhost:8080/api/editor/recommend', {
     method: 'POST',
