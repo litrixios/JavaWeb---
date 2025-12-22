@@ -20,11 +20,13 @@
       <el-table v-loading="loading" :data="tableData" style="width: 100%; margin-top: 20px;">
         <el-table-column prop="manuscriptId" label="ID" width="80" />
         <el-table-column prop="title" label="标题" show-overflow-tooltip />
-        <el-table-column prop="createTime" label="提交时间" width="180">
+
+        <el-table-column prop="submissionTime" label="提交时间" width="180">
           <template #default="scope">
-            {{ formatDate(scope.row.createTime) }}
+            {{ formatDate(scope.row.submissionTime) }}
           </template>
         </el-table-column>
+
         <el-table-column prop="status" label="当前状态">
           <template #default="{ row }">
             <el-tag :type="getStatusTag(row.status)">{{ row.status }}</el-tag>
@@ -107,12 +109,10 @@ const formatDate = (dateStr) => {
 const getList = async () => {
   loading.value = true
   try {
-    // 假设后端接收 status 参数作为大类筛选
-    // 如果后端逻辑不同，请根据后端实际情况调整参数
     const params = {
       pageNum: queryParams.pageNum,
       pageSize: queryParams.pageSize,
-      status: activeTab.value // 传给后端的大状态
+      status: activeTab.value
     }
     const res = await getMyManuscripts(params)
     if (res.code === 200) {
@@ -131,7 +131,6 @@ const handleTabChange = (name) => {
 }
 
 const handleEdit = (id) => {
-  // 跳转到 submit 页面并携带 id
   router.push({ path: '/manuscript/submit', query: { id } })
 }
 
