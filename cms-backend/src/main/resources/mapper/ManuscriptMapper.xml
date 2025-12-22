@@ -164,6 +164,24 @@
                  LEFT JOIN User u ON l.OperatorID = u.UserID
         WHERE l.ManuscriptID = #{manuscriptId}
         ORDER BY l.OperationTime DESC
+
+    </select>
+    <!-- 定义审稿人专用的resultMap：仅映射需要展示的字段，复用已有实体类属性 -->
+    <resultMap id="ManuscriptReviewMap" type="com.bjfu.cms.entity.Manuscript">
+        <id property="manuscriptId" column="ManuscriptID"/> <!-- 主键 -->
+        <result property="title" column="Title"/> <!-- 稿件标题 -->
+        <result property="abstractText" column="Abstract"/> <!-- 关键：对应已有实体类的abstractText属性 -->
+        <result property="keywords" column="Keywords"/> <!-- 关键词 -->
+        <result property="authorList" column="AuthorList"/> <!-- 作者列表 -->
+        <!-- 仅保留这几个字段，其他字段自动为null，避免返回敏感数据 -->
+    </resultMap>
+
+    <!-- 新增：selectManuscriptForReview方法的SQL映射 -->
+    <select id="selectManuscriptForReview" resultMap="ManuscriptReviewMap">
+        SELECT
+            ManuscriptID, Title, Abstract, Keywords, AuthorList
+        FROM Manuscript
+        WHERE ManuscriptID = #{manuscriptId}
     </select>
 
 </mapper>
