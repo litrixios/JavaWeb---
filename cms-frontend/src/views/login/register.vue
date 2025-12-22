@@ -6,7 +6,9 @@
           <span>用户注册</span>
         </div>
       </template>
-
+      <el-form-item>
+        <el-button style="width: 100%;" @click="returnto">返回到主界面</el-button>
+      </el-form-item>
       <el-form :model="registerForm" :rules="registerRules" ref="registerFormRef" label-width="100px">
         <el-form-item label="用户名" prop="username">
           <el-input v-model="registerForm.username" placeholder="请输入用户名" />
@@ -140,6 +142,9 @@ const handleRegister = async () => {
 
 const goToLogin = () => {
   router.push('/login')
+}
+const returnto = () =>{
+  window.location.href = 'http://localhost:8080/index'
 }
 </script>
 

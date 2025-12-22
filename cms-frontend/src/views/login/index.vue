@@ -6,7 +6,9 @@
           <span>系统登录</span>
         </div>
       </template>
-
+      <el-form-item>
+        <el-button style="width: 100%;" @click="returnto">返回到主界面</el-button>
+      </el-form-item>
       <el-form :model="form" label-width="60px">
         <el-form-item label="账号">
           <el-input v-model="form.username" placeholder="请输入用户名" />
@@ -95,10 +97,10 @@ const handleLogin = async () => {
 
         switch (userRole) {
           case 'SuperAdmin':
-            router.push('/layout/index')
+            router.push('/SuperAdmin/superadmin')
             break
           case 'SystemAdmin':
-            router.push('/layout/index')
+            router.push('/Systemadmin/systemadmin')
             break
           case 'Editor':
             router.push('/editor/my-manuscripts')
@@ -107,13 +109,13 @@ const handleLogin = async () => {
             router.push('/manuscript/list')
             break
           case 'Reviewer':
-            router.push('/layout/index')
+            router.push('/eic/reviewer')
             break
           case 'EditorialAdmin':
             router.push('/layout/index')
             break
           case 'EditorInChief':
-            router.push('/layout/index')
+            router.push('/eic/audit')
             break
           default:
             router.push('/manuscript/list')
@@ -134,6 +136,10 @@ const handleLogin = async () => {
 const goToRegister = () => {
   router.push('/register')
 }
+const returnto = () =>{
+  window.location.href = 'http://localhost:8080/index'
+}
+
 </script>
 
 <style scoped>

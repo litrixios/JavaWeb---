@@ -328,6 +328,68 @@
     .cfp-content {
       color: #555;
       line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+
+    /* 文件下载样式 */
+    .file-list {
+      margin-top: 1rem;
+      border-top: 1px solid #ddd;
+      padding-top: 1rem;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .file-item:last-child {
+      border-bottom: none;
+    }
+
+    .file-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .file-icon {
+      color: #3498db;
+      font-size: 1.2rem;
+    }
+
+    .file-name {
+      color: #555;
+      font-size: 0.9rem;
+    }
+
+    .download-btn {
+      background: #27ae60;
+      color: white;
+      border: none;
+      padding: 0.3rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      text-decoration: none;
+      transition: background-color 0.3s ease;
+    }
+
+    .download-btn:hover {
+      background: #219653;
+      text-decoration: none;
+      color: white;
+    }
+
+    .no-files {
+      color: #7f8c8d;
+      font-style: italic;
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 1rem;
     }
 
     /* 响应式设计 */
@@ -370,6 +432,16 @@
       .news-more {
         margin-left: 0;
         margin-top: 0.5rem;
+        align-self: flex-end;
+      }
+
+      .file-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .download-btn {
         align-self: flex-end;
       }
     }
@@ -559,19 +631,19 @@
     </div>
   </section>
 
-  <!-- 征稿通知（动态展示） -->
+  <!-- 征稿通知（动态展示，包含文件下载） -->
   <section class="section">
     <h2 class="section-title">征稿通知 (Call for Papers)</h2>
     <div class="call-for-papers">
       <c:choose>
-        <c:when test="${not empty callForPapers}">
-          <c:forEach var="cfp" items="${callForPapers}">
+        <c:when test="${not empty newsWithFiles}">
+          <c:forEach var="news" items="${newsWithFiles}">
             <div class="cfp-card">
-              <h3 class="cfp-title">${cfp.title}</h3>
+              <h3 class="cfp-title">${news.title}</h3>
               <div class="cfp-deadline">
                 <c:choose>
-                  <c:when test="${not empty cfp.publishDate}">
-                    发布时间: ${cfp.publishDate}
+                  <c:when test="${not empty news.publishDate}">
+                    发布时间: ${news.publishDate}
                   </c:when>
                   <c:otherwise>
                     发布时间: 待定
@@ -579,14 +651,45 @@
                 </c:choose>
               </div>
               <div class="cfp-content">
-                <p>${cfp.content}</p>
+                <p>${news.content}</p>
+              </div>
+
+              <!-- 文件下载部分 -->
+              <div class="file-list">
+                <c:choose>
+                  <c:when test="${not empty news.files}">
+                    <c:forEach var="file" items="${news.files}">
+                      <div class="file-item">
+                        <div class="file-info">
+                          <span class="file-icon">📎</span>
+                          <span class="file-name">${file.fileName}</span>
+                        </div>
+                        <a href="/files/download/${file.fileId}" class="download-btn" download="${file.fileName}">
+                          下载
+                        </a>
+                      </div>
+                    </c:forEach>
+                  </c:when>
+                  <c:otherwise>
+                    <div class="no-files">暂无附件</div>
+                  </c:otherwise>
+                </c:choose>
               </div>
             </div>
           </c:forEach>
         </c:when>
         <c:otherwise>
           <!-- 如果没有征稿数据，显示静态内容 -->
-          <p>暂无任何通知</p>
+          <div class="cfp-card">
+            <h3 class="cfp-title">2025年度人工智能前沿技术特刊</h3>
+            <div class="cfp-deadline">发布时间: 2024-11-25</div>
+            <div class="cfp-content">
+              <p>本特刊聚焦人工智能领域的最新研究进展，包括机器学习、深度学习、自然语言处理等方向。</p>
+            </div>
+            <div class="file-list">
+              <div class="no-files">暂无附件</div>
+            </div>
+          </div>
         </c:otherwise>
       </c:choose>
     </div>

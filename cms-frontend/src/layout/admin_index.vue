@@ -9,28 +9,14 @@
           default-active="1"
           router
       >
-        <el-menu-item index="/manuscript/list">
+        <el-menu-item index="/SuperAdmin/superadmin">
           <el-icon><Document /></el-icon>
-          <span>我的稿件</span>
+          <span>用户管理</span>
         </el-menu-item>
-        <el-menu-item index="/manuscript/submit">
+        <el-menu-item index="/SuperAdmin/superadmin_management">
           <el-icon><Edit /></el-icon>
-          <span>在线投稿</span>
+          <span>系统维护</span>
         </el-menu-item>
-        <el-sub-menu index="/eic">
-          <template #title>
-            <el-icon><User /></el-icon>
-            <span>主编管理</span>
-          </template>
-          <el-menu-item index="/eic/reviewer">
-            <el-icon><Avatar /></el-icon>
-            <span>审稿人管理</span>
-          </el-menu-item>
-          <el-menu-item index="/eic/audit">
-            <el-icon><Search /></el-icon>
-            <span>稿件全览</span>
-          </el-menu-item>
-        </el-sub-menu>
       </el-menu>
     </div>
 

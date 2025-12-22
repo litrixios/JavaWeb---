@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bjfu.cms.mapper.SuperAdminMapper">
+
+    <resultMap id="UserWithPermissionsResultMap" type="com.bjfu.cms.entity.User">
+        <!-- 根据Users表实际字段名 -->
+        <id column="UserID" property="userId"/>
+        <result column="Username" property="username"/>
+        <result column="Password" property="password"/>
+        <result column="Role" property="role"/>
+        <result column="Email" property="email"/>
+        <result column="FullName" property="fullName"/>
+        <result column="Affiliation" property="affiliation"/>
+        <result column="ResearchDirection" property="researchDirection"/>
+        <result column="RegisterTime" property="registerTime"/>
+        <result column="Status" property="status"/>
+        <!-- 注意：数据库有AvatarUrl字段，但您实体类中没有 -->
+
+        <association property="permissions" javaType="com.bjfu.cms.entity.UserPermission">
+            <id column="up_UserID" property="userId"/>
+            <result column="CanSubmitManuscript" property="canSubmitManuscript"/>
+            <result column="CanViewAllManuscripts" property="canViewAllManuscripts"/>
+            <result column="CanAssignReviewer" property="canAssignReviewer"/>
+            <result column="CanViewReviewerIdentity" property="canViewReviewerIdentity"/>
+            <result column="CanWriteReview" property="canWriteReview"/>
+            <result column="CanMakeDecision" property="canMakeDecision"/>
+            <result column="CanModifySystemConfig" property="canModifySystemConfig"/>
+            <result column="CanTechCheck" property="canTechCheck"/>
+            <result column="CanPublishNews" property="canPublishNews"/>
+        </association>
+    </resultMap>
+
+    <select id="selectAllUsersWithPermissions" resultMap="UserWithPermissionsResultMap">
+        SELECT
+        u.UserID,
+        u.Username,
+        u.Password,
+        u.Role,
+        u.Email,
+        u.FullName,
+        u.Affiliation,
+        u.ResearchDirection,
+        u.RegisterTime,
+        u.Status,
+        u.AvatarUrl,  <!-- 数据库有但实体类没有，可选择性保留 -->
+        up.UserID AS up_UserID,
+        up.CanSubmitManuscript,
+        up.CanViewAllManuscripts,
+        up.CanAssignReviewer,
+        up.CanViewReviewerIdentity,
+        up.CanWriteReview,
+        up.CanMakeDecision,
+        up.CanModifySystemConfig,
+        up.CanTechCheck,
+        up.CanPublishNews
+        FROM [Users] u
+        LEFT JOIN UserPermissions up ON u.UserID = up.UserID
+        WHERE 1=1
+        <if test="username != null and username != ''">
+            AND u.Username LIKE '%' + #{username} + '%'
+        </if>
+        <if test="role != null and role != ''">
+            AND u.Role = #{role}
+        </if>
+        <if test="status != null">
+            AND u.Status = #{status}
+        </if>
+        ORDER BY u.RegisterTime DESC
+        <if test="pageNum != null and pageSize != null">
+            OFFSET (#{pageNum} - 1) * #{pageSize} ROWS
+            FETCH NEXT #{pageSize} ROWS ONLY
+        </if>
+    </select>
+
+    <select id="selectUserDetailById" resultMap="UserWithPermissionsResultMap">
+        SELECT
+            u.UserID,
+            u.Username,
+            u.Password,
+            u.Role,
+            u.Email,
+            u.FullName,
+            u.Affiliation,
+            u.ResearchDirection,
+            u.RegisterTime,
+            u.Status,
+            up.UserID AS up_UserID,
+            up.CanSubmitManuscript,
+            up.CanViewAllManuscripts,
+            up.CanAssignReviewer,
+            up.CanViewReviewerIdentity,
+            up.CanWriteReview,
+            up.CanMakeDecision,
+            up.CanModifySystemConfig,
+            up.CanTechCheck,
+            up.CanPublishNews
+        FROM [Users] u
+            LEFT JOIN UserPermissions up ON u.UserID = up.UserID
+        WHERE u.UserID = #{userId}
+    </select>
+
+    <!-- 修正：使用Users表和Username字段 -->
+    <select id="countByUsername" resultType="int">
+        SELECT COUNT(*) FROM [Users] WHERE Username = #{username}
+    </select>
+
+    <!-- 修正：使用Users表、Status和UserID字段 -->
+    <update id="updateUserStatus">
+        UPDATE [Users] SET Status = #{status} WHERE UserID = #{userId}
+    </update>
+
+    <!-- 修正：使用Users表和UserID字段 -->
+    <delete id="deleteUser">
+        DELETE FROM [Users] WHERE UserID = #{userId}
+    </delete>
+
+    <!-- 保持原样 -->
+    <delete id="deleteUserPermissions">
+        DELETE FROM UserPermissions WHERE UserID = #{userId}
+    </delete>
+
+    <!-- 修正：使用Users表的所有字段名 -->
+    <update id="updateUserBasicInfo">
+        UPDATE [Users]
+        SET Username = #{username},
+            Role = #{role},
+            Email = #{email},
+            FullName = #{fullName},
+            Affiliation = #{affiliation},
+            ResearchDirection = #{researchDirection},
+            Status = #{status}
+        WHERE UserID = #{userId}
+    </update>
+
+    <!-- 保持原样 -->
+    <update id="updateUserPermission">
+        UPDATE UserPermissions
+        SET CanSubmitManuscript = #{canSubmitManuscript},
+            CanViewAllManuscripts = #{canViewAllManuscripts},
+            CanAssignReviewer = #{canAssignReviewer},
+            CanViewReviewerIdentity = #{canViewReviewerIdentity},
+            CanWriteReview = #{canWriteReview},
+            CanMakeDecision = #{canMakeDecision},
+            CanModifySystemConfig = #{canModifySystemConfig},
+            CanTechCheck = #{canTechCheck},
+            CanPublishNews = #{canPublishNews}
+        WHERE UserID = #{userId}
+    </update>
+
+</mapper>

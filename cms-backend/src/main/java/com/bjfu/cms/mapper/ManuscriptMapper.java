@@ -77,4 +77,5 @@ public interface ManuscriptMapper {
      */
     String selectLatestOriginalFilePath(Integer manuscriptId);
     List<SystemLog> selectLogsByManuscriptId(Integer manuscriptId);
+    Manuscript selectManuscriptForReview(@Param("manuscriptId") Integer manuscriptId);
 }
