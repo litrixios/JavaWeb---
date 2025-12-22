@@ -56,6 +56,31 @@ const routes = [
                 meta: { title: '稿件详情', hidden: true }
             }
         ]
+    },
+    //编辑路由
+    {
+        path: '/editor',
+        component: Layout,
+        meta: { title: '稿件处理', icon: 'Edit', role: 'Editor' },
+        children: [
+            {
+                path: 'my-manuscripts',
+                name: 'EditorManuscripts',
+                component: () => import('@/views/editor/list.vue'),
+                meta: { title: '我负责的稿件' } // 功能1
+            },
+            {
+                path: 'process/:id',
+                name: 'ProcessManuscript',
+                component: () => import('@/views/editor/process.vue'),
+                meta: { title: '稿件处理详情', hidden: true } // 功能2,3,4,5
+            },
+            {
+                path: '/editor/process',
+                name: 'ManuscriptProcess',
+                component: () => import('@/views/editor/process.vue') // 确保文件名和路径正确
+            }
+        ]
     }
 ]
 

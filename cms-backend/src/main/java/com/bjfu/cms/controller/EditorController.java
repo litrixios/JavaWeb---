@@ -38,4 +38,16 @@ public class EditorController {
         editorService.submitToEIC(manuscript);
         return Result.success("总结报告已提交，等待主编审批");
     }
+    @Operation(summary = "查询稿件详情")
+    @GetMapping("/detail")
+    public Result<Manuscript> getDetail(@RequestParam("id") Integer id) {
+        // 调用 Service 获取单条稿件信息
+        System.out.println(">>> 接收到前端详情请求 ID: " + id);
+        Manuscript manuscript = editorService.getById(id);
+
+        if (manuscript == null) {
+            return Result.error("未找到该稿件详情");
+        }
+        return Result.success(manuscript);
+    }
 }
