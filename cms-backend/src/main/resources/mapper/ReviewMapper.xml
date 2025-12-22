@@ -43,4 +43,20 @@
         WHERE ReviewID = #{reviewId}
     </update>
 
+    <update id="updateReviewComments" parameterType="com.bjfu.cms.entity.dto.ReviewSubmitDTO">
+        UPDATE review
+        SET confidential_comments = #{confidentialComments},
+            author_comments = #{authorComments},
+            innovation_score = #{innovationScore},
+            methodology_score = #{methodologyScore},
+            quality_score = #{qualityScore},
+            recommendation = #{recommendation}
+        WHERE review_id = #{reviewId}
+    </update>
+
+    <update id="completeReview">
+        UPDATE review SET status = 'Completed', submission_time = #{finishDate}
+        WHERE review_id = #{reviewId}
+    </update>
+
 </mapper>
