@@ -16,19 +16,20 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-//        registry.addInterceptor(jwtInterceptor)
-//                .addPathPatterns("/**")        // 拦截所有路径
-//                .excludePathPatterns(          // 排除以下路径
-//                        "/doc.html",
-//                        "/webjars/**",
-//                        "/swagger-resources/**",
-//                        "/v3/api-docs/**",
-//                        "/api/auth/login",     // 登录
-//                        "/api/auth/register",  // 注册
-//                        "/api/news/**",        // 公开新闻 (根据需求可选)
-//                        "/api/files/download/**", // 文件下载 (视情况而定)
-//                        "/index/**"
-//                );
+        registry.addInterceptor(jwtInterceptor)
+                .addPathPatterns("/**")        // 拦截所有路径
+                .excludePathPatterns(          // 排除以下路径
+                        "/doc.html",
+                        "/webjars/**",
+                        "/swagger-resources/**",
+                        "/v3/api-docs/**",
+                        "/api/auth/login",     // 登录
+                        "/api/auth/register",  // 注册
+                        "/api/news/**",        // 公开新闻 (根据需求可选)
+                        "/api/files/download/**", // 文件下载 (视情况而定)
+                        "/index/**",
+                        "/"
+                );
     }
 
     // 解决 Vue 跨域问题
