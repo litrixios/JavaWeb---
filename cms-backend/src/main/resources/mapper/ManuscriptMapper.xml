@@ -64,6 +64,15 @@
         WHERE ManuscriptID = #{manuscriptId}
     </update>
 
+
+    <update id="updateCurrentEditorAndStatus">
+        UPDATE Manuscript
+        SET CurrentEditorID = #{editorId},
+            Status = #{status},
+            SubStatus = #{subStatus}
+        WHERE ManuscriptID = #{manuscriptId}
+    </update>
+
     <insert id="insertVersion">
         INSERT INTO Versions
         (ManuscriptID, VersionNumber, OriginalFilePath, AnonymousFilePath,
@@ -100,8 +109,9 @@
 
     <update id="updateCurrentEditor">
         UPDATE Manuscript
-        SET CurrentEditorID = #{editorId}, SubStatus = #{subStatus}
-        WHERE ManuscriptID = #{id}
+        SET CurrentEditorID = #{editorId},
+            Status = 'Processing',   SubStatus = #{subStatus}
+        WHERE ManuscriptID = #{manuscriptId}
     </update>
 
     <update id="updateFinalDecision">

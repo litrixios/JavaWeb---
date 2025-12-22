@@ -50,9 +50,10 @@ public interface ManuscriptMapper {
                       @Param("subStatus") String subStatus);
 
     // 指派编辑
-    void updateCurrentEditor(@Param("id") Integer id,
-                             @Param("editorId") Integer editorId,
-                             @Param("subStatus") String subStatus);
+    void updateCurrentEditorAndStatus(@Param("manuscriptId") Integer manuscriptId,
+                                      @Param("editorId") Integer editorId,
+                                      @Param("status") String status,
+                                      @Param("subStatus") String subStatus);
 
     // 终审决策
     void updateFinalDecision(@Param("id") Integer id,
