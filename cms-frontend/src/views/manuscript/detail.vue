@@ -7,16 +7,33 @@
           <div v-loading="loading">
             <div class="status-header">
               <h3>{{ manuscript.title }}</h3>
-              <el-tag size="large" :type="statusType">{{ manuscript.status }}</el-tag>
+              <small style="color: #999; font-weight: normal;">(Status: {{ manuscript.status }})</small>
+
+              <el-tag size="large" :type="statusType">
+                {{ formatFullStatus(manuscript) }}
+              </el-tag>
               <span class="cycle-tip" v-if="trackInfo.estimatedCycle">预计周期: {{ trackInfo.estimatedCycle }}</span>
             </div>
 
-            <el-steps :active="activeStep" align-center style="margin: 30px 0;">
-              <el-step title="提交" />
-              <el-step title="形式审查" />
-              <el-step title="编辑处理" />
-              <el-step title="外审中" />
-              <el-step title="决议" />
+            <el-steps :active="activeStepIndex" align-center finish-status="success" style="margin: 30px 0;">
+              <el-step title="未完成 (Incomplete)" description="Draft / Saved" />
+
+              <el-step
+                  title="处理中 (Processing)"
+                  :description="processingDesc"
+              >
+                <template #icon v-if="manuscript.status === 'Processing'">
+                  <el-icon class="is-loading"><Loading /></el-icon>
+                </template>
+              </el-step>
+
+              <el-step title="需修回 (Revision)" description="Waiting for Author" />
+
+              <el-step
+                  title="已决议 (Decided)"
+                  :description="decidedDesc"
+                  :status="decidedStepStatus"
+              />
             </el-steps>
 
             <h4>历史记录 (History)</h4>
@@ -36,7 +53,7 @@
           </div>
         </el-tab-pane>
 
-        <el-tab-pane label="提交修回 (Revision)" name="revision" :disabled="manuscript.status !== 'Need Revision'">
+        <el-tab-pane label="提交修回 (Revision)" name="revision" :disabled="!isRevisionStatus">
           <el-form label-width="140px" style="max-width: 800px; margin-top: 20px;">
             <el-alert title="请根据审稿意见上传修改后的文件" type="warning" show-icon :closable="false" style="margin-bottom: 20px;" />
 
@@ -66,7 +83,11 @@
           </el-form>
         </el-tab-pane>
 
-        <el-tab-pane label="沟通 (Communication)" name="communication">
+        <el-tab-pane
+            label="沟通 (Communication)"
+            name="communication"
+            v-if="shouldShowCommunication"
+        >
           <div class="chat-container">
             <div class="message-list">
               <div v-for="msg in messages" :key="msg.id" class="message-item">
@@ -98,11 +119,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { trackManuscript, submitRevision } from '@/api/manuscript'
 import { getManuscriptHistory, sendMessage } from '@/api/message'
 import { ElMessage } from 'element-plus'
+import { Loading } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const manuscriptId = route.params.id
@@ -126,26 +148,83 @@ const revisionForm = reactive({
 const messages = ref([])
 const newMessage = ref('')
 
-// 状态样式
+// --- 判定是否为修回状态 ---
+const isRevisionStatus = computed(() => {
+  const s = manuscript.value.status
+  // 兼容 'Need Revision' 和 'Revision'
+  return s && (s === 'Revision' || s === 'Need Revision')
+})
+
+// --- 核心修改：沟通 Tab 显示逻辑 (白名单模式) ---
+const shouldShowCommunication = computed(() => {
+  const s = manuscript.value.status
+  if (!s) return false // 数据还没加载回来，先不显示
+
+  // 1. 如果是 Revision (包括 Need Revision), 肯定显示
+  if (isRevisionStatus.value) return true
+
+  // 2. 如果是已决议 (Decided, Accepted, Rejected), 显示
+  if (['Decided', 'Accepted', 'Rejected'].includes(s)) return true
+
+  // 3. 剩下的通常是 Processing 或 Incomplete -> 不显示
+  // 如果您发现某些 Processing 状态也想显示，可以在这里把 return false 改为特定判断
+  return false
+})
+
+// --- 状态标签颜色 ---
 const statusType = computed(() => {
   const s = manuscript.value.status
-  if (s === 'Accepted') return 'success'
-  if (s === 'Rejected') return 'danger'
-  if (s === 'Need Revision') return 'warning'
+  const sub = manuscript.value.subStatus
+  if (s === 'Decided' || s === 'Accepted') {
+    return (sub === 'Accepted' || s === 'Accepted') ? 'success' : 'danger'
+  }
+  if (isRevisionStatus.value) return 'warning'
+  if (s === 'Incomplete') return 'info'
   return 'primary'
 })
 
-// 简易进度条映射
-const activeStep = computed(() => {
+// --- 进度条映射 ---
+const activeStepIndex = computed(() => {
   const s = manuscript.value.status
-  if (!s) return 0
-  if (s.includes('Submit')) return 1
-  if (s.includes('Check') || s.includes('Form')) return 2
-  if (s.includes('Editor') || s.includes('Assign')) return 3
-  if (s.includes('Review')) return 4
-  if (s.includes('Decision') || s.includes('Accept') || s.includes('Reject') || s.includes('Revision')) return 5
-  return 1
+  if (!s || s === 'Incomplete') return 0
+  if (s === 'Processing') return 1
+  if (isRevisionStatus.value) return 2
+  if (['Decided', 'Accepted', 'Rejected'].includes(s)) return 4
+  return 0
 })
+
+// --- 进度条描述文字 ---
+const processingDesc = computed(() => {
+  if (manuscript.value.status === 'Processing') {
+    return `当前阶段: ${manuscript.value.subStatus || 'Unknown'}`
+  }
+  if (isRevisionStatus.value || ['Decided', 'Accepted', 'Rejected'].includes(manuscript.value.status)) {
+    return 'Completed'
+  }
+  return ''
+})
+
+const decidedDesc = computed(() => {
+  if (['Decided', 'Accepted', 'Rejected'].includes(manuscript.value.status)) {
+    return `结果: ${manuscript.value.subStatus || manuscript.value.status}`
+  }
+  return ''
+})
+
+const decidedStepStatus = computed(() => {
+  const s = manuscript.value.status
+  const sub = manuscript.value.subStatus
+  if (['Decided', 'Accepted', 'Rejected'].includes(s)) {
+    return (sub === 'Rejected' || s === 'Rejected') ? 'error' : 'success'
+  }
+  return 'wait'
+})
+
+const formatFullStatus = (m) => {
+  if (!m.status) return ''
+  if (m.subStatus) return `${m.status} - ${m.subStatus}`
+  return m.status
+}
 
 const formatDate = (str) => {
   if (!str) return ''
@@ -156,26 +235,40 @@ const formatDate = (str) => {
 const loadData = async () => {
   loading.value = true
   try {
-    // 1. 获取详情
     const res = await trackManuscript(manuscriptId)
     if (res.code === 200) {
       trackInfo.value = res.data
       manuscript.value = res.data.manuscript || {}
       historyLogs.value = res.data.historyLogs || []
+
+      // 自动修正 Tab (如果当前选了沟通但不可见，切回Track)
+      if (activeTab.value === 'communication' && !shouldShowCommunication.value) {
+        activeTab.value = 'track'
+      }
     }
-    // 2. 获取消息历史
-    loadMessages()
   } finally {
     loading.value = false
   }
 }
 
 const loadMessages = async () => {
-  const res = await getManuscriptHistory(manuscriptId)
-  if (res.code === 200) {
-    messages.value = res.data
+  try {
+    const res = await getManuscriptHistory(manuscriptId)
+    if (res.code === 200) {
+      messages.value = res.data
+    }
+  } catch (e) {
+    console.warn('获取消息失败', e)
   }
 }
+
+// --- 新增：监听器 ---
+// 只要沟通面板应该显示了，就立即去加载消息数据
+watch(shouldShowCommunication, (newVal) => {
+  if (newVal) {
+    loadMessages()
+  }
+})
 
 // 提交修回
 const handleRevisionSubmit = async () => {
@@ -186,7 +279,7 @@ const handleRevisionSubmit = async () => {
   const res = await submitRevision(revisionForm)
   if (res.code === 200) {
     ElMessage.success('修回提交成功')
-    loadData() // 刷新状态
+    loadData()
     activeTab.value = 'track'
   } else {
     ElMessage.error(res.msg || '修回提交失败')
@@ -197,26 +290,25 @@ const handleRevisionSubmit = async () => {
 const handleSendMessage = async () => {
   if (!newMessage.value.trim()) return
 
-  // 假设发给当前处理该稿件的编辑，或者系统默认接收人
-  // 这里简化处理，Topic 为 MS-{id}
+  const receiver = manuscript.value.currentEditorId || 2
   const payload = {
-    // 修改点 1：如果没有分配编辑，默认发给总编(ID=2)而不是管理员(ID=1)，以匹配后端默认策略
-    receiverId: manuscript.value.currentEditorId || 2,
+    receiverId: receiver,
     topic: `MS-${manuscriptId}`,
     title: `关于稿件 ${manuscriptId} 的沟通`,
     content: newMessage.value
   }
 
-  const res = await sendMessage(payload)
-
-  // 修改点 2：添加 else 分支，处理后端报错
-  if (res.code === 200) {
-    ElMessage.success('发送成功')
-    newMessage.value = ''
-    loadMessages()
-  } else {
-    // 显示具体错误信息，例如 "您只能回复编辑部工作人员..."
-    ElMessage.error(res.msg || '消息发送失败，请稍后重试')
+  try {
+    const res = await sendMessage(payload)
+    if (res.code === 200) {
+      ElMessage.success('发送成功')
+      newMessage.value = ''
+      loadMessages()
+    } else {
+      ElMessage.error(res.msg || '消息发送失败')
+    }
+  } catch (e) {
+    ElMessage.error('发送失败，请检查网络')
   }
 }
 
@@ -242,7 +334,6 @@ onMounted(() => {
   font-size: 12px;
   color: #999;
 }
-/* 聊天样式 */
 .chat-container {
   max-width: 800px;
 }
