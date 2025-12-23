@@ -6,8 +6,14 @@ import com.bjfu.cms.entity.dto.ReviewInviteDTO;
 import com.bjfu.cms.service.EditorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 // ... 原有 import 保持不变
 import com.bjfu.cms.entity.User;
@@ -53,6 +59,18 @@ public class EditorController {
         Manuscript manuscript = editorService.getById(id);
         if (manuscript == null) return Result.error("未找到该稿件详情");
         return Result.success(manuscript);
+    }
+
+    @Operation(summary = "下载稿件附件")
+    @GetMapping("/download/{id}")
+    public void downloadManuscript(@PathVariable("id") Integer id, HttpServletResponse response) {
+        try {
+            // 直接调用 Service 即可，Service 内部会处理 response 的 Header 和 Body
+            editorService.downloadManuscript(id, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 }
 

@@ -21,8 +21,13 @@
           <div style="line-height: 1.6; white-space: pre-wrap;">{{ manuscriptDetail.abstractText }}</div>
         </el-descriptions-item>
         <el-descriptions-item label="源文件" :span="2">
-          <el-button v-if="manuscriptDetail.filePath" type="success" size="small" @click="handleDownload(manuscriptDetail.filePath)">
-            <el-icon><Download /></el-icon> 下载稿件附件
+          <el-button
+              v-if="manuscriptDetail.manuscriptId"
+              type="success"
+              size="small"
+              @click="handleDownload"
+          >
+            <el-icon><Download /></el-icon> 下载最新稿件附件
           </el-button>
           <span v-else style="color: #999;">无附件</span>
         </el-descriptions-item>
@@ -111,6 +116,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Download } from '@element-plus/icons-vue'
+import axios from 'axios';
 
 const route = useRoute()
 const mid = route.query.id // 获取地址栏 ?id=xxx
@@ -177,11 +183,47 @@ const fetchChatHistory = async () => {
   if (result.code === 200) chatHistory.value = result.data
 }
 
-const handleDownload = (path) => {
-  const url = `http://localhost:8080/api/file/download?path=${encodeURIComponent(path)}&token=${localStorage.getItem('token')}`
-  window.open(url, '_blank')
-}
+const handleDownload = async () => {
+  try {
+    const response = await axios.get(`http://localhost:8080/api/editor/download/${mid}`, {
+      headers: { 'Authorization': localStorage.getItem('token') },
+      responseType: 'blob'
+    });
 
+    // 调试：请务必检查这里打印的内容
+    console.log("Headers from Backend:", response.headers);
+
+    const disposition = response.headers['content-disposition'];
+    let fileName = `manuscript_${mid}.pdf`; // 默认备选名
+
+    if (disposition) {
+      // 提取 filename= 后的内容
+      const match = disposition.match(/filename=(.*)/);
+      if (match && match[1]) {
+        // 解码并去掉引号
+        fileName = decodeURIComponent(match[1].replace(/['"]/g, ''));
+        // 处理可能存在的 filename* 情况
+        if (fileName.includes("utf-8''")) {
+          fileName = decodeURIComponent(fileName.split("utf-8''")[1]);
+        }
+      }
+    }
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    ElMessage.success("下载成功");
+  } catch (error) {
+    console.error("下载出错:", error);
+    ElMessage.error("下载失败，请检查文件是否存在");
+  }
+};
 // 发送邀请逻辑
 const handleInvite = async () => {
   if (selectedReviewers.value.length === 0) return ElMessage.warning("请至少选择一位审稿人")
