@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 // 确保 Layout 路径正确，如果报错找不到文件，请检查 src/layout/index.vue 是否存在
 import Layout from '@/layout/index.vue'
+import Editorsidebar from '@/layout/EditorSIdebar.vue'
 import Layout2 from '@/layout/admin_index.vue'
 import Layout3 from '@/layout/systemadminSidebar.vue'
 const routes = [
@@ -18,7 +19,29 @@ const routes = [
     },
 
     // ================== 新增：主编功能模块 ==================
-    {
+    // {
+    //     path: '/eic',
+    //     component: Layout,
+    //     redirect: '/eic/reviewer',
+    //     meta: { title: '主编工作台', icon: 'UserFilled' }, // 需确保引入了 UserFilled 图标，或者换成 'User'
+    //     children: [
+    //         // {
+    //         //     path: 'reviewer',
+    //         //     name: 'ReviewerManager',
+    //         //     // 对应下面第三步创建的文件
+    //         //     component: () => import('@/views/eic/ReviewerManager.vue'),
+    //         //     meta: { title: '审稿人管理' }
+    //         // },
+    //         {
+    //             path: 'audit',
+    //             name: 'ManuscriptAudit',
+    //             // 暂时预留，你可以之后再创建这个文件
+    //             component: () => import('@/views/eic/ManuscriptAudit.vue'),
+    //             meta: { title: '稿件全览与决策' }
+    //         }
+    //     ]
+    // },
+    /*{
         path: '/eic',
         component: Layout,
         redirect: '/eic/reviewer',
@@ -39,7 +62,7 @@ const routes = [
                 meta: { title: '稿件全览与决策' }
             }
         ]
-    },
+    },*/
     // 2. 首页 (Dashboard)
     {
         path: '/',
@@ -171,7 +194,7 @@ const routes = [
     //编辑路由
     {
         path: '/editor',
-        component: Layout,
+        component: Editorsidebar,
         meta: { title: '稿件处理', icon: 'Edit', role: 'Editor' },
         children: [
             {
@@ -190,9 +213,40 @@ const routes = [
                 path: '/editor/process',
                 name: 'ManuscriptProcess',
                 component: () => import('@/views/editor/process.vue') // 确保文件名和路径正确
+            },
+            {
+                // 确保这里的 path 是小写 'monitoring'
+                path: 'monitoring',
+                name: 'Monitoring',
+                // 确保文件名 Monitoring.vue 路径正确
+                component: () => import('@/views/editor/Monitoring.vue'),
+                meta: { title: '审稿监控', roles: ['Editor'] }
+            }
+        ]
+    },
+
+    {
+        path: '/reviewer',
+        component: () => import('@/layout/index.vue'), // 确保使用你的主布局组件
+        redirect: '/reviewer/dashboard',
+        meta: { title: '审稿工作台', icon: 'Edit', roles: ['Reviewer'] },
+        children: [
+            {
+                path: 'dashboard',
+                name: 'ReviewerDashboard',
+                component: () => import('@/views/reviewer/dashboard.vue'),
+                meta: { title: '我的审稿任务' }
+            },
+            {
+                path: 'process/:reviewId',
+                name: 'ReviewProcess',
+                component: () => import('@/views/reviewer/process.vue'),
+                meta: { title: '审稿详情', hidden: true }
             }
         ]
     }
+
+
 ]
 
 const router = createRouter({

@@ -4,12 +4,14 @@ import com.bjfu.cms.common.utils.UserContext;
 import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.Review;
 import com.bjfu.cms.entity.User;
+import com.bjfu.cms.entity.dto.ReviewSubmitDTO;
 import com.bjfu.cms.mapper.ManuscriptMapper;
 import com.bjfu.cms.mapper.ReviewMapper;
 import com.bjfu.cms.mapper.UserMapper;
 import com.bjfu.cms.service.EmailService;
 import com.bjfu.cms.service.ReviewerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,10 @@ public class ReviewerServiceImpl implements ReviewerService {
     @Autowired
     private EmailService emailService;
 
+    @Value("${aliyun.ecs.remote-dir}")
+    private String remoteBaseDir;  // 远程根目录
+    @Value("${file.temp.path}")
+    private String localTempPath;  // 本地临时目录
 
     @Override
     public List<Review> getPendingInvitations() {
@@ -123,6 +129,91 @@ public class ReviewerServiceImpl implements ReviewerService {
             return "";
         }
         return new SimpleDateFormat("yyyy-MM-dd").format(review.getDeadline());
+    }
+
+    // 在 ReviewerServiceImpl 中补全方法
+    @Override
+    public String getManuscriptFilePath(Integer reviewId) {
+        // 1. 获取当前登录审稿人ID
+        Integer reviewerId = UserContext.getUserId();
+
+        // 2. 查询审稿任务详情
+        Review review = reviewMapper.selectById(reviewId);
+
+        // 3. 权限与流程校验
+        if (review == null) {
+            throw new RuntimeException("该审稿任务不存在");
+        }
+        if (!review.getReviewerID().equals(reviewerId)) {
+            throw new RuntimeException("无权访问该审稿任务");
+        }
+        // 任务书要求：接受审稿邀请后方可下载 [cite: 740]
+        if (!"Accepted".equals(review.getStatus())) {
+            throw new RuntimeException("请先接受审稿邀请后再下载稿件");
+        }
+
+        // 4. 从 Versions 表查询最新的匿名文件路径
+        String anonymousPath = manuscriptMapper.selectLatestAnonymousFilePath(review.getManuscriptID());
+
+        if (anonymousPath == null || anonymousPath.isEmpty()) {
+            throw new RuntimeException("未找到该稿件的匿名版本文件");
+        }
+
+        return anonymousPath;
+    }
+
+    @Override
+    @Transactional
+    public void submitReview(ReviewSubmitDTO dto) {
+        Integer reviewerId = UserContext.getUserId();
+        Review review = reviewMapper.selectById(dto.getReviewId());
+
+        // 1. 安全校验
+        if (review == null || !review.getReviewerID().equals(reviewerId)) {
+            throw new RuntimeException("非法操作：该评审任务不属于你");
+        }
+        if (!"Accepted".equals(review.getStatus())) {
+            throw new RuntimeException("当前状态不可提交意见");
+        }
+
+        // 2. 更新意见内容
+        reviewMapper.updateReviewComments(dto);
+
+        // 3. 变更状态为已完成
+        String now = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date());
+        reviewMapper.completeReview(dto.getReviewId(), now);
+
+        // 4. 记录日志
+        userMapper.insertLog(now, reviewerId, "SubmitReview", review.getManuscriptID(), "审稿人提交了审稿意见");
+
+        // 5. 通知编辑（加分项逻辑可在此添加）
+    }
+
+    @Override
+    public String getAnonymousFilePath(Integer reviewId) {
+        // 1. 获取当前审稿人ID
+        Integer reviewerId = UserContext.getUserId();
+
+        // 2. 查询审稿任务信息
+        Review review = reviewMapper.selectById(reviewId);
+
+        // 3. 校验权限
+        if (review == null || !review.getReviewerID().equals(reviewerId)) {
+            throw new RuntimeException("无权访问该审稿任务");
+        }
+
+        // 4. 流程校验：根据任务书，只有接受邀请(Accepted)后才能下载
+        if (!"Accepted".equals(review.getStatus())) {
+            throw new RuntimeException("请先接受审稿邀请后再下载稿件");
+        }
+
+        // 5. 从Versions表获取最新匿名路径
+        String path = manuscriptMapper.selectLatestAnonymousFilePath(review.getManuscriptID());
+        if (path == null || path.isEmpty()) {
+            throw new RuntimeException("未找到该稿件的匿名版本文件");
+        }
+
+        return path;
     }
 
 

@@ -42,4 +42,58 @@
             Status = 'Processing'
         WHERE ManuscriptID = #{manuscriptId}
     </update>
+
+    <select id="selectUsersByRole" resultType="com.bjfu.cms.entity.User">
+        SELECT
+            UserID as userId,
+            Username as username,
+            FullName as fullName,
+            Email as email,
+            Role as role,
+            Affiliation as affiliation,         -- 新增：单位
+            ResearchDirection as researchDirection, -- 新增：研究方向
+            -- 实时计算该审稿人当前未完成的任务数 (Status 不是 Completed 或 Rejected)
+            (SELECT COUNT(*)
+             FROM Review r
+             WHERE r.ReviewerID = Users.UserID
+               AND r.Status NOT IN ('Completed', 'Rejected')) as activeTasks
+        FROM Users
+        WHERE Role = 'Reviewer'
+          AND Status = 1 -- 只查询状态正常（已激活）的审稿人
+    </select>
+
+    <select id="findUserByRole" resultType="java.lang.Integer">
+        SELECT TOP 1 UserID
+        FROM Users
+        WHERE Role = #{role} -- 确保传入的是 "EditorInChief"
+          AND Status = 1
+    </select>
+
+    <select id="selectOverdueReviews" resultType="map">
+        SELECT
+        r.ReviewID as reviewId,
+        m.ManuscriptID as manuscriptId,
+        m.Title as title,
+        u.FullName as reviewerName,
+        u.Email as reviewerEmail,
+        r.Deadline as deadline,
+        DATEDIFF(day, r.Deadline, GETDATE()) as overdueDays
+        FROM Review r
+        JOIN Manuscript m ON r.ManuscriptID = m.ManuscriptID
+        JOIN Users u ON r.ReviewerID = u.UserID
+        WHERE r.Status = 'Invited' -- 必须是正在审稿的状态
+          AND r.Deadline &lt; GETDATE()    -- 且截止日期早于当前时间
+          AND r.SubmitTime IS NULL       -- 且尚未提交意见
+    </select>
+    <select id="selectReviewDetailForRemind" resultType="map">
+        SELECT
+            r.ReviewID as reviewId,
+            u.Email as email,
+            u.FullName as reviewerName,
+            m.Title as title
+        FROM Review r
+                 JOIN Users u ON r.ReviewerID = u.UserID
+                 JOIN Manuscript m ON r.ManuscriptID = m.ManuscriptID
+        WHERE r.ReviewID = #{reviewId}
+    </select>
 </mapper>

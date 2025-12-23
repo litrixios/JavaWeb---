@@ -70,6 +70,12 @@ public interface ManuscriptMapper {
     // 新增：根据ID查询，方便校验归属
     Manuscript selectById(@Param("id") Integer id);
 
+    // ManuscriptMapper.java 补充
+    /**
+     * 获取稿件最新版本的匿名文件路径 (AnonymousFilePath)
+     */
+    String selectLatestAnonymousFilePath(@Param("manuscriptId") Integer manuscriptId);
+
     // 获取待形式审查的稿件
     List<Manuscript> selectTechCheckManuscripts();
     /**

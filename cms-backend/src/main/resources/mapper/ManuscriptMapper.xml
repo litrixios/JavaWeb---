@@ -184,4 +184,11 @@
         WHERE ManuscriptID = #{manuscriptId}
     </select>
 
+    <select id="selectLatestAnonymousFilePath" resultType="java.lang.String">
+        SELECT TOP 1 AnonymousFilePath
+        FROM Versions
+        WHERE ManuscriptID = #{manuscriptId}
+        ORDER BY VersionNumber DESC
+    </select>
+
 </mapper>
