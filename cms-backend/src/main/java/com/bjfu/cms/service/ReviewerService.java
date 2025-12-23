@@ -9,6 +9,12 @@ import java.util.List;
 
 public interface ReviewerService {
 
+
+    /**
+     * 获取审稿人已接受或已完成的审稿任务列表
+     */
+    List<Review> getMyReviews();
+
     /**
      * 获取当前审稿人待处理的邀请列表
      */

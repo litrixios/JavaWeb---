@@ -10,6 +10,13 @@ import java.util.List;
 @Mapper
 public interface ReviewMapper {
 
+    // 在 ReviewMapper 接口中添加
+
+    /**
+     * 查询审稿人已接受或已完成的任务
+     */
+    List<Review> selectMyReviews(@Param("reviewerId") Integer reviewerId);
+
     /**
      * 查询审稿人待处理的邀请
      */
