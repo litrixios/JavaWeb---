@@ -165,4 +165,33 @@ public class SftpService {
         }
     }
 
+    /**
+     * [新增] 下载文件到输出流（用于Web下载）
+     * @param remoteFile 服务器文件全路径
+     * @param outputStream 响应输出流
+     */
+    public void downloadToStream(String remoteFile, OutputStream outputStream) {
+        ChannelSftp sftp = null;
+        try {
+            sftp = connect();
+            // 检查文件是否存在
+            try {
+                sftp.stat(remoteFile);
+            } catch (SftpException e) {
+                if (e.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) {
+                    throw new FileNotFoundException("远程文件不存在: " + remoteFile);
+                }
+                throw e;
+            }
+            // 将文件内容写入输出流
+            sftp.get(remoteFile, outputStream);
+            System.out.println("✅ 文件流传输成功: " + remoteFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("文件下载失败: " + e.getMessage());
+        } finally {
+            close(sftp);
+        }
+    }
+
 }
