@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Layout from '@/layout/index.vue'
 import Editorsidebar from '@/layout/EditorSIdebar.vue'
 import Layout2 from '@/layout/admin_index.vue'
+import Layout3 from '@/layout/systemadminSidebar.vue'
 const routes = [
     // 1. 登录页
     {
@@ -123,7 +124,7 @@ const routes = [
     {
 
         path: '/Systemadmin', // 匹配 /dashboard/systemadmin 路径
-       // component: Layout,
+        component: Layout3,
         children: [{
 
             path: 'systemadmin', // 匹配 /dashboard/systemadmin 路径
@@ -141,6 +142,23 @@ const routes = [
                 roles: ['SystemAdmin']
 
             }},
+            {
+
+                path: 'systemadmin_management', // 匹配 /dashboard/systemadmin 路径
+
+                name: 'Systemadmin_management',
+
+                component: () => import('@/views/Systemadmin/system_management.vue'),
+
+                meta: {
+
+                    title: '系统管理',
+
+                    icon: 'Setting',
+
+                    roles: ['SystemAdmin']
+
+                }}
 
 
         ]

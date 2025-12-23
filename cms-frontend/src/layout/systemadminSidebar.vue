@@ -9,11 +9,11 @@
           default-active="1"
           router
       >
-        <el-menu-item index="/SuperAdmin/superadmin">
+        <el-menu-item index="/Systemadmin/systemadmin">
           <el-icon><Document /></el-icon>
           <span>用户管理</span>
         </el-menu-item>
-        <el-menu-item index="/SuperAdmin/superadmin_management">
+        <el-menu-item index="/Systemadmin/systemadmin_management">
           <el-icon><Edit /></el-icon>
           <span>系统维护</span>
         </el-menu-item>

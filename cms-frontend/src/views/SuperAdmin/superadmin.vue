@@ -1,6 +1,8 @@
-<!-- views/system/UserManagement.vue -->
 <template>
   <div class="user-management-container">
+    <div class="header">
+      <h2>用户管理</h2>
+    </div>
 
     <div class="search-bar">
       <el-input
@@ -14,6 +16,7 @@
           style="width: 180px; margin-right: 10px;"
       >
         <el-option label="所有角色" value="" />
+<!--        <el-option label="SuperAdmin" value="SuperAdmin" />-->
         <el-option label="EditorInChief" value="EditorInChief" />
         <el-option label="EditorialAdmin" value="EditorialAdmin" />
         <el-option label="Editor" value="Editor" />
@@ -182,14 +185,53 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted, computed, onBeforeMount } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router'
 import request from '@/utils/request.js'
 
+// 添加路由实例
 const router = useRouter()
 
-// 用户管理相关数据和方法（从原代码中提取用户管理部分）
+// token验证函数
+const checkAuth = () => {
+  const token = localStorage.getItem('token')
+  const userInfo = localStorage.getItem('userInfo')
+
+  if (!token || !userInfo) {
+    ElMessage.warning('请先登录')
+    router.push('/login')
+    return false
+  }
+
+  try {
+    const userData = JSON.parse(userInfo)
+    // 可以添加额外的权限验证，比如只有特定角色可以访问用户管理
+    const allowedRoles = ['SuperAdmin']
+    if (!allowedRoles.includes(userData.role)) {
+      ElMessage.error('权限不足，无法访问用户管理')
+      router.push('/unauthorized')
+      return false
+    }
+    return true
+  } catch (error) {
+    console.error('解析用户信息失败:', error)
+    localStorage.removeItem('token')
+    localStorage.removeItem('userInfo')
+    router.push('/login')
+    return false
+  }
+}
+
+// token过期处理函数
+const handleTokenExpired = () => {
+  ElMessage.error('登录已过期，请重新登录')
+  localStorage.removeItem('token')
+  localStorage.removeItem('userInfo')
+  router.push('/login')
+}
+
+// 用户管理相关
 const userList = ref([])
 const userLoading = ref(false)
 const userQuery = reactive({
@@ -198,7 +240,23 @@ const userQuery = reactive({
   status: '',
 })
 
-// 用户对话框相关
+// 可用的角色选项（新增用户时去掉SuperAdmin）
+const availableRoles = computed(() => {
+  const allRoles = [
+    //{ label: 'SuperAdmin', value: 'SuperAdmin' },
+    { label: 'EditorInChief', value: 'EditorInChief' },
+    { label: 'EditorialAdmin', value: 'EditorialAdmin' },
+    { label: 'Editor', value: 'Editor' },
+    { label: 'Author', value: 'Author' },
+    { label: 'Reviewer', value: 'Reviewer' },
+     { label: 'SystemAdmin', value: 'SystemAdmin' }
+  ]
+
+  // 编辑模式下显示所有角色，新增模式下去掉SuperAdmin
+  return isEditMode.value ? allRoles : allRoles.filter(role => role.value !== 'SuperAdmin')
+})
+
+// 用户对话框
 const userDialogVisible = ref(false)
 const userFormRef = ref()
 const userForm = reactive({
@@ -252,7 +310,7 @@ const isEditMode = computed(() => !!userForm.userId)
 const userDialogTitle = computed(() => isEditMode.value ? '编辑用户' : '新增用户')
 const saveLoading = ref(false)
 
-// 权限对话框相关
+// 用户权限对话框
 const permissionDialogVisible = ref(false)
 const userPermissionForm = reactive({
   userId: null,
@@ -260,25 +318,23 @@ const userPermissionForm = reactive({
   permissions: []
 })
 
-// 可用的角色选项
-const availableRoles = computed(() => {
-  const allRoles = [
-    { label: 'EditorInChief', value: 'EditorInChief' },
-    { label: 'EditorialAdmin', value: 'EditorialAdmin' },
-    { label: 'Editor', value: 'Editor' },
-    { label: 'Author', value: 'Author' },
-    { label: 'Reviewer', value: 'Reviewer' },
-    { label: 'SystemAdmin', value: 'SystemAdmin' }
-  ]
-  return isEditMode.value ? allRoles : allRoles.filter(role => role.value !== 'SuperAdmin')
+// 在组件加载前检查权限
+onBeforeMount(() => {
+  //checkAuth()
 })
 
+// 初始化
 onMounted(() => {
-  fetchUsers()
+  if (checkAuth()) {
+    fetchUsers()
+  }
 })
 
 // 获取用户列表
 const fetchUsers = async () => {
+  // 先检查token
+  if (!checkAuth()) return
+
   userLoading.value = true
   try {
     const params = {
@@ -287,11 +343,22 @@ const fetchUsers = async () => {
     }
     const res = await request.get('/api/system-admin/users', { params })
     if (res.code === 200) {
+      // 过滤掉SuperAdmin角色的用户
       userList.value = res.data.filter(user => user.role !== 'SuperAdmin')
     } else {
+      // 如果token过期或无效，后端通常会返回401
+      if (res.code === 401) {
+        handleTokenExpired()
+        return
+      }
       ElMessage.error(res.msg || '获取用户列表失败')
     }
   } catch (err) {
+    // 网络错误或token过期
+    if (err.response && err.response.status === 401) {
+      handleTokenExpired()
+      return
+    }
     ElMessage.error('获取用户列表失败')
     console.error(err)
   } finally {
@@ -301,6 +368,9 @@ const fetchUsers = async () => {
 
 // 打开用户对话框
 const openUserDialog = (user = null) => {
+  // 检查权限
+  if (!checkAuth()) return
+
   resetUserForm()
   if (user) {
     Object.assign(userForm, {
@@ -330,6 +400,9 @@ const resetUserForm = () => {
 
 // 保存用户
 const saveUser = async () => {
+  // 先检查token
+  if (!checkAuth()) return
+
   if (!userFormRef.value) return
 
   try {
@@ -337,6 +410,7 @@ const saveUser = async () => {
     saveLoading.value = true
 
     if (isEditMode.value) {
+      // 编辑用户
       const { password, confirmPassword, ...editData } = userForm
       const res = await request.put(`/api/system-admin/users/${userForm.userId}`, editData)
       if (res.code === 200) {
@@ -344,20 +418,35 @@ const saveUser = async () => {
         userDialogVisible.value = false
         fetchUsers()
       } else {
+        if (res.code === 401) {
+          handleTokenExpired()
+          return
+        }
         ElMessage.error(res.msg || '用户更新失败')
       }
     } else {
+      // 新增用户
       const res = await request.post('/api/system-admin/users', userForm)
       if (res.code === 200) {
         ElMessage.success('用户创建成功')
         userDialogVisible.value = false
         fetchUsers()
       } else {
+        if (res.code === 401) {
+          handleTokenExpired()
+          return
+        }
         ElMessage.error(res.msg || '用户创建失败')
       }
     }
   } catch (err) {
-    if (err.errors) return
+    if (err.errors) {
+      return
+    }
+    if (err.response && err.response.status === 401) {
+      handleTokenExpired()
+      return
+    }
     ElMessage.error(isEditMode.value ? '用户更新失败' : '用户创建失败')
     console.error(err)
   } finally {
@@ -367,6 +456,9 @@ const saveUser = async () => {
 
 // 更改用户状态
 const handleChangeStatus = async (user) => {
+  // 先检查token
+  if (!checkAuth()) return
+
   try {
     const newStatus = user.status === 1 ? 0 : 1
     const action = newStatus === 1 ? '启用' : '禁用'
@@ -380,10 +472,20 @@ const handleChangeStatus = async (user) => {
       ElMessage.success(`用户已${action}`)
       user.status = newStatus
     } else {
+      if (res.code === 401) {
+        handleTokenExpired()
+        return
+      }
       ElMessage.error(res.msg || `${action}用户失败`)
     }
   } catch (err) {
-    if (err === 'cancel') return
+    if (err === 'cancel') {
+      return
+    }
+    if (err.response && err.response.status === 401) {
+      handleTokenExpired()
+      return
+    }
     ElMessage.error('状态更新失败')
     console.error(err)
   }
@@ -391,9 +493,14 @@ const handleChangeStatus = async (user) => {
 
 // 删除用户
 const handleDeleteUser = async (userId) => {
+  // 先检查token
+  if (!checkAuth()) return
+
   try {
     await ElMessageBox.confirm('确定要删除该用户吗？此操作不可恢复。', '警告', {
-      type: 'warning'
+      type: 'warning',
+      confirmButtonText: '确定',
+      cancelButtonText: '取消'
     })
 
     const res = await request.delete(`/api/system-admin/users/${userId}`)
@@ -401,10 +508,20 @@ const handleDeleteUser = async (userId) => {
       ElMessage.success('用户删除成功')
       fetchUsers()
     } else {
+      if (res.code === 401) {
+        handleTokenExpired()
+        return
+      }
       ElMessage.error(res.msg || '用户删除失败')
     }
   } catch (err) {
-    if (err === 'cancel') return
+    if (err === 'cancel') {
+      return
+    }
+    if (err.response && err.response.status === 401) {
+      handleTokenExpired()
+      return
+    }
     ElMessage.error('用户删除失败')
     console.error(err)
   }
@@ -412,10 +529,14 @@ const handleDeleteUser = async (userId) => {
 
 // 打开权限对话框
 const openPermissionDialog = (user) => {
+  // 检查权限
+  if (!checkAuth()) return
+
   userPermissionForm.userId = user.userId
   userPermissionForm.username = user.username
   userPermissionForm.permissions = []
 
+  // 设置当前权限
   if (user.permissions) {
     Object.keys(user.permissions).forEach(key => {
       if (user.permissions[key] === true && key.startsWith('can')) {
@@ -429,6 +550,9 @@ const openPermissionDialog = (user) => {
 
 // 保存用户权限
 const saveUserPermissions = async () => {
+  // 先检查token
+  if (!checkAuth()) return
+
   try {
     const permissionData = {
       userId: userPermissionForm.userId,
@@ -449,9 +573,17 @@ const saveUserPermissions = async () => {
       permissionDialogVisible.value = false
       fetchUsers()
     } else {
+      if (res.code === 401) {
+        handleTokenExpired()
+        return
+      }
       ElMessage.error(res.msg || '用户权限更新失败')
     }
   } catch (err) {
+    if (err.response && err.response.status === 401) {
+      handleTokenExpired()
+      return
+    }
     ElMessage.error('用户权限更新失败')
     console.error(err)
   }
@@ -465,12 +597,12 @@ const saveUserPermissions = async () => {
 }
 
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #e4e7ed;
+}
+
+.header h2 {
+  margin: 0;
+  color: #303133;
 }
 
 .search-bar {
