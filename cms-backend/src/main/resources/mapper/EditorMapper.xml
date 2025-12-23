@@ -45,13 +45,21 @@
 
     <select id="selectUsersByRole" resultType="com.bjfu.cms.entity.User">
         SELECT
-            UserID as userId,         -- 对应实体类的 id
-            Username as username, -- 对应实体类的 username
-            FullName as fullName, -- 数据库里是 FullName，映射到实体类的 realName
+            UserID as userId,
+            Username as username,
+            FullName as fullName,
             Email as email,
-            Role as role
+            Role as role,
+            Affiliation as affiliation,         -- 新增：单位
+            ResearchDirection as researchDirection, -- 新增：研究方向
+            -- 实时计算该审稿人当前未完成的任务数 (Status 不是 Completed 或 Rejected)
+            (SELECT COUNT(*)
+             FROM Review r
+             WHERE r.ReviewerID = Users.UserID
+               AND r.Status NOT IN ('Completed', 'Rejected')) as activeTasks
         FROM Users
-        WHERE Role = 'Reviewer'   -- 注意：数据库 Role 存的是 'Reviewer'，首字母大写
+        WHERE Role = 'Reviewer'
+          AND Status = 1 -- 只查询状态正常（已激活）的审稿人
     </select>
 
     <select id="findUserByRole" resultType="java.lang.Integer">
