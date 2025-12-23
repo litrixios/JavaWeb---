@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLEncoder;
 import java.util.List;
 
 @Tag(name = "审稿人功能模块", description = "审稿人专用的接口")
@@ -76,13 +77,26 @@ public class ReviewerController {
             // 1. 获取匿名文件路径
             String filePath = reviewerService.getAnonymousFilePath(reviewId);
 
-            // 2. 调用文件服务下载文件
-            // 假设 sftpService 提供 downloadFile(String path, HttpServletResponse response) 方法
-            sftpService.download(filePath, localTempPath);
+            // 2. 获取文件名 (从路径中截取)
+            String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
 
-            // 3. 记录下载日志（加分项要求）
+            // 3. 设置响应头
+            response.reset();
+            response.setContentType("application/pdf"); // 如果确定是PDF，否则用 application/octet-stream
+            response.setCharacterEncoding("utf-8");
+            // 设置 Content-Disposition 让浏览器识别文件名
+            response.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, "UTF-8"));
+
+            // 4. 调用文件服务将文件写入 Response 输出流
+            sftpService.downloadToStream(filePath, response.getOutputStream());
+
+            // 5. 记录下载日志（可选）
             // userMapper.insertLog(...)
+
         } catch (Exception e) {
+            // 发生错误时，如果响应未提交，可以返回错误信息
+            // 但由于是 void 方法且涉及流，通常只能打印日志或通过 Header 返回错误
+            e.printStackTrace();
             throw new RuntimeException("文件下载失败：" + e.getMessage());
         }
     }

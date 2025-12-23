@@ -17,9 +17,8 @@ public class TestRunner implements CommandLineRunner {
         System.out.println("--- 开始测试 SFTP ---");
 
 //         1. 上传测试 (请确保本地有这个文件)
-         sftpService.upload("C:/test.txt", "/root");
-
+        sftpService.upload("D:\\Wang 等 - 2024 - User Behavior Simulation with Large Language Model based Agents.pdf", "/root/cms/files");
         // 2. 下载测试 (请确保服务器有这个文件)
-         sftpService.download("/root/test.txt", "D:/");
+//         sftpService.download("/root/test.txt", "D:/");
     }
 }
