@@ -26,6 +26,7 @@ public class IndexController {
     public String indexPage(Model model) {
         // 获取编委数据
         List<Map<String, Object>> editorialBoard = editorialBoardService.getPublicList();
+
         model.addAttribute("editorialBoard", editorialBoard);
 
         // 获取激活的新闻列表

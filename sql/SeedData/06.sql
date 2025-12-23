@@ -1,12 +1,12 @@
-INSERT INTO Editorial_Board (UserID, Position, Introduction, Section,IsVisible)
+INSERT INTO Editorial_Board (UserID, Position, Introduction, Section,IsVisible,PhotoUrl)
 VALUES
-    (2, 'Editor-in-Chief', '清华大学计算机科学与技术学院教授，博士生导师，IEEE Fellow。主要从事人工智能、计算机视觉研究，发表论文200余篇，引用超过10000次。担任多个国际期刊编委，具有丰富的期刊编辑经验。', '人工智能与计算机科学',0),
-    (4, 'Associate Editor', '北京大学人工智能研究院副教授，博士生导师。研究方向包括机器学习、深度学习、自然语言处理。在NeurIPS、ICML、ACL等顶会发表论文50余篇。担任多个国际会议程序委员会委员。', '人工智能与机器学习',0),
-    (5, 'Associate Editor', '中国科学院材料研究所研究员，国家杰出青年科学基金获得者。长期从事纳米材料、功能材料研究，在Advanced Materials、Nature Communications等期刊发表论文100余篇。', '材料科学与工程',0),
-    (8, 'Associate Editor', '浙江大学计算机学院教授，国家优秀青年科学基金获得者。研究方向为计算机视觉、图像处理、模式识别。在CVPR、ICCV、TPAMI等发表多篇论文，担任多个国际期刊审稿人。', '计算机视觉与图像处理',0),
-    (9, 'Associate Editor', '武汉大学信息管理学院副教授，硕士生导师。研究方向为信息检索、文本挖掘、数字图书馆。在SIGIR、WWW、CIKM等会议发表论文30余篇，具有丰富的审稿经验。', '信息科学与技术',0),
-    (3, 'Managing Editor', '期刊管理办公室主任，具有10年期刊管理经验。负责稿件流程管理、作者服务、编委会协调等工作，确保期刊出版流程高效运行。', '编辑部管理',1),
-    (6, 'Associate Editor', '复旦大学计算机科学学院教授，长江学者特聘教授。研究方向为数据挖掘、推荐系统、人工智能。在KDD、WWW、TKDE等发表论文80余篇，引用超过8000次。', '数据挖掘与知识发现',1),
-    (7, 'Associate Editor', '南开大学数学科学学院副教授，硕士生导师。研究方向为计算数学、优化算法、数值分析。在SIAM系列期刊发表论文20余篇，具有扎实的理论基础。', '计算数学与优化',1),
-    (1, 'Technical Editor', '期刊管理系统技术负责人，负责期刊投稿系统的开发与维护。具有丰富的软件开发和系统架构经验，确保系统稳定运行。', '技术支持与管理',1);
+    (2, 'Editor-in-Chief', '清华大学计算机科学与技术学院教授，博士生导师，IEEE Fellow。主要从事人工智能、计算机视觉研究，发表论文200余篇，引用超过10000次。担任多个国际期刊编委，具有丰富的期刊编辑经验。', '人工智能与计算机科学',0,'https://images.pexels.com/photos/3777943/pexels-photo-3777943.jpeg'),
+    (4, 'Associate Editor', '北京大学人工智能研究院副教授，博士生导师。研究方向包括机器学习、深度学习、自然语言处理。在NeurIPS、ICML、ACL等顶会发表论文50余篇。担任多个国际会议程序委员会委员。', '人工智能与机器学习',0,'https://images.unsplash.com/photo-1560250097-0b93528c311a'),
+    (5, 'Associate Editor', '中国科学院材料研究所研究员，国家杰出青年科学基金获得者。长期从事纳米材料、功能材料研究，在Advanced Materials、Nature Communications等期刊发表论文100余篇。', '材料科学与工程',0,'https://images.unsplash.com/photo-1564564244667-61f3a6c71fff'),
+    (8, 'Associate Editor', '浙江大学计算机学院教授，国家优秀青年科学基金获得者。研究方向为计算机视觉、图像处理、模式识别。在CVPR、ICCV、TPAMI等发表多篇论文，担任多个国际期刊审稿人。', '计算机视觉与图像处理',0,'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d'),
+    (9, 'Associate Editor', '武汉大学信息管理学院副教授，硕士生导师。研究方向为信息检索、文本挖掘、数字图书馆。在SIGIR、WWW、CIKM等会议发表论文30余篇，具有丰富的审稿经验。', '信息科学与技术',0,'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg'),
+    (3, 'Managing Editor', '期刊管理办公室主任，具有10年期刊管理经验。负责稿件流程管理、作者服务、编委会协调等工作，确保期刊出版流程高效运行。', '编辑部管理',1,'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e'),
+    (6, 'Associate Editor', '复旦大学计算机科学学院教授，长江学者特聘教授。研究方向为数据挖掘、推荐系统、人工智能。在KDD、WWW、TKDE等发表论文80余篇，引用超过8000次。', '数据挖掘与知识发现',1,'https://images.unsplash.com/photo-1507591064344-4c6ce005b128'),
+    (7, 'Associate Editor', '南开大学数学科学学院副教授，硕士生导师。研究方向为计算数学、优化算法、数值分析。在SIAM系列期刊发表论文20余篇，具有扎实的理论基础。', '计算数学与优化',1,'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg'),
+    (1, 'Technical Editor', '期刊管理系统技术负责人，负责期刊投稿系统的开发与维护。具有丰富的软件开发和系统架构经验，确保系统稳定运行。', '技术支持与管理',1,'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7');
 GO
