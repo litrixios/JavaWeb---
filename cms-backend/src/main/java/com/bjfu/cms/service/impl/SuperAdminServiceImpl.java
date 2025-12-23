@@ -4,16 +4,20 @@ import com.bjfu.cms.common.result.Result;
 import com.bjfu.cms.entity.User;
 import com.bjfu.cms.entity.UserPermission;
 import com.bjfu.cms.entity.dto.AdminUserDTO;
+import com.bjfu.cms.entity.dto.LogQueryDTO;
 import com.bjfu.cms.entity.dto.UserCreateDTO;
 import com.bjfu.cms.mapper.SuperAdminMapper;
 import com.bjfu.cms.mapper.UserMapper;
 import com.bjfu.cms.service.SuperAdminService;
+import com.bjfu.cms.service.LogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class SuperAdminServiceImpl implements SuperAdminService {
@@ -24,10 +28,14 @@ public class SuperAdminServiceImpl implements SuperAdminService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private LogService logService;
+
     @Override
     public Result<List<User>> getAllUsers(AdminUserDTO queryDTO) {
         try {
-            List<User> users = superAdminMapper.selectAllUsersWithPermissions(queryDTO);
+            List<User> users;
+            users = superAdminMapper.selectAllUsersWithPermissions(queryDTO);
             return Result.success(users);
         } catch (Exception e) {
             return Result.error("查询用户列表失败: " + e.getMessage());
@@ -172,15 +180,61 @@ public class SuperAdminServiceImpl implements SuperAdminService {
         }
     }
 
-        @Override
-        public Result<Boolean> checkUsernameExists(String username) {
-            try {
-                int count = superAdminMapper.countByUsername(username);
-                return Result.success(count > 0);
-            } catch (Exception e) {
-                return Result.error("检查用户名失败: " + e.getMessage());
-            }
+    @Override
+    public Result<Boolean> checkUsernameExists(String username) {
+        try {
+            int count = superAdminMapper.countByUsername(username);
+            return Result.success(count > 0);
+        } catch (Exception e) {
+            return Result.error("检查用户名失败: " + e.getMessage());
         }
+    }
+
+    @Override
+    public Result<Map<String, Object>> getSystemLogs(LogQueryDTO queryDTO) {
+        try {
+            Map<String, Object> logData = logService.getLogs(queryDTO);
+            return Result.success(logData);
+        } catch (Exception e) {
+            return Result.error("获取系统日志失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Result<String> clearSystemLogs() {
+        try {
+            boolean success = logService.clearAllLogs();
+            if (success) {
+                return Result.success("日志清空成功");
+            } else {
+                return Result.error("日志清空失败");
+            }
+        } catch (Exception e) {
+            return Result.error("清空日志失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Result<Map<String, Object>> getSystemInfo() {
+        try {
+            // 这里可以添加真实的统计查询逻辑
+            Map<String, Object> systemInfo = new HashMap<>();
+
+            // 模拟数据 - 实际项目中应该从数据库查询
+            systemInfo.put("totalUsers", 150);
+            systemInfo.put("activeUsers", 142);
+            systemInfo.put("totalManuscripts", 89);
+            systemInfo.put("pendingReviews", 23);
+            systemInfo.put("systemVersion", "1.0.0");
+            systemInfo.put("serverTime", System.currentTimeMillis());
+            systemInfo.put("databaseStatus", "正常");
+            systemInfo.put("diskUsage", "45%");
+
+            return Result.success(systemInfo);
+        } catch (Exception e) {
+            return Result.error("获取系统信息失败: " + e.getMessage());
+        }
+    }
 
     /**
      * 根据角色创建默认权限
@@ -202,7 +256,7 @@ public class SuperAdminServiceImpl implements SuperAdminService {
                 permissions.setCanAssignReviewer(true);
                 permissions.setCanViewReviewerIdentity(true);
                 break;
-            case "EditorInchief":
+            case "EditorInChief":
                 permissions.setCanViewAllManuscripts(true);
                 permissions.setCanAssignReviewer(true);
                 permissions.setCanViewReviewerIdentity(true);

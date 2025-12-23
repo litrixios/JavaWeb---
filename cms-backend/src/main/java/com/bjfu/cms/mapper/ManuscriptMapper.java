@@ -2,7 +2,7 @@ package com.bjfu.cms.mapper;
 
 import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.SystemLog;
-import com.bjfu.cms.entity.Version; // 需新建 Version 实体，或直接用 Map 传参，这里建议新建实体
+import com.bjfu.cms.entity.SystemLog;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import java.util.List;

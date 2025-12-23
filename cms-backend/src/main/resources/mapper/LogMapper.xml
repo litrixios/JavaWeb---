@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bjfu.cms.mapper.LogMapper">
+
+    <resultMap id="LogWithOperatorResultMap" type="com.bjfu.cms.entity.Log">
+        <id column="LogID" property="logId"/>
+        <result column="OperationTime" property="operationTime"/>
+        <result column="OperatorID" property="operatorId"/>
+        <result column="operatorName" property="operatorName"/>
+        <result column="operatorFullName" property="operatorFullName"/>
+        <result column="OperationType" property="operationType"/>
+        <result column="ManuscriptID" property="manuscriptId"/>
+        <result column="Description" property="description"/>
+    </resultMap>
+
+    <select id="selectLogsWithOperator" resultMap="LogWithOperatorResultMap">
+        SELECT
+        l.LogID,
+        l.OperationTime,
+        l.OperatorID,
+        u.Username as operatorName,
+        u.FullName as operatorFullName,  <!-- 新增：获取用户全名 -->
+        l.OperationType,
+        l.ManuscriptID,
+        l.Description
+        FROM Logs l
+        LEFT JOIN Users u ON l.OperatorID = u.UserID
+        WHERE 1=1
+        <if test="operationType != null and operationType != ''">
+            AND l.OperationType = #{operationType}
+        </if>
+        <if test="startDate != null">
+            AND l.OperationTime >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND l.OperationTime &lt;= #{endDate}
+        </if>
+        ORDER BY l.OperationTime DESC
+        <if test="pageNum != null and pageSize != null">
+            OFFSET (#{pageNum} - 1) * #{pageSize} ROWS
+            FETCH NEXT #{pageSize} ROWS ONLY
+        </if>
+    </select>
+
+    <select id="countLogs" resultType="int">
+        SELECT COUNT(*)
+        FROM Logs l
+        LEFT JOIN Users u ON l.OperatorID = u.UserID
+        WHERE 1=1
+        <if test="operationType != null and operationType != ''">
+            AND l.OperationType = #{operationType}
+        </if>
+        <if test="startDate != null">
+            AND l.OperationTime >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND l.OperationTime &lt;= #{endDate}
+        </if>
+    </select>
+
+    <delete id="deleteAllLogs">
+        DELETE FROM Logs
+    </delete>
+
+    <insert id="insertLog" parameterType="com.bjfu.cms.entity.Log"
+            useGeneratedKeys="true" keyProperty="logId">
+        INSERT INTO Logs (OperatorID, OperationType, ManuscriptID, Description, OperationTime)
+        VALUES (#{operatorId}, #{operationType}, #{manuscriptId}, #{description}, GETDATE())
+    </insert>
+
+</mapper>

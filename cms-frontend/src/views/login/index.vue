@@ -76,7 +76,6 @@ const handleLogin = async () => {
     console.log('完整的登录响应:', result) // 查看完整的响应结构
 
     if (result.code==200) {
-      ElMessage.success('登录成功')
 
       // 根据实际返回的数据结构调整
       // 后端返回的是 {user: ..., token: ...}，不是 {data: {user: ..., token: ...}}
@@ -85,43 +84,45 @@ const handleLogin = async () => {
 
       console.log('用户数据:', userData)
       console.log('token:', token)
-
-      if (userData && token) {
-        // 保存token和用户信息到本地存储
-        localStorage.setItem('token', token)
-        localStorage.setItem('userInfo', JSON.stringify(userData))
-
-        // 根据用户角色跳转到不同页面
-        const userRole = userData.role
-        console.log('用户角色:', userRole)
-
-        switch (userRole) {
-          case 'SuperAdmin':
-            router.push('/SuperAdmin/superadmin')
-            break
-          case 'SystemAdmin':
-            router.push('/Systemadmin/systemadmin')
-            break
-          case 'Editor':
-            router.push('/editor/my-manuscripts')
-            break
-          case 'Author':
-            router.push('/manuscript/list')
-            break
-          case 'Reviewer':
-            router.push('/eic/reviewer')
-            break
-          case 'EditorialAdmin':
-            router.push('/layout/index')
-            break
-          case 'EditorInChief':
-            router.push('/eic/audit')
-            break
-          default:
-            router.push('/manuscript/list')
+      if(userData.status==1){
+        if (userData && token) {
+          // 保存token和用户信息到本地存储
+          localStorage.setItem('token', token)
+          localStorage.setItem('userInfo', JSON.stringify(userData))
+          ElMessage.success('登录成功')
+          // 根据用户角色跳转到不同页面
+          const userRole = userData.role
+          console.log('用户角色:', userRole)
+          switch (userRole) {
+            case 'SuperAdmin':
+              router.push('/SuperAdmin/superadmin')
+              break
+            case 'SystemAdmin':
+              router.push('/Systemadmin/systemadmin')
+              break
+            case 'Editor':
+              router.push('/editor/my-manuscripts')
+              break
+            case 'Author':
+              router.push('/manuscript/list')
+              break
+            case 'Reviewer':
+              router.push('/eic/reviewer')
+              break
+            case 'EditorialAdmin':
+              router.push('/layout/index')
+              break
+            case 'EditorInChief':
+              router.push('/eic/audit')
+              break
+            default:
+              router.push('/manuscript/list')
+          }
+        } else {
+          ElMessage.error('返回的用户数据为空')
         }
-      } else {
-        ElMessage.error('返回的用户数据为空')
+      }else{
+        ElMessage.error('该用户已被禁用')
       }
     } else {
       ElMessage.error(result.message || '登录失败')
