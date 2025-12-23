@@ -33,6 +33,14 @@ public class ReviewerController {
     private String localTempPath;  // 本地临时目录
 
 
+
+    @Operation(summary = "获取我的审稿任务列表（已接受/已完成）")
+    @GetMapping("/my-reviews")
+    public Result<List<Review>> getMyReviews() {
+        return Result.success(reviewerService.getMyReviews());
+    }
+
+
     @Operation(summary = "查看待处理的审稿邀请列表")
     @GetMapping("/pending-invitations")
     public Result<List<Review>> getPendingInvitations() {

@@ -17,26 +17,65 @@
                 {{ row.manuscriptTitle || '（暂无标题信息/盲审）' }}
               </template>
             </el-table-column>
-            <el-table-column prop="createTime" label="邀请时间" width="180">
+            <el-table-column prop="inviteDate" label="邀请时间" width="180">
               <template #default="{ row }">
-                {{ formatDate(row.createTime) }}
+                {{ formatDate(row.inviteDate || row.createTime) }}
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="250" fixed="right">
+            <el-table-column label="操作" width="180" fixed="right">
               <template #default="{ row }">
-                <el-button type="success" size="small" @click="handleAccept(row)">
-                  接受
-                </el-button>
-                <el-button type="danger" size="small" @click="openRejectDialog(row)">
-                  拒绝
-                </el-button>
+                <el-button type="success" size="small" @click="handleAccept(row)">接受</el-button>
+                <el-button type="danger" size="small" @click="openRejectDialog(row)">拒绝</el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
 
-        <el-tab-pane label="正在审稿 (Processing)" name="PROCESSING">
-          <el-empty description="后端暂未提供获取'已接受任务'的接口，请先实现 backend: getMyActiveReviews" />
+        <el-tab-pane label="我的审稿任务 (My Reviews)" name="MY_REVIEWS">
+          <el-table v-loading="loading" :data="myReviewList" style="width: 100%">
+            <el-table-column prop="reviewId" label="任务ID" width="80" />
+            <el-table-column prop="manuscriptTitle" label="稿件标题" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="status" label="状态" width="120">
+              <template #default="{ row }">
+                <el-tag :type="getStatusTag(row.status)">
+                  {{ getStatusLabel(row.status) }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="deadline" label="截止日期" width="160">
+              <template #default="{ row }">
+                <span :class="{ 'text-danger': isOverdue(row.deadline) }">
+                  {{ formatDate(row.deadline) }}
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="submitTime" label="完成时间" width="160">
+              <template #default="{ row }">
+                {{ row.submitTime ? formatDate(row.submitTime) : '-' }}
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="150" fixed="right">
+              <template #default="{ row }">
+                <el-button
+                    v-if="row.status === 'Accepted'"
+                    type="primary"
+                    size="small"
+                    @click="goReview(row)"
+                >
+                  <el-icon><EditPen /></el-icon> 去审稿
+                </el-button>
+                <el-button
+                    v-else-if="row.status === 'Completed'"
+                    type="info"
+                    size="small"
+                    plain
+                    @click="goReview(row)"
+                >
+                  <el-icon><View /></el-icon> 查看详情
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
         </el-tab-pane>
       </el-tabs>
     </el-card>
@@ -65,29 +104,44 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getPendingInvitations, respondToInvitation } from '@/api/reviewer'
+import { getPendingInvitations, respondToInvitation, getMyReviews } from '@/api/reviewer'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { EditPen, View } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const activeTab = ref('INVITATIONS')
 const loading = ref(false)
 const invitationList = ref([])
+const myReviewList = ref([])
 
 // 拒绝弹窗相关
 const rejectDialogVisible = ref(false)
 const currentReviewId = ref(null)
-const rejectForm = reactive({
-  reason: ''
-})
+const rejectForm = reactive({ reason: '' })
 
-// 格式化时间
+// 工具函数
 const formatDate = (dateStr) => {
   if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleString()
+  return new Date(dateStr).toLocaleDateString()
 }
 
-// 获取邀请列表
-const getInvitations = async () => {
+const getStatusTag = (status) => {
+  const map = { 'Accepted': 'warning', 'Completed': 'success', 'Overdue': 'danger' }
+  return map[status] || 'info'
+}
+
+const getStatusLabel = (status) => {
+  const map = { 'Accepted': '正在审稿', 'Completed': '已完成', 'Overdue': '已逾期' }
+  return map[status] || status
+}
+
+const isOverdue = (deadline) => {
+  if (!deadline) return false
+  return new Date() > new Date(deadline)
+}
+
+// 获取待处理邀请
+const fetchInvitations = async () => {
   loading.value = true
   try {
     const res = await getPendingInvitations()
@@ -99,87 +153,83 @@ const getInvitations = async () => {
   }
 }
 
+// [新增] 获取我的审稿任务
+const fetchMyReviews = async () => {
+  loading.value = true
+  try {
+    const res = await getMyReviews()
+    if (res.code === 200) {
+      myReviewList.value = res.data
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+// Tab 切换逻辑
+const handleTabChange = (name) => {
+  if (name === 'INVITATIONS') {
+    fetchInvitations()
+  } else if (name === 'MY_REVIEWS') {
+    fetchMyReviews()
+  }
+}
+
 // 接受邀请
 const handleAccept = (row) => {
-  ElMessageBox.confirm(
-      `确认接受该稿件的审稿邀请吗？`,
-      '接受邀请',
-      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'info' }
-  ).then(async () => {
+  ElMessageBox.confirm('确认接受该稿件的审稿邀请吗？', '接受邀请', {
+    confirmButtonText: '确定', cancelButtonText: '取消', type: 'info'
+  }).then(async () => {
     try {
-      const res = await respondToInvitation({
-        reviewId: row.reviewId,
-        isAccepted: true
-      })
+      const res = await respondToInvitation({ reviewId: row.reviewId, isAccepted: true })
       if (res.code === 200) {
-        ElMessage.success(res.data || '已接受邀请')
-        getInvitations() // 刷新列表
-        // 如果有"进行中"列表，可以在这里切换 Tab
-        // activeTab.value = 'PROCESSING'
-
-        // 临时逻辑：直接跳转去审稿（因为列表里它会消失）
-        router.push(`/reviewer/process/${row.reviewId}`)
+        ElMessage.success('已接受邀请')
+        fetchInvitations() // 刷新当前列表
+        // 自动跳转到"我的任务"并刷新
+        activeTab.value = 'MY_REVIEWS'
+        fetchMyReviews()
       }
-    } catch (error) {
-      // error handled in request.js
-    }
+    } catch (e) {}
   })
 }
 
-// 打开拒绝弹窗
+// 拒绝逻辑
 const openRejectDialog = (row) => {
   currentReviewId.value = row.reviewId
   rejectForm.reason = ''
   rejectDialogVisible.value = true
 }
 
-// 确认拒绝
 const confirmReject = async () => {
-  if (!rejectForm.reason.trim()) {
-    ElMessage.warning('请填写拒绝理由')
-    return
-  }
+  if (!rejectForm.reason.trim()) return ElMessage.warning('请填写拒绝理由')
   try {
     const res = await respondToInvitation({
-      reviewId: currentReviewId.value,
-      isAccepted: false,
-      reason: rejectForm.reason
+      reviewId: currentReviewId.value, isAccepted: false, reason: rejectForm.reason
     })
     if (res.code === 200) {
-      ElMessage.success('已拒绝该邀请')
+      ElMessage.success('已拒绝邀请')
       rejectDialogVisible.value = false
-      getInvitations()
+      fetchInvitations()
     }
-  } catch (error) {
-    console.error(error)
-  }
+  } catch (e) {}
 }
 
-// 切换 Tab
-const handleTabChange = (name) => {
-  if (name === 'INVITATIONS') {
-    getInvitations()
-  }
-  // else if (name === 'PROCESSING') { getMyActiveReviews() }
-}
-
-// 模拟跳转审稿（给开发测试用，实际应从 Processing 列表跳转）
-const goReview = (id) => {
-  router.push(`/reviewer/process/${id}`)
+// 跳转去审稿页面（如果是已完成，传递 reviewData 供回显）
+const goReview = (row) => {
+  router.push({
+    name: 'ReviewProcess', // 确保你的路由配置里 name 是 ReviewProcess，或者用 path: `/reviewer/process/${row.reviewId}`
+    params: { reviewId: row.reviewId },
+    state: { reviewData: row } // 将当前行数据传递过去，用于详情回显
+  })
 }
 
 onMounted(() => {
-  getInvitations()
+  fetchInvitations()
 })
 </script>
 
 <style scoped>
-.app-container {
-  padding: 20px;
-}
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+.app-container { padding: 20px; }
+.card-header { display: flex; justify-content: space-between; align-items: center; }
+.text-danger { color: #f56c6c; font-weight: bold; }
 </style>

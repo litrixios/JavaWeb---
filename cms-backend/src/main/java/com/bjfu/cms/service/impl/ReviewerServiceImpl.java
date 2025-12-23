@@ -38,6 +38,15 @@ public class ReviewerServiceImpl implements ReviewerService {
     @Value("${file.temp.path}")
     private String localTempPath;  // 本地临时目录
 
+
+
+    @Override
+    public List<Review> getMyReviews() {
+        Integer reviewerId = UserContext.getUserId();
+        // 查询状态为 Accepted (审稿中) 或 Completed (已完成) 的任务
+        return reviewMapper.selectMyReviews(reviewerId);
+    }
+
     @Override
     public List<Review> getPendingInvitations() {
         // 获取当前登录审稿人ID

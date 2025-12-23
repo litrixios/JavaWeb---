@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
 <mapper namespace="com.bjfu.cms.mapper.ReviewMapper">
 
     <resultMap id="ReviewMap" type="com.bjfu.cms.entity.Review">
@@ -10,7 +9,15 @@
         <result property="reviewerID" column="ReviewerID"/>
         <result property="inviteDate" column="InviteDate"/>
         <result property="deadline" column="Deadline"/>
+        <result property="submitTime" column="SubmitTime"/>
         <result property="status" column="Status"/>
+        <result property="score" column="Score"/>
+        <result property="suggestion" column="Suggestion"/>
+        <result property="commentsToAuthor" column="CommentsToAuthor"/>
+        <result property="confidentialComments" column="ConfidentialComments"/>
+
+        <result property="manuscriptTitle" column="Title"/>
+        <result property="manuscriptAbstract" column="Abstract"/>
     </resultMap>
 
     <select id="selectPendingInvitations" resultMap="ReviewMap">
@@ -23,6 +30,19 @@
         ORDER BY r.InviteDate DESC
     </select>
 
+    <select id="selectMyReviews" resultMap="ReviewMap">
+        SELECT r.ReviewID, r.ManuscriptID, r.ReviewerID, r.InviteDate, r.Deadline,
+               r.Status, r.SubmitTime, r.Score, r.Suggestion,
+               m.Title, m.Abstract
+        FROM Review r
+                 LEFT JOIN Manuscript m ON r.ManuscriptID = m.ManuscriptID
+        WHERE r.ReviewerID = #{reviewerId}
+          AND r.Status IN ('Accepted', 'Completed')
+        ORDER BY
+            CASE WHEN r.Status = 'Accepted' THEN 0 ELSE 1 END, -- 优先显示未完成的任务
+            r.Deadline ASC
+    </select>
+
     <select id="selectById" resultMap="ReviewMap">
         SELECT * FROM Review
         WHERE ReviewID = #{reviewId}
@@ -30,33 +50,32 @@
 
     <update id="updateStatus">
         UPDATE Review
-        SET Status = #{status},
-            SubmitTime = GETDATE()
+        SET Status = #{status}
+        <if test="status == 'Accepted'">
+            , StartDate = GETDATE()
+        </if>
         WHERE ReviewID = #{reviewId}
-          AND ReviewerID = #{reviewerId}
-          AND Status = 'Invited'  -- 确保只能更新处于邀请状态的任务
+        AND ReviewerID = #{reviewerId}
     </update>
 
     <update id="updateRejectionReason">
         UPDATE Review
-        SET ConfidentialComments = #{reason}  -- 使用保密意见字段存储拒绝理由
+        SET ConfidentialComments = #{reason}
         WHERE ReviewID = #{reviewId}
     </update>
 
     <update id="updateReviewComments" parameterType="com.bjfu.cms.entity.dto.ReviewSubmitDTO">
-        UPDATE review
-        SET confidential_comments = #{confidentialComments},
-            author_comments = #{authorComments},
-            innovation_score = #{innovationScore},
-            methodology_score = #{methodologyScore},
-            quality_score = #{qualityScore},
-            recommendation = #{recommendation}
-        WHERE review_id = #{reviewId}
+        UPDATE Review
+        SET ConfidentialComments = #{confidentialComments},
+            CommentsToAuthor = #{authorComments},
+            Score = #{qualityScore},  -- 假设使用 qualityScore 作为主要评分
+            Suggestion = #{recommendation}
+        WHERE ReviewID = #{reviewId}
     </update>
 
     <update id="completeReview">
-        UPDATE review SET status = 'Completed', submission_time = #{finishDate}
-        WHERE review_id = #{reviewId}
+        UPDATE Review SET Status = 'Completed', SubmitTime = #{finishDate}
+        WHERE ReviewID = #{reviewId}
     </update>
 
 </mapper>

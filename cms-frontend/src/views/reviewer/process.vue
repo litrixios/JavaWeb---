@@ -2,7 +2,10 @@
   <div class="process-container" v-loading="loading">
     <div class="page-header">
       <el-button icon="ArrowLeft" @click="$router.back()">返回列表</el-button>
-      <span class="title">稿件审阅 (Review ID: {{ reviewId }})</span>
+      <span class="title">
+        稿件审阅 (Review ID: {{ reviewId }})
+        <el-tag v-if="isReadOnly" type="success" effect="dark" style="margin-left: 10px;">已完成</el-tag>
+      </span>
     </div>
 
     <el-row :gutter="20" style="margin-top: 20px;">
@@ -11,9 +14,14 @@
           <template #header>
             <div class="card-header">
               <span>稿件详情 (匿名)</span>
-              <el-button type="primary" link @click="handleDownload">
-                <el-icon><Download /></el-icon> 下载稿件全文
-              </el-button>
+              <el-space>
+                <el-button type="primary" link @click="handleDownload">
+                  <el-icon><Download /></el-icon> 下载PDF
+                </el-button>
+                <el-button type="success" link @click="openPdfViewer">
+                  <el-icon><View /></el-icon> 在线批注
+                </el-button>
+              </el-space>
             </div>
           </template>
 
@@ -21,7 +29,6 @@
             <h3 class="manuscript-title">{{ manuscript.title }}</h3>
             <el-divider content-position="left">摘要</el-divider>
             <p class="abstract-content">{{ manuscript.abstractText || '无摘要内容' }}</p>
-
             <el-divider />
             <div class="meta-info">
               <p><strong>关键词：</strong> {{ manuscript.keywords || '-' }}</p>
@@ -38,7 +45,7 @@
             <span>审稿意见表</span>
           </template>
 
-          <el-form :model="form" ref="reviewFormRef" :rules="rules" label-position="top">
+          <el-form :model="form" ref="reviewFormRef" :rules="rules" label-position="top" :disabled="isReadOnly">
 
             <div class="score-section">
               <el-row :gutter="20">
@@ -63,10 +70,16 @@
             <el-divider />
 
             <el-form-item label="给作者的意见 (Author Comments) - 公开" prop="authorComments">
+              <template #label>
+                <span>给作者的意见 (Author Comments) - 公开 </span>
+                <el-tooltip content="您可以使用左侧的'在线批注'功能自动生成意见" placement="top">
+                  <el-icon><QuestionFilled /></el-icon>
+                </el-tooltip>
+              </template>
               <el-input
                   v-model="form.authorComments"
                   type="textarea"
-                  :rows="6"
+                  :rows="8"
                   placeholder="请详细描述稿件的优缺点，以及修改建议..."
               />
             </el-form-item>
@@ -91,25 +104,53 @@
               </el-radio-group>
             </el-form-item>
 
-            <div class="form-actions">
+            <div class="form-actions" v-if="!isReadOnly">
               <el-button type="primary" size="large" @click="handleSubmit" :loading="submitting">
                 提交审稿意见
               </el-button>
+            </div>
+            <div v-else class="form-actions">
+              <el-alert title="该审稿任务已完成，仅供查看。" type="info" :closable="false" center />
             </div>
 
           </el-form>
         </el-card>
       </el-col>
     </el-row>
+
+    <el-dialog
+        v-model="pdfViewerVisible"
+        title="在线审阅与批注"
+        fullscreen
+        destroy-on-close
+        class="pdf-viewer-dialog"
+    >
+      <div style="height: calc(100vh - 120px); overflow-y: auto; background-color: #f0f2f5;">
+        <PdfAnnotator
+            v-if="pdfBlobUrl"
+            :source="pdfBlobUrl"
+            @update:annotations="handleAnnotationsUpdate"
+        />
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="pdfViewerVisible = false">关闭</el-button>
+          <el-button type="primary" @click="saveAnnotationsToComment" :disabled="isReadOnly">
+            将批注汇总到意见框
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getManuscriptForReview, downloadAnonymousManuscript, submitReview } from '@/api/reviewer'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Download, ArrowLeft } from '@element-plus/icons-vue'
+import { Download, ArrowLeft, View, QuestionFilled } from '@element-plus/icons-vue'
+import PdfAnnotator from '@/components/PdfAnnotator.vue' // 引入我们新建的组件
 
 const route = useRoute()
 const router = useRouter()
@@ -119,6 +160,12 @@ const loading = ref(false)
 const submitting = ref(false)
 const manuscript = ref(null)
 const reviewFormRef = ref(null)
+const isReadOnly = ref(false)
+
+// PDF Viewer 相关状态
+const pdfViewerVisible = ref(false)
+const pdfBlobUrl = ref('')
+const currentAnnotations = ref([])
 
 const form = reactive({
   reviewId: parseInt(reviewId),
@@ -157,11 +204,9 @@ const fetchDetails = async () => {
 const handleDownload = async () => {
   try {
     const blob = await downloadAnonymousManuscript(reviewId)
-    // 创建下载链接
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    // 假设文件名，或者从 response header 获取
     link.setAttribute('download', `Manuscript_${reviewId}_Anonymous.pdf`)
     document.body.appendChild(link)
     link.click()
@@ -170,6 +215,57 @@ const handleDownload = async () => {
   } catch (error) {
     ElMessage.error('下载失败')
   }
+}
+
+// 打开在线查看器
+const openPdfViewer = async () => {
+  loading.value = true
+  try {
+    // 复用下载接口获取 Blob
+    const blob = await downloadAnonymousManuscript(reviewId)
+    // 创建本地 Blob URL 供 PDF.js 读取
+    if (pdfBlobUrl.value) window.URL.revokeObjectURL(pdfBlobUrl.value) // 清理旧的
+    pdfBlobUrl.value = window.URL.createObjectURL(blob)
+    pdfViewerVisible.value = true
+  } catch (error) {
+    ElMessage.error('无法加载PDF文件，请尝试直接下载')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 监听批注更新
+const handleAnnotationsUpdate = (list) => {
+  currentAnnotations.value = list
+}
+
+// 将批注汇总到意见框
+const saveAnnotationsToComment = () => {
+  if (currentAnnotations.value.length === 0) {
+    ElMessage.info('当前没有添加任何批注')
+    return
+  }
+
+  // 生成格式化的文本
+  const summary = currentAnnotations.value
+      .sort((a, b) => {
+        if (a.page !== b.page) return a.page - b.page
+        return a.y - b.y // 同一页按垂直位置排序
+      })
+      .map((note, index) => `${index + 1}. [第 ${note.page} 页] ${note.content}`)
+      .join('\n')
+
+  const separator = '\n\n=== 在线批注汇总 ===\n'
+
+  // 智能追加：如果已经有内容，先换行
+  if (form.authorComments) {
+    form.authorComments += separator + summary
+  } else {
+    form.authorComments = summary
+  }
+
+  ElMessage.success('批注已成功添加到意见输入框中')
+  pdfViewerVisible.value = false
 }
 
 // 提交表单
@@ -199,12 +295,37 @@ const handleSubmit = () => {
   })
 }
 
+// 生命周期钩子
 onMounted(() => {
-  if (reviewId) {
-    fetchDetails()
-  } else {
+  if (!reviewId) {
     ElMessage.error('缺少Review ID')
     router.push('/reviewer/dashboard')
+    return
+  }
+
+  fetchDetails()
+
+  // 历史数据回显逻辑 (只读模式)
+  const historyData = history.state?.reviewData
+  if (historyData && historyData.status === 'Completed') {
+    isReadOnly.value = true
+    // 回显数据
+    form.qualityScore = historyData.score || 0
+    // 假设后端返回的数据结构中有这些字段
+    form.innovationScore = historyData.innovationScore || 0
+    form.methodologyScore = historyData.methodologyScore || 0
+
+    // 兼容不同的字段命名
+    form.authorComments = historyData.commentsToAuthor || historyData.authorComments || ''
+    form.confidentialComments = historyData.confidentialComments || ''
+    form.recommendation = historyData.suggestion || historyData.recommendation || ''
+  }
+})
+
+// 组件销毁时释放内存
+onUnmounted(() => {
+  if (pdfBlobUrl.value) {
+    window.URL.revokeObjectURL(pdfBlobUrl.value)
   }
 })
 </script>
@@ -250,5 +371,10 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   margin-top: 30px;
+}
+/* 覆盖 Dialog 样式 */
+:deep(.pdf-viewer-dialog .el-dialog__body) {
+  padding: 0;
+  margin: 0;
 }
 </style>
