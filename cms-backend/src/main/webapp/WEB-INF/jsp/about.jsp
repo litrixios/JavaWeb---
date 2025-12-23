@@ -9,6 +9,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* 基础样式 */
+        .editor-photo img {
+            width: 100%;
+            height: 100%;
+            border-radius: 100%;
+            object-fit: cover;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -466,7 +472,19 @@
                             <div class="editor-header">
                                 <!-- 添加头像占位符 -->
                                 <div class="editor-photo" style="background: #3498db; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">
-                                        ${editor.FullName.charAt(0)}
+                                    <c:choose>
+                                        <c:when test="${not empty editor.PhotoUrl}">
+                                            <!-- 如果有照片URL，显示照片 -->
+                                            <img src="${editor.PhotoUrl}" alt="${editor.FullName}"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <!-- 备用显示：首字母 -->
+                                            <span style="display: none;">${editor.FullName.charAt(0)}</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <!-- 如果没有照片URL，显示首字母 -->
+                                            <span>${editor.FullName.charAt(0)}</span>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </div>
                                 <div class="editor-info">
                                     <h3>${editor.FullName}</h3>

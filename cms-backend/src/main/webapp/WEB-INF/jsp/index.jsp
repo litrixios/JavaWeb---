@@ -142,12 +142,18 @@
     }
 
     .editor-photo {
-      width: 80px;
-      height: 80px;
+      width: 100px;
+      height: 100px;
       border-radius: 50%;
       object-fit: cover;
-      border: 3px solid #3498db;
-      margin-right: 1rem;
+      /*border: 3px solid #3498db;*/
+      /*margin: 0 auto 1rem;*/
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      color: #7f8c8d;
     }
 
     .editor-info h3 {
@@ -324,7 +330,20 @@
       margin-bottom: 0.8rem;
       font-size: 0.9rem;
     }
-
+    .editor-photo img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #3498db;
+      margin: 0 auto 1rem;
+      background: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      color: white;
+    }
     .cfp-content {
       color: #555;
       line-height: 1.5;
@@ -508,7 +527,19 @@
             <div class="editor-card">
               <div class="editor-header">
                 <div class="editor-photo" style="background: #3498db; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">
-                    ${editor.FullName.charAt(0)}
+                  <c:choose>
+                    <c:when test="${not empty editor.PhotoUrl}">
+                      <!-- 如果有照片URL，显示照片 -->
+                      <img src="${editor.PhotoUrl}" alt="${editor.FullName}"
+                           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                      <!-- 备用显示：首字母 -->
+                      <span style="display: none;">${editor.FullName.charAt(0)}</span>
+                    </c:when>
+                    <c:otherwise>
+                      <!-- 如果没有照片URL，显示首字母 -->
+                      <span>${editor.FullName.charAt(0)}</span>
+                    </c:otherwise>
+                  </c:choose>
                 </div>
                 <div class="editor-info">
                   <h3>${editor.FullName}</h3>

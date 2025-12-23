@@ -3,7 +3,7 @@
 <mapper namespace="com.bjfu.cms.mapper.EditorialBoardMapper">
 
     <select id="selectVisibleForPublic" resultType="map">
-        SELECT b.Position, b.Introduction, b.Section, u.FullName, u.AvatarUrl
+        SELECT b.Position, b.Introduction, b.Section, u.FullName, u.AvatarUrl,b.PhotoUrl
         FROM Editorial_Board b
                  JOIN Users u ON b.UserID = u.UserID
         WHERE b.IsVisible = 1
