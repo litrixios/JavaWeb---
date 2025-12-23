@@ -52,7 +52,33 @@ const routes = [
                 meta: { title: '稿件详情' }
             }
         ]
-    }
+    },
+
+    // ... 其他路由 ...
+
+    // 4. 审稿人功能模块
+    {
+        path: '/reviewer',
+        component: Layout,
+        redirect: '/reviewer/dashboard',
+        meta: { title: '审稿工作台', icon: 'EditPen', roles: ['Reviewer'] }, // 需确保有对应的 Icon
+        children: [
+            {
+                path: 'dashboard',
+                name: 'ReviewerDashboard',
+                component: () => import('@/views/reviewer/dashboard.vue'),
+                meta: { title: '我的审稿任务' }
+            },
+            {
+                path: 'process/:reviewId',
+                name: 'ReviewProcess',
+                component: () => import('@/views/reviewer/process.vue'),
+                meta: { title: '审稿详情', hidden: true }
+            }
+        ]
+    },
+
+    // ...
 ]
 
 const router = createRouter({
