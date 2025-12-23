@@ -30,4 +30,16 @@ public class User {
 
     // 🔥 扩展字段：为了方便业务，把权限对象直接放这里，虽然数据库是分表的
     private UserPermission permissions;
+
+    private Integer activeTasks;
+
+    // 2. 加上你刚才写的这两个方法（Getter/Setter）
+    public Integer getActiveTasks() {
+        return activeTasks;
+    }
+
+    public void setActiveTasks(Integer activeTasks) {
+        this.activeTasks = activeTasks;
+    }
+
 }
