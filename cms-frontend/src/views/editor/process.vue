@@ -37,16 +37,51 @@
     <el-card style="margin-top: 20px">
       <h3>1. 指派审稿人</h3>
       <div style="display: flex; align-items: center; gap: 15px;">
-        <el-select v-model="selectedReviewers" multiple placeholder="请选择审稿人" style="width: 400px">
-          <el-option
-              v-for="r in reviewerOptions"
-              :key="r.id"
-              :label="r.name"
-              :value="r.id"
-          />
-        </el-select>
-        <el-button type="primary" @click="handleInvite">发送邀请</el-button>
+        <el-button type="primary" plain @click="reviewerDialogVisible = true">
+          <el-icon style="margin-right: 5px"><Search /></el-icon> 选择并添加审稿人
+        </el-button>
+
+        <div v-if="selectedReviewers.length > 0" style="flex: 1">
+          <span style="font-size: 14px; color: #909399; margin-right: 10px;">已选择:</span>
+          <el-tag
+              v-for="id in selectedReviewers"
+              :key="id"
+              closable
+              @close="removeReviewer(id)"
+              style="margin-right: 8px"
+          >
+            {{ getReviewerName(id) }}
+          </el-tag>
+        </div>
+
+        <el-button type="primary" @click="handleInvite" :disabled="selectedReviewers.length === 0">发送邀请</el-button>
       </div>
+
+      <el-dialog v-model="reviewerDialogVisible" title="选择审稿人 (基于专业领域与负载)" width="850px">
+        <el-table
+            :data="reviewerOptions"
+            @selection-change="handleSelectionChange"
+            border
+            stripe
+            max-height="450"
+        >
+          <el-table-column type="selection" width="55" />
+          <el-table-column label="姓名" prop="name" width="120" />
+          <el-table-column label="所属单位" prop="affiliation" show-overflow-tooltip />
+          <el-table-column label="研究方向" prop="researchDirection" show-overflow-tooltip />
+          <el-table-column label="在审任务" prop="activeTasks" width="100" align="center">
+            <template #default="scope">
+              <el-tag :type="scope.row.activeTasks > 3 ? 'danger' : 'success'">
+                {{ scope.row.activeTasks || 0 }} 篇
+              </el-tag>
+            </template>
+          </el-table-column>
+        </el-table>
+        <template #footer>
+          <el-button @click="reviewerDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmReviewers">确定选择</el-button>
+        </template>
+      </el-dialog>
     </el-card>
 
     <el-card style="margin-top: 20px">
@@ -123,6 +158,8 @@ const mid = route.query.id // 获取地址栏 ?id=xxx
 
 // 1. 数据状态定义
 const manuscriptDetail = ref({})
+const reviewerDialogVisible = ref(false)
+const tempSelection = ref([]) // 弹窗临时的勾选记录
 const reviewerOptions = ref([])
 const selectedReviewers = ref([])
 const chatHistory = ref([])
@@ -166,14 +203,41 @@ const fetchReviewers = async () => {
     })
     const result = await res.json()
     if (result.code === 200) {
-      // 核心修复：确保 ID 唯一且为数字，Name 使用全名
+      // 映射后端新加的字段：affiliation, researchDirection, activeTasks
       reviewerOptions.value = result.data.map(user => ({
         id: Number(user.userId || user.id),
-        name: user.fullName || user.realName || user.username
+        name: user.fullName || user.username,
+        affiliation: user.affiliation || '未填写',
+        researchDirection: user.researchDirection || '未填写',
+        activeTasks: user.activeTasks || 0
       }))
     }
   } catch (e) { ElMessage.error("审稿人加载失败") }
 }
+
+// 监听弹窗内表格的勾选
+const handleSelectionChange = (val) => {
+  tempSelection.value = val;
+};
+
+// 弹窗点击“确定选择”
+const confirmReviewers = () => {
+  // 将勾选的人员 ID 合并到已选列表中（去重）
+  const newIds = tempSelection.value.map(item => item.id);
+  selectedReviewers.value = [...new Set([...selectedReviewers.value, ...newIds])];
+  reviewerDialogVisible.value = false;
+};
+
+// 获取姓名用于 Tag 标签展示
+const getReviewerName = (id) => {
+  const reviewer = reviewerOptions.value.find(r => r.id === id);
+  return reviewer ? reviewer.name : id;
+};
+
+// 点击标签上的 x 移除审稿人
+const removeReviewer = (id) => {
+  selectedReviewers.value = selectedReviewers.value.filter(item => item !== id);
+};
 
 const fetchChatHistory = async () => {
   const res = await fetch(`http://localhost:8080/api/message/history/${mid}`, {
