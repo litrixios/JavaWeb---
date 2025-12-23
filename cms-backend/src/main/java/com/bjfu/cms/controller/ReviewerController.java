@@ -57,12 +57,15 @@ public class ReviewerController {
     @Operation(summary = "接受/拒绝审稿邀请")
     @PostMapping("/invitation/respond")
     public Result<String> respondToInvitation(@RequestBody ReviewInvitationResponseDTO dto) {
+        System.out.println(dto);
         if (dto.isAccepted()) {
             reviewerService.acceptInvitation(dto.getReviewId());
             return Result.success("审稿任务已接受，截止日期：" + reviewerService.getDeadline(dto.getReviewId()));
         } else {
-            if (dto.getReason() == null || dto.getReason().trim().isEmpty()) {
-                return Result.error("拒绝审稿必须填写理由");
+            if (!dto.isAccepted()) {
+                if (dto.getReason() == null || dto.getReason().trim().isEmpty()) {
+                    return Result.error("拒绝审稿必须填写理由");
+                }
             }
             reviewerService.rejectInvitation(dto.getReviewId(), dto.getReason());
             return Result.success("已拒绝审稿邀请");
