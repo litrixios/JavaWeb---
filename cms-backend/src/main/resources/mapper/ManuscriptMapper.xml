@@ -61,12 +61,17 @@
         WHERE ManuscriptID = #{manuscriptId}
     </update>
 
-
-    <update id="updateCurrentEditorAndStatus">
+    <!-- 新增：撤稿更新操作，包含所有必要字段 -->
+    <update id="updateRetractManuscript">
         UPDATE Manuscript
-        SET CurrentEditorID = #{editorId},
-            Status = #{status},
-            SubStatus = #{subStatus}
+        SET Status = #{status},
+            SubStatus = #{subStatus},
+            Decision = #{decision},
+            DecisionTime = GETDATE(),
+            RetractTime = #{retractTime},
+            RetractByUserID = #{retractByUserId},
+            RetractReason = #{retractReason},
+            RetractType = #{retractType}
         WHERE ManuscriptID = #{manuscriptId}
     </update>
 
@@ -87,21 +92,18 @@
         SELECT * FROM Manuscript WHERE ManuscriptID = #{id}
     </select>
 
-    <select id="selectAllManuscripts" resultMap="ManuscriptMap">
-        SELECT * FROM Manuscript
+    <select id="selectAllManuscripts" resultType="com.bjfu.cms.entity.Manuscript">
+        SELECT m.*, u.FullName as AuthorName
+        FROM Manuscript m
+        LEFT JOIN Users u ON m.AuthorID = u.UserID
         <where>
             <if test="status != null and status != ''">
-                AND Status = #{status}
+                m.Status = #{status}
             </if>
         </where>
-        ORDER BY SubmissionTime DESC
+        ORDER BY m.SubmissionTime DESC
     </select>
 
-    <update id="updateStatus">
-        UPDATE Manuscript
-        SET Status = #{status}, SubStatus = #{subStatus}
-        WHERE ManuscriptID = #{id}
-    </update>
 
     <update id="updateCurrentEditor">
         UPDATE Manuscript
@@ -110,25 +112,46 @@
         WHERE ManuscriptID = #{manuscriptId}
     </update>
 
+    <!-- 添加 selectByPrimaryKey 方法 -->
+    <select id="selectByPrimaryKey" resultMap="ManuscriptMap">
+        SELECT * FROM Manuscript WHERE ManuscriptID = #{manuscriptId}
+    </select>
+
     <update id="updateFinalDecision">
         UPDATE Manuscript
         SET Decision = #{decision},
             Status = #{status},
             SubStatus = #{subStatus},
-            DecisionTime = #{decisionTime},
-            EditorSummaryReport = #{editorSummary}
-        WHERE ManuscriptID = #{id}
+            DecisionTime = #{finalDecisionDate},
+            EditorSummaryReport = #{comments}
+        WHERE ManuscriptID = #{manuscriptId}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE Manuscript
+        SET Status = #{status},
+            SubStatus = #{subStatus}
+        WHERE ManuscriptID = #{manuscriptId}
+    </update>
+
+    <update id="updateCurrentEditorAndStatus">
+        UPDATE Manuscript
+        SET CurrentEditorID = #{editorId},
+            Status = #{status},
+            SubStatus = #{subStatus}
+        WHERE ManuscriptID = #{manuscriptId}
     </update>
 
     <update id="updateManuscriptSpecial">
         UPDATE Manuscript
-        SET Status = #{status}, SubStatus = #{subStatus}
-        WHERE ManuscriptID = #{id}
+        SET Status = #{status},
+            SubStatus = #{subStatus}
+        WHERE ManuscriptID = #{manuscriptId}
     </update>
 
     <insert id="insertLog">
         INSERT INTO Logs (OperationTime, OperatorID, OperationType, ManuscriptID, Description)
-        VALUES (#{time}, #{operatorId}, #{type}, #{manuscriptId}, #{description})
+        VALUES (#{operationTime}, #{operatorId}, #{operationType}, #{manuscriptId}, #{description})
     </insert>
 
     <select id="selectTechCheckManuscripts" resultMap="ManuscriptMap">
