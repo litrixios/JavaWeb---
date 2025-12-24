@@ -442,7 +442,7 @@
           <el-radio-group v-model="finalDecisionForm.decision">
             <el-radio label="Accept">录用</el-radio>
             <el-radio label="Reject">拒稿</el-radio>
-            <el-radio label="Revise">修改后录用</el-radio>
+            <el-radio label="Revise">需要修改</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="决策理由" required>
