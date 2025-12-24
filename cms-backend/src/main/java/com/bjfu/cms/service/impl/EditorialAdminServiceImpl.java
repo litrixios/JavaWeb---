@@ -12,12 +12,16 @@ import com.bjfu.cms.mapper.UserMapper;
 import com.bjfu.cms.service.EmailService;
 import com.bjfu.cms.service.EditorialAdminService;
 import com.bjfu.cms.service.SftpService;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -64,7 +68,7 @@ public class EditorialAdminServiceImpl implements EditorialAdminService {
         // 更新稿件状态
         if (dto.getPassed()) {
             // 形式审查通过，进入下一阶段
-            manuscriptMapper.updateStatus(dto.getManuscriptId(), "Processing", "PendingAssign");
+            manuscriptMapper.updateStatus(dto.getManuscriptId(), "Processing", "PendingDeskReview");
         } else {
             // 形式审查不通过，调用退回修改方法
             unsubmitManuscript(dto);
@@ -177,6 +181,51 @@ public class EditorialAdminServiceImpl implements EditorialAdminService {
     // 查重模拟方法（实际需替换为真实查重逻辑）
     private double checkPlagiarism(String localFilePath) {
         // 示例：随机返回0-15%的查重率
-        return Math.random() * 0.15;
+        return Math.random() * 0.30;
     }
+
+    @Override
+    public void previewLatestPdf(Integer manuscriptId, HttpServletResponse response) {
+        // 1) 校验稿件存在性 —— 复用 getTechCheckFileAnalysis 的逻辑
+        Manuscript manuscript = manuscriptMapper.selectById(manuscriptId);
+        if (manuscript == null) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        // 2) 获取最新版本的OriginalFilePath —— 与 getTechCheckFileAnalysis 一致
+        String remoteFilePath = manuscriptMapper.selectLatestOriginalFilePath(manuscriptId);
+        if (remoteFilePath == null || remoteFilePath.isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        // 3) 只允许PDF预览（避免把doc等当pdf预览）
+        if (!remoteFilePath.toLowerCase().endsWith(".pdf")) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        // 4) 设置响应头：inline 预览
+        String fileName = remoteFilePath.substring(remoteFilePath.lastIndexOf("/") + 1);
+        String encoded = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
+
+        response.setContentType("application/pdf");
+        response.setCharacterEncoding("utf-8");
+        response.setHeader("Content-Disposition",
+                "inline; filename=\"" + fileName + "\"; filename*=UTF-8''" + encoded);
+        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("X-Content-Type-Options", "nosniff");
+
+        // 5) SFTP -> HTTP 输出流（不落地）
+        try (ServletOutputStream out = response.getOutputStream()) {
+            sftpService.downloadToStream(remoteFilePath, out);
+            out.flush();
+        } catch (Exception e) {
+            // 这里不要再往response写JSON，否则会污染PDF响应
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }
