@@ -14,6 +14,7 @@
       <el-table-column prop="manuscriptId" label="稿件ID" width="100" />
       <el-table-column prop="title" label="标题"  />
       <el-table-column prop="keywords" label="关键词"  />
+      <el-table-column prop="fundingInfo" label="项目资助情况"  />
       <el-table-column prop="authorList" label="作者" width="200" />
       <el-table-column label="提交时间" width="190">
         <template #default="{ row }">
