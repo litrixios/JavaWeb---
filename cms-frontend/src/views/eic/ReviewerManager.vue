@@ -37,7 +37,7 @@
                 v-if="scope.row.status === 0"
                 type="success"
                 size="small"
-                @click="auditReviewer(scope.row.userId, 1)"
+                @click="handleAudit(scope.row.userId, 1)"
             >
               批准
             </el-button>
@@ -45,7 +45,7 @@
                 v-if="scope.row.status === 0"
                 type="warning"
                 size="small"
-                @click="auditReviewer(scope.row.userId, 2)"
+                @click="handleAudit(scope.row.userId, 2)"
             >
               拒绝
             </el-button>
@@ -86,7 +86,7 @@
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="form.email" placeholder="例如：wangwu@example.com" />
         </el-form-item>
-        <el-form-item label="单位" prop="Affiliation">
+        <el-form-item label="单位" prop="affiliation">
           <el-input v-model="form.affiliation" placeholder="例如：北京大学" />
         </el-form-item>
         <el-form-item label="研究领域" prop="researchDirection">
@@ -225,13 +225,13 @@ const submitInvite = async () => {
   }
 }
 
-// 6. 审核审稿人
-const auditReviewerAction = async (userId, status) => {
+// 6. 审核审稿人 - 实时更新版本
+const handleAudit = async (userId, status) => {
   try {
     const action = status === 1 ? '批准' : '拒绝'
     const confirmMessage = status === 1
-        ? `确定要批准用户ID为${userId}的审稿人吗？`
-        : `确定要拒绝用户ID为${userId}的审稿人吗？`
+        ? `确定要批准该审稿人吗？`
+        : `确定要拒绝该审稿人吗？`
 
     await ElMessageBox.confirm(confirmMessage, '确认操作', {
       confirmButtonText: '确定',
@@ -239,10 +239,28 @@ const auditReviewerAction = async (userId, status) => {
       type: 'warning'
     })
 
+    // 发送审核请求
     const res = await auditReviewer(userId, status)
     if (res.code === 200) {
       ElMessage.success(`${action}成功`)
-      fetchData()
+
+      // 实时更新当前列表中的数据，而不是重新获取整个列表
+      const index = reviewerList.value.findIndex(item => item.userId === userId)
+      if (index !== -1) {
+        // 直接更新状态
+        reviewerList.value[index].status = status
+
+        // 如果是批准操作，还可以更新其他可能的信息
+        if (status === 1 && res.data) {
+          // 如果后端返回了更新后的完整数据，可以合并更新
+          Object.assign(reviewerList.value[index], res.data)
+        }
+
+        // 强制触发响应式更新
+        reviewerList.value = [...reviewerList.value]
+      }
+    } else {
+      ElMessage.error(res.msg || '操作失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
@@ -258,12 +276,18 @@ const onRemoveClick = (row) => {
     cancelButtonText: '取消',
     inputPattern: /\S/,
     inputErrorMessage: '理由不能为空'
-  }).then(async ({ value }) => {
+  }).then(async ({value}) => {
     try {
       const res = await removeReviewer(row.userId, value)
       if (res.code === 200) {
         ElMessage.success('已移除')
-        fetchData()
+
+        // 实时更新：找到对应审稿人并更新状态为2（已移除）
+        const index = reviewerList.value.findIndex(item => item.userId === row.userId)
+        if (index !== -1) {
+          reviewerList.value[index].status = 2
+          reviewerList.value = [...reviewerList.value]
+        }
       }
     } catch (error) {
       ElMessage.error(error.message || '系统错误')
