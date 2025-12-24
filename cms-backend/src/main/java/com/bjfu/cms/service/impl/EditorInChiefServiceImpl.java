@@ -34,23 +34,63 @@ public class EditorInChiefServiceImpl implements EditorInChiefService {
     public Map<String, Integer> getManuscriptStatistics() {
         Map<String, Integer> stats = new HashMap<>();
 
-        // 统计不同状态的稿件数量
+        // 获取所有稿件
         List<Manuscript> allManuscripts = manuscriptMapper.selectAllManuscripts(null);
 
-        // 按状态分组计数
-        Map<String, Long> countByStatus = allManuscripts.stream()
-                .collect(Collectors.groupingBy(Manuscript::getStatus, Collectors.counting()));
+        // 初始化计数器
+        int pendingDeskReviewCount = 0;  // 待初审
+        int pendingAssignCount = 0;      // 待分配
+        int withEditorCount = 0;         // 编辑处理中
+        int underReviewCount = 0;        // 正在审稿
+        int revisionCount = 0;           // 需要修改
+        int decidedCount = 0;            // 已有决定
 
-        // 转换为Integer类型
-        countByStatus.forEach((status, count) -> stats.put(status, count.intValue()));
+        // 只统计前端需要的6个状态
+        for (Manuscript manuscript : allManuscripts) {
+            String status = manuscript.getStatus();
+            String subStatus = manuscript.getSubStatus();
 
-        // 计算平均审稿时间（如果有决策时间）
+            // 1. 待初审：status='Processing' and subStatus='PendingDeskReview'
+            if ("Processing".equals(status) && "PendingDeskReview".equals(subStatus)) {
+                pendingDeskReviewCount++;
+            }
+            // 2. 待分配：status='Processing' and subStatus='PendingAssign'
+            else if ("Processing".equals(status) && "PendingAssign".equals(subStatus)) {
+                pendingAssignCount++;
+            }
+            // 3. 编辑处理中：status='Processing' and subStatus='WithEditor'
+            else if ("Processing".equals(status) && "WithEditor".equals(subStatus)) {
+                withEditorCount++;
+            }
+            // 4. 正在审稿：status='Processing' and subStatus='UnderReview'
+            else if ("Processing".equals(status) && "UnderReview".equals(subStatus)) {
+                underReviewCount++;
+            }
+            // 5. 需要修改：status='Revision'
+            else if ("Revision".equals(status)) {
+                revisionCount++;
+            }
+            // 6. 已有决定：status='Decided'
+            else if ("Decided".equals(status)) {
+                decidedCount++;
+            }
+        }
+
+        // 只放入前端需要的6个状态和平均审稿天数
+        stats.put("PendingDeskReview", pendingDeskReviewCount);  // 待初审
+        stats.put("PendingAssign", pendingAssignCount);          // 待分配
+        stats.put("WithEditor", withEditorCount);                // 编辑处理中
+        stats.put("UnderReview", underReviewCount);              // 正在审稿
+        stats.put("Revision", revisionCount);                    // 需要修改
+        stats.put("Decided", decidedCount);                      // 已有决定
+
+        // 计算平均审稿时间
         if (!allManuscripts.isEmpty()) {
             double avgReviewDays = allManuscripts.stream()
                     .filter(m -> m.getDecisionTime() != null && m.getSubmissionTime() != null)
                     .mapToLong(m -> {
                         long diff = m.getDecisionTime().getTime() - m.getSubmissionTime().getTime();
-                        return diff / (1000 * 60 * 60 * 24); // 转换为天数
+                        return diff / (1000 * 60 * 60 * 24);
                     })
                     .average()
                     .orElse(0.0);
