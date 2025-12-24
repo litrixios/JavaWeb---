@@ -128,7 +128,7 @@ CREATE TABLE Review (
                         ReviewerID INT NOT NULL,                    -- �����ID (���)
                         CommentsToAuthor NVARCHAR(MAX),             -- �����ߵĹ������
                         ConfidentialComments NVARCHAR(MAX),         -- ���༭�ı������
-                        Score INT,                                  -- ��� (���� 1-5 ��)
+                        Score DECIMAL(3, 1),                                  -- ��� (���� 1-5 ��)
                         Suggestion NVARCHAR(50),                    -- ���� (Accept, Minor Revision, Major Revision, Reject)
                         InviteDate DATETIME DEFAULT GETDATE(),      -- ��������
                         Deadline DATETIME,                          -- ��ֹ����
