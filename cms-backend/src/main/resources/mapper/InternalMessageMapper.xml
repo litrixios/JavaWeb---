@@ -56,6 +56,17 @@
         ORDER BY m.SendTime ASC
     </select>
 
+    <select id="selectAllMessagesForUser" resultMap="MessageMap">
+        SELECT
+            m.*,
+            sender.FullName AS SenderName,
+            sender.Role AS SenderRole
+        FROM InternalMessage m
+                 LEFT JOIN Users sender ON m.SenderID = sender.UserID
+        WHERE m.ReceiverID = #{userId} OR m.SenderID = #{userId}
+        ORDER BY m.SendTime DESC
+    </select>
+
     <select id="selectByTypeAndReceiver" resultMap="MessageMap">
         SELECT
             m.*,

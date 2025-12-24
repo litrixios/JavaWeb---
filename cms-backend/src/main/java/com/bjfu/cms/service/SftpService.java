@@ -10,7 +10,6 @@ import java.util.Properties;
 @Service
 public class SftpService {
 
-
     @Value("${aliyun.ecs.ip}")
     private String host;
 
@@ -23,12 +22,11 @@ public class SftpService {
     @Value("${aliyun.ecs.port}")
     private int port;
 
-    //注入远程目录配置
     @Value("${aliyun.ecs.remote-dir}")
     private String remoteBaseDir;
-    @Value("${file.temp.path}")
-    private String localTempPath;  // 本地临时目录
 
+    @Value("${file.temp.path}")
+    private String localTempPath;
 
     // 获取连接
     private ChannelSftp connect() throws JSchException {
@@ -47,33 +45,73 @@ public class SftpService {
     }
 
     /**
-     * 上传文件
+     * [修改] 上传文件
+     * 逻辑更新：如果远程目录不存在，则自动递归创建，而不是直接报错返回
      * @param localPath 本地文件绝对路径
-     * @param remoteDir 服务器目标目录 (如 /root)
+     * @param remoteDir 服务器目标目录 (如 /root/data)
      */
     public void upload(String localPath, String remoteDir) {
         ChannelSftp sftp = null;
         try {
             sftp = connect();
-            try { sftp.cd(remoteDir); } catch (SftpException e) {
-                // 如果目录不存在，这里可以做创建目录的逻辑，或者报错
-                System.err.println("目录不存在: " + remoteDir);
-                return;
+
+            // --- 修改开始 ---
+            try {
+                // 尝试进入目录
+                sftp.cd(remoteDir);
+            } catch (SftpException e) {
+                // 如果目录不存在 (或其他进入失败原因)，尝试递归创建该目录
+                // createRemoteDir 内部逻辑会最终 cd 到该目录
+                createRemoteDir(sftp, remoteDir);
             }
+            // --- 修改结束 ---
+
             File file = new File(localPath);
+            // 此时 sftp 已经位于 remoteDir 目录下
             sftp.put(new FileInputStream(file), file.getName());
-            System.out.println("✅ 上传成功: " + file.getName());
+            System.out.println("✅ 上传成功: " + remoteDir + "/" + file.getName());
         } catch (Exception e) {
             e.printStackTrace();
+            // 建议抛出运行时异常以便上层捕获
+            throw new RuntimeException("文件上传失败: " + e.getMessage());
         } finally {
             close(sftp);
         }
     }
 
     /**
+     * 递归创建远程目录 (辅助方法)
+     * 该方法会逐级检查目录，不存在则创建，并且最终会停留在 remoteDir 目录下
+     */
+    private void createRemoteDir(ChannelSftp sftp, String remoteDir) throws SftpException {
+        // 处理路径分隔符，防止双斜杠
+        String path = remoteDir.replaceAll("//", "/");
+        if (remoteDir.startsWith("/")) {
+            // 如果是绝对路径，先回退到根目录，防止相对路径叠加错误
+            sftp.cd("/");
+        }
+
+        String[] dirs = path.split("/");
+        for (String dir : dirs) {
+            if (dir == null || dir.trim().isEmpty()) continue;
+
+            try {
+                sftp.cd(dir);
+            } catch (SftpException e) {
+                // 进入失败，尝试创建
+                try {
+                    sftp.mkdir(dir);
+                    sftp.cd(dir);
+                } catch (SftpException ex) {
+                    System.err.println("创建目录失败: " + dir);
+                    throw ex;
+                }
+            }
+        }
+    }
+
+    /**
      * 下载文件
-     * @param remoteFile 服务器文件全路径 (如 /root/test.txt)
-     * @param localDir 本地保存目录
      */
     public void download(String remoteFile, String localDir) {
         ChannelSftp sftp = null;
@@ -81,9 +119,8 @@ public class SftpService {
             sftp = connect();
             String fileName = remoteFile.substring(remoteFile.lastIndexOf("/") + 1);
 
-            // 检查远程文件是否存在
             try {
-                sftp.stat(remoteFile); // 调用stat方法检查文件是否存在
+                sftp.stat(remoteFile);
             } catch (SftpException e) {
                 if (e.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) {
                     throw new FileNotFoundException("远程文件不存在: " + remoteFile);
@@ -101,40 +138,13 @@ public class SftpService {
         }
     }
 
-    private void close(ChannelSftp sftp) {
-        if (sftp != null) {
-            try {
-                if (sftp.isConnected()) sftp.disconnect();
-                if (sftp.getSession() != null) sftp.getSession().disconnect();
-            } catch (Exception e) { e.printStackTrace(); }
-        }
-    }
-
-    // 新增：创建远程目录（支持多级目录）
-    private void createRemoteDir(ChannelSftp sftp, String remoteDir) throws SftpException {
-        String[] dirs = remoteDir.split("/");
-        String currentDir = "";
-        for (String dir : dirs) {
-            if (dir.isEmpty()) continue;
-            currentDir += "/" + dir;
-            try {
-                sftp.cd(currentDir);
-            } catch (SftpException e) {
-                sftp.mkdir(currentDir);
-                sftp.cd(currentDir);
-            }
-        }
-    }
-
-    // 优化上传方法：自动创建目录，支持通过输入流上传
+    // 优化上传方法：通过输入流上传 (保留你原有的重载方法)
     public void upload(InputStream inputStream, String remoteFileName, String remoteDir) {
         ChannelSftp sftp = null;
         try {
             sftp = connect();
-            // 自动创建远程目录（如果不存在）
-            createRemoteDir(sftp, remoteDir);
-            sftp.cd(remoteDir);
-            // 上传文件
+            createRemoteDir(sftp, remoteDir); // 复用创建目录逻辑
+            // 此时已在目标目录
             sftp.put(inputStream, remoteFileName);
             System.out.println("✅ 上传成功: " + remoteDir + "/" + remoteFileName);
         } catch (Exception e) {
@@ -143,14 +153,14 @@ public class SftpService {
         } finally {
             close(sftp);
             try {
-                inputStream.close(); // 关闭输入流
+                inputStream.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    // 新增：删除远程文件
+    // 删除远程文件
     public void deleteRemoteFile(String remoteFilePath) {
         ChannelSftp sftp = null;
         try {
@@ -165,16 +175,11 @@ public class SftpService {
         }
     }
 
-    /**
-     * [新增] 下载文件到输出流（用于Web下载）
-     * @param remoteFile 服务器文件全路径
-     * @param outputStream 响应输出流
-     */
+    // 下载文件到输出流
     public void downloadToStream(String remoteFile, OutputStream outputStream) {
         ChannelSftp sftp = null;
         try {
             sftp = connect();
-            // 检查文件是否存在
             try {
                 sftp.stat(remoteFile);
             } catch (SftpException e) {
@@ -183,7 +188,6 @@ public class SftpService {
                 }
                 throw e;
             }
-            // 将文件内容写入输出流
             sftp.get(remoteFile, outputStream);
             System.out.println("✅ 文件流传输成功: " + remoteFile);
         } catch (Exception e) {
@@ -194,4 +198,12 @@ public class SftpService {
         }
     }
 
+    private void close(ChannelSftp sftp) {
+        if (sftp != null) {
+            try {
+                if (sftp.isConnected()) sftp.disconnect();
+                if (sftp.getSession() != null) sftp.getSession().disconnect();
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+    }
 }

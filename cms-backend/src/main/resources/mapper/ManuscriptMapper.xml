@@ -42,6 +42,21 @@
         ORDER BY SubmissionTime DESC
     </select>
 
+
+    <select id="selectByAuthorId" resultMap="ManuscriptMap">
+        SELECT * FROM Manuscript
+        WHERE AuthorID = #{authorId}
+        ORDER BY SubmissionTime DESC
+    </select>
+
+    <select id="selectByEditorId" resultMap="ManuscriptMap">
+        SELECT * FROM Manuscript
+        WHERE CurrentEditorID = #{editorId}
+        ORDER BY SubmissionTime DESC
+    </select>
+
+
+
     <insert id="insertManuscript" useGeneratedKeys="true" keyProperty="manuscriptId" keyColumn="ManuscriptID">
         INSERT INTO Manuscript
         (AuthorID, Title, Abstract, Keywords, AuthorList, FundingInfo, Status, SubStatus, SubmissionTime)

@@ -260,7 +260,22 @@ const routes = [
                 component: () => import('@/views/editorial-admin/news/form.vue')
             }
         ]
-    }
+    },
+
+    // 【新增】消息中心 (所有人可见)
+    {
+        path: '/message',
+        component: Layout,
+        redirect: '/message/index',
+        children: [
+            {
+                path: 'index',
+                name: 'MessageCenter',
+                component: () => import('@/views/message/index.vue'),
+                meta: { title: '消息中心', icon: 'ChatDotRound' } // 确保图标已在 main.ts 注册或使用 Text
+            }
+        ]
+    },
 
 
 ]

@@ -48,5 +48,9 @@ public class MessageController {
         return Result.success(communicationService.getChatHistory(topic));
     }
 
+    @GetMapping("/list")
+    public Result<List<InternalMessage>> getMyMessages() {
+        return Result.success(communicationService.getMyAllMessages());
+    }
 
 }
