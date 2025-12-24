@@ -182,6 +182,7 @@ const handleAccept = (row) => {
   }).then(async () => {
     try {
       const res = await respondToInvitation({ reviewId: row.reviewId, isAccepted: true })
+      console.log(res)
       if (res.code === 200) {
         ElMessage.success('已接受邀请')
         fetchInvitations() // 刷新当前列表

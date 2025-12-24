@@ -51,11 +51,8 @@
     <update id="updateStatus">
         UPDATE Review
         SET Status = #{status}
-        <if test="status == 'Accepted'">
-            , StartDate = GETDATE()
-        </if>
         WHERE ReviewID = #{reviewId}
-        AND ReviewerID = #{reviewerId}
+          AND ReviewerID = #{reviewerId}
     </update>
 
     <update id="updateRejectionReason">

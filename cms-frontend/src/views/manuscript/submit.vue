@@ -66,8 +66,10 @@
           <el-upload
               class="upload-demo"
               action="/api/common/upload"
+              :headers="uploadHeaders"
               :limit="1"
               :on-success="handleManuscriptSuccess"
+              :on-error="handleUploadError"
               :file-list="manuscriptFileList"
           >
             <el-button type="primary">点击上传 PDF/Word</el-button>
@@ -79,8 +81,10 @@
           <el-upload
               class="upload-demo"
               action="/api/common/upload"
+              :headers="uploadHeaders"
               :limit="1"
               :on-success="handleCoverLetterSuccess"
+              :on-error="handleUploadError"
               :file-list="coverLetterFileList"
           >
             <el-button type="primary">点击上传 Cover Letter</el-button>
@@ -117,6 +121,17 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const formRef = ref(null)
 const isEdit = ref(false) // 这里可以根据路由 query.id 判断是否为编辑模式
+
+// --- 新增代码开始 ---
+const token = localStorage.getItem('token')
+const uploadHeaders = {
+  Authorization: token
+}
+const handleUploadError = (err) => {
+  ElMessage.error('上传失败，请检查登录状态或文件大小')
+  console.error(err)
+}
+// --- 新增代码结束 ---
 
 const form = reactive({
   manuscriptId: null,
@@ -159,17 +174,21 @@ const removeReviewer = (index) => {
   form.recommendedReviewers.splice(index, 1)
 }
 
-// 文件上传回调 (假设后端返回格式 { code: 200, data: "path/to/file" })
+// 文件上传回调
 const handleManuscriptSuccess = (res) => {
   if(res.code === 200) {
     form.originalFilePath = res.data
     ElMessage.success('手稿上传成功')
+  } else {
+    ElMessage.error(res.msg || '手稿上传失败')
   }
 }
 const handleCoverLetterSuccess = (res) => {
   if(res.code === 200) {
     form.coverLetterPath = res.data
     ElMessage.success('Cover Letter 上传成功')
+  } else {
+    ElMessage.error(res.msg || 'Cover Letter 上传失败')
   }
 }
 
@@ -177,7 +196,6 @@ const handleCoverLetterSuccess = (res) => {
 const handleSubmit = async (actionType) => {
   if (!formRef.value) return
 
-  // 如果是保存草稿，可以不校验所有必填项，但这里为了演示，简单处理
   if (actionType === 'SUBMIT') {
     await formRef.value.validate()
   }
@@ -189,7 +207,7 @@ const handleSubmit = async (actionType) => {
 
   const res = await submitManuscript(payload)
   if (res.code === 200) {
-    ElMessage.success(res.data) // "投稿成功" 或 "草稿已保存"
+    ElMessage.success(res.data)
     router.push('/manuscript/list')
   }
 }
