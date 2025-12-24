@@ -95,13 +95,13 @@ const handleLogin = async () => {
 
         switch (userRole) {
           case 'SuperAdmin':
-            router.push('/layout/index')
+            router.push('/SuperAdmin/superadmin')
             break
           case 'SystemAdmin':
-            router.push('/layout/index')
+            router.push('/Systemadmin/systemadmin')
             break
           case 'Editor':
-            router.push('/layout/index')
+            router.push('/editor/my-manuscripts')
             break
           case 'Author':
             router.push('/manuscript/list')
@@ -113,7 +113,7 @@ const handleLogin = async () => {
             router.push('/editorial-admin')
             break
           case 'EditorInChief':
-            router.push('/layout/index')
+            router.push('/eic/audit')
             break
           default:
             router.push('/manuscript/list')
