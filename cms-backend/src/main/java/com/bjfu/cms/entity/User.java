@@ -33,7 +33,6 @@ public class User {
 
     private Integer activeTasks;
 
-    // 2. 加上你刚才写的这两个方法（Getter/Setter）
     public Integer getActiveTasks() {
         return activeTasks;
     }
@@ -41,5 +40,5 @@ public class User {
     public void setActiveTasks(Integer activeTasks) {
         this.activeTasks = activeTasks;
     }
-
+    private Double recommendScore;
 }

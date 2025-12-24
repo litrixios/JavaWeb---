@@ -5,22 +5,26 @@ import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.User;
 import com.bjfu.cms.mapper.EditorMapper;
 import com.bjfu.cms.mapper.ManuscriptMapper; // 确保有这个Mapper
+import com.bjfu.cms.mapper.UserMapper;
 import com.bjfu.cms.service.EditorService;
 import com.bjfu.cms.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.util.FileCopyUtils; // Spring自带的流拷贝工具，非常方便
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 // 确保原有注入的 SftpService 和 ManuscriptMapper 正常
 
 @Service
@@ -45,26 +49,33 @@ public class EditorServiceImpl implements EditorService {
     @Autowired
     private com.bjfu.cms.service.SftpService sftpService;
 
+    @Autowired
+    private UserMapper userMapper; // 注入 UserMapper 用于查询作者和审稿人
+
+
     @Override
-    public void sendRemindMail(Integer reviewId, String content) {
-        // 1. 获取催审详情
+    public void sendRemindMail(Integer manuscriptId, Integer reviewId, String content) {
+        // 1. 获取催审详情 (SQL 中可以增加对 manuscriptId 的匹配校验)
         Map<String, Object> detail = editorMapper.selectReviewDetailForRemind(reviewId);
 
-        if (detail == null || detail.get("email") == null) {
-            throw new RuntimeException("催审失败：未找到审稿人邮箱信息。");
+        if (detail == null) {
+            throw new RuntimeException("催审失败：未找到相关评审任务。");
+        }
+
+        // 校验：确保该评审任务确实属于传入的稿件 ID
+        Integer actualMsId = (Integer) detail.get("manuscript_id");
+        if (actualMsId != null && !actualMsId.equals(manuscriptId)) {
+            throw new RuntimeException("催审失败：稿件与评审任务不匹配。");
         }
 
         String toEmail = (String) detail.get("email");
         String manuscriptTitle = (String) detail.get("title");
 
         // 2. 构建邮件主题
-        String subject = "【催审通知】稿件评审进度提醒：" + manuscriptTitle;
+        String subject = "【催审通知】稿件(ID:" + manuscriptId + ")评审进度提醒：" + manuscriptTitle;
 
-        // 3. 调用你已有的异步发送方法
-        // 注意：content 已经在前端通过模板生成，包含了 HTML 标签
+        // 3. 发送邮件
         emailService.sendHtmlMail(toEmail, null, subject, content);
-
-        System.out.println("催审任务已提交至发送队列，Target: " + toEmail);
     }
 
     @Override
@@ -159,4 +170,59 @@ public class EditorServiceImpl implements EditorService {
             if (localFile.exists()) localFile.delete(); // 清理临时文件
         }
     }
+
+    @Override
+    public List<User> recommendReviewers(Integer msId) {
+        // 1. 获取当前稿件详情（使用你 Mapper 中的 selectById）
+        Manuscript ms = manuscriptMapper.selectById(msId); //
+        if (ms == null) return new ArrayList<>();
+
+        // 2. 获取作者信息以进行机构避嫌
+        User author = userMapper.selectById(ms.getAuthorId()); // 假设 UserMapper 也有 selectById
+        String authorAffiliation = (author != null) ? author.getAffiliation() : "";
+
+        // 3. 处理稿件关键词（分词处理）
+        String[] msKeywords = ms.getKeywords() != null
+                ? ms.getKeywords().split("[;；,，\\s+]")
+                : new String[0];
+
+        // 4. 获取所有待选审稿人（角色为 Reviewer）
+        // 这里会拿到你之前 SQL 算出来的 activeTasks
+        List<User> allReviewers = editorMapper.selectUsersByRole("Reviewer");
+
+        // 5. 算法打分逻辑
+        for (User reviewer : allReviewers) {
+            double score = 0.0;
+
+            // 【机构避嫌】同单位直接排除
+            if (authorAffiliation != null && !authorAffiliation.isEmpty()
+                    && authorAffiliation.equals(reviewer.getAffiliation())) {
+                reviewer.setRecommendScore(-999.0);
+                continue;
+            }
+
+            // 【专业匹配】关键词重合度 (Manuscript.keywords vs User.researchDirection)
+            if (reviewer.getResearchDirection() != null && msKeywords.length > 0) {
+                for (String kw : msKeywords) {
+                    String cleanKw = kw.trim();
+                    if (!cleanKw.isEmpty() && reviewer.getResearchDirection().contains(cleanKw)) {
+                        score += 10.0; // 命中一个词加 10 分
+                    }
+                }
+            }
+
+            // 【负载平衡】在审稿件数越少，分越高 (使用你加的 activeTasks 字段)
+            int tasks = (reviewer.getActiveTasks() != null) ? reviewer.getActiveTasks() : 0; //
+            score -= (tasks * 2.0); // 每多 1 篇扣 2 分
+
+            reviewer.setRecommendScore(score);
+        }
+
+        // 6. 排序并过滤
+        return allReviewers.stream()
+                .filter(r -> r.getRecommendScore() > -100) // 过滤掉被排除的同单位人员
+                .sorted((r1, r2) -> r2.getRecommendScore().compareTo(r1.getRecommendScore()))
+                .collect(Collectors.toList());
+    }
+
 } // 所有的实现方法必须在这个大括号内！

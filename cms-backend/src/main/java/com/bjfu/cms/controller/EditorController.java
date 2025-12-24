@@ -26,6 +26,7 @@ public class EditorController {
     @Autowired
     private EditorService editorService;
 
+
     // --- 新增：获取审稿人列表接口 ---
     @Operation(summary = "查询所有审稿人")
     @GetMapping("/reviewers")
@@ -71,6 +72,14 @@ public class EditorController {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    // 智能推荐审稿人接口
+    @GetMapping("/recommend")
+    public Result<List<User>> getRecommendReviewers(@RequestParam("id") Integer manuscriptId) {
+        // manuscriptId 对应前端传递的 id 参数
+        List<User> list = editorService.recommendReviewers(manuscriptId);
+        return Result.success(list);
     }
 }
 
