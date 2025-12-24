@@ -4,6 +4,8 @@ import com.bjfu.cms.common.result.Result;
 import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.dto.TechCheckAnalysisDTO;
 import com.bjfu.cms.entity.dto.TechCheckDTO;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.List;
 
 public interface EditorialAdminService {
@@ -20,4 +22,6 @@ public interface EditorialAdminService {
      * 获取稿件最新版本文件并进行自动分析
      */
     Result<TechCheckAnalysisDTO> getTechCheckFileAnalysis(Integer manuscriptId);
+
+    void previewLatestPdf(Integer manuscriptId, HttpServletResponse response);
 }
