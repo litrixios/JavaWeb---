@@ -65,7 +65,7 @@
         UPDATE Review
         SET ConfidentialComments = #{confidentialComments},
             CommentsToAuthor = #{authorComments},
-            Score = #{qualityScore},  -- 假设使用 qualityScore 作为主要评分
+            Score = ROUND((#{innovationScore} * 0.3) + (#{methodologyScore} * 0.3) + (#{qualityScore} * 0.4), 1),
             Suggestion = #{recommendation}
         WHERE ReviewID = #{reviewId}
     </update>

@@ -95,7 +95,7 @@ CREATE TABLE Review (
                         ReviewerID INT NOT NULL,                    -- 审稿人ID (外键)
                         CommentsToAuthor NVARCHAR(MAX),             -- 给作者的公开意见
                         ConfidentialComments NVARCHAR(MAX),         -- 给编辑的保密意见
-                        Score INT,                                  -- 打分 (例如 1-5 分)
+                        Score DECIMAL(3, 1),                                  -- 打分 (例如 1-5 分)
                         Suggestion NVARCHAR(50),                    -- 建议 (Accept, Minor Revision, Major Revision, Reject)
                         InviteDate DATETIME DEFAULT GETDATE(),      -- 邀请日期
                         Deadline DATETIME,                          -- 截止日期
