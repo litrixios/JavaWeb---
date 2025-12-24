@@ -7,10 +7,12 @@ import com.bjfu.cms.entity.dto.TechCheckDTO;
 import com.bjfu.cms.service.EditorialAdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/editorial-admin")
@@ -49,4 +51,7 @@ public class EditorialAdminController {
         // 服务层方法已返回 Result<TechCheckAnalysisDTO>，直接返回即可
         return editorialAdminService.getTechCheckFileAnalysis(manuscriptId);
     }
+
+
+
 }
