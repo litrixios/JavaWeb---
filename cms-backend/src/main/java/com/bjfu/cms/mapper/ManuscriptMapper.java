@@ -3,6 +3,7 @@ package com.bjfu.cms.mapper;
 import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.SystemLog;
 import com.bjfu.cms.entity.SystemLog;
+import com.bjfu.cms.entity.dto.ReviewTrackingDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -105,4 +106,7 @@ public interface ManuscriptMapper {
     String selectLatestOriginalFilePath(Integer manuscriptId);
     List<SystemLog> selectLogsByManuscriptId(Integer manuscriptId);
     Manuscript selectManuscriptForReview(@Param("manuscriptId") Integer manuscriptId);
+
+    // 在 ManuscriptMapper 接口中
+    List<ReviewTrackingDTO> selectTrackingWithOpinions(@Param("editorId") Integer editorId);
 }
