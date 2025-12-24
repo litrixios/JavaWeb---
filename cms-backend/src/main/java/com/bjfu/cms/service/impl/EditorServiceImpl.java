@@ -11,6 +11,7 @@ import com.bjfu.cms.service.EditorService;
 import com.bjfu.cms.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,6 +82,30 @@ public class EditorServiceImpl implements EditorService {
                 content,
                 0
         );
+    }
+
+    @Scheduled(cron = "0 0 2 * * ?") // 每天凌晨 2 点执行一次
+    public void autoCheckOverdueReviews() {
+        // 1. 查找逾期正好 7 天且状态为 'Invited' 或 'Accepted' (未完成) 的评审
+        // 这里的逻辑交给 Mapper 去筛选日期
+        List<Map<String, Object>> overdueReviews = editorMapper.selectOverdueSevenDays();
+
+        for (Map<String, Object> review : overdueReviews) {
+            Integer msId = (Integer) review.get("ManuscriptID");
+            Integer rId = (Integer) review.get("ReviewID");
+            String title = (String) review.get("Title");
+
+            String autoContent = "尊敬的审稿人，您负责的稿件《" + title + "》已逾期 7 天，请尽快提交审稿意见。";
+
+            try {
+                // 直接复用你写好的催审方法
+                this.sendRemindMail(msId, rId, autoContent);
+                System.out.println("自动催审已发送：稿件ID " + msId);
+            } catch (Exception e) {
+                // 防止单个失败影响整体扫描
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override

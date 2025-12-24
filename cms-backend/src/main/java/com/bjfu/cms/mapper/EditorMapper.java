@@ -40,4 +40,5 @@ public interface EditorMapper {
     List<User> selectUsersByRole(@Param("role") String role);
     // 4. 提交建议给主编
     void updateRecommendation(Manuscript manuscript);
+    List<Map<String, Object>> selectOverdueSevenDays();
 }

@@ -34,7 +34,7 @@
 
         <el-table-column prop="manuscriptId" label="ID" width="80" />
         <el-table-column prop="title" label="稿件标题" min-width="250" show-overflow-tooltip />
-        <el-table-column label="关键词" width="200">
+        <el-table-column label="关键词" width="400">
           <template #default="scope">
             <el-tag v-for="kw in scope.row.keywords?.split(/[;；,，]/)" :key="kw" size="small" style="margin-right: 5px;">
               {{ kw }}
