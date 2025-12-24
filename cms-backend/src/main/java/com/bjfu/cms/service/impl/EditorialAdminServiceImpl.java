@@ -68,7 +68,7 @@ public class EditorialAdminServiceImpl implements EditorialAdminService {
         // 更新稿件状态
         if (dto.getPassed()) {
             // 形式审查通过，进入下一阶段
-            manuscriptMapper.updateStatus(dto.getManuscriptId(), "Processing", "PendingAssign");
+            manuscriptMapper.updateStatus(dto.getManuscriptId(), "Processing", "PendingDeskReview");
         } else {
             // 形式审查不通过，调用退回修改方法
             unsubmitManuscript(dto);
