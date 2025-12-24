@@ -15,9 +15,6 @@
         <result property="status" column="Status"/>
         <result property="submissionTime" column="SubmissionTime"/>
 
-        <result property="keywords" column="Keywords"/>
-        <result property="authorList" column="AuthorList"/>
-        <result property="fundingInfo" column="FundingInfo"/>
         <result property="currentEditorId" column="CurrentEditorID"/>
         <result property="subStatus" column="SubStatus"/>
         <result property="decision" column="Decision"/>
@@ -55,12 +52,12 @@
     <update id="updateManuscript">
         UPDATE Manuscript
         SET Title = #{title},
-        Abstract = #{abstractText},
-        Keywords = #{keywords},
-        AuthorList = #{authorList},
-        FundingInfo = #{fundingInfo},
-        Status = #{status},
-        SubmissionTime = #{submissionTime}
+            Abstract = #{abstractText},
+            Keywords = #{keywords},
+            AuthorList = #{authorList},
+            FundingInfo = #{fundingInfo},
+            Status = #{status},
+            SubmissionTime = #{submissionTime}
         WHERE ManuscriptID = #{manuscriptId}
     </update>
 
@@ -146,6 +143,7 @@
         WHERE ManuscriptID = #{manuscriptId}
         ORDER BY VersionNumber DESC
     </select>
+
     <resultMap id="LogMap" type="com.bjfu.cms.entity.SystemLog">
         <id property="logId" column="LogID"/>
         <result property="operationTime" column="OperationTime"/>
@@ -161,22 +159,19 @@
             l.*,
             u.UserName as OperatorName
         FROM Logs l
-                 LEFT JOIN User u ON l.OperatorID = u.UserID
+                 LEFT JOIN Users u ON l.OperatorID = u.UserID
         WHERE l.ManuscriptID = #{manuscriptId}
         ORDER BY l.OperationTime DESC
-
     </select>
-    <!-- 定义审稿人专用的resultMap：仅映射需要展示的字段，复用已有实体类属性 -->
+
     <resultMap id="ManuscriptReviewMap" type="com.bjfu.cms.entity.Manuscript">
-        <id property="manuscriptId" column="ManuscriptID"/> <!-- 主键 -->
-        <result property="title" column="Title"/> <!-- 稿件标题 -->
-        <result property="abstractText" column="Abstract"/> <!-- 关键：对应已有实体类的abstractText属性 -->
-        <result property="keywords" column="Keywords"/> <!-- 关键词 -->
-        <result property="authorList" column="AuthorList"/> <!-- 作者列表 -->
-        <!-- 仅保留这几个字段，其他字段自动为null，避免返回敏感数据 -->
+        <id property="manuscriptId" column="ManuscriptID"/>
+        <result property="title" column="Title"/>
+        <result property="abstractText" column="Abstract"/>
+        <result property="keywords" column="Keywords"/>
+        <result property="authorList" column="AuthorList"/>
     </resultMap>
 
-    <!-- 新增：selectManuscriptForReview方法的SQL映射 -->
     <select id="selectManuscriptForReview" resultMap="ManuscriptReviewMap">
         SELECT
             ManuscriptID, Title, Abstract, Keywords, AuthorList

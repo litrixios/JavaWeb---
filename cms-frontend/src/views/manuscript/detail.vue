@@ -7,7 +7,9 @@
           <div v-loading="loading">
             <div class="status-header">
               <h3>{{ manuscript.title }}</h3>
-              <el-tag size="large" :type="statusType">{{ manuscript.status }}</el-tag>
+              <el-tag size="large" :type="statusType">
+                {{ manuscript.subStatus || manuscript.status }}
+              </el-tag>
               <span class="cycle-tip" v-if="trackInfo.estimatedCycle">预计周期: {{ trackInfo.estimatedCycle }}</span>
             </div>
 
@@ -35,7 +37,7 @@
           </div>
         </el-tab-pane>
 
-        <el-tab-pane label="提交修回 (Revision)" name="revision" :disabled="manuscript.status !== 'Need Revision'">
+        <el-tab-pane label="提交修回 (Revision)" name="revision" :disabled="manuscript.status !== 'Revision'">
           <el-form label-width="140px" style="max-width: 800px; margin-top: 20px;">
             <el-alert title="请根据审稿意见上传修改后的文件" type="warning" show-icon :closable="false" style="margin-bottom: 20px;" />
 
@@ -126,7 +128,6 @@ const manuscriptId = route.params.id
 const activeTab = ref(route.query.tab || 'track')
 const loading = ref(false)
 
-// --- 新增代码开始 ---
 const token = localStorage.getItem('token')
 const uploadHeaders = {
   Authorization: token
@@ -135,7 +136,6 @@ const handleUploadError = (err) => {
   ElMessage.error('上传失败，请检查登录状态')
   console.error(err)
 }
-// --- 新增代码结束 ---
 
 // 详情数据
 const manuscript = ref({})
@@ -154,25 +154,39 @@ const revisionForm = reactive({
 const messages = ref([])
 const newMessage = ref('')
 
-// 状态样式
+
+// --- 修正后的状态颜色逻辑 ---
 const statusType = computed(() => {
-  const s = manuscript.value.status
-  if (s === 'Accepted') return 'success'
-  if (s === 'Rejected') return 'danger'
-  if (s === 'Need Revision') return 'warning'
-  return 'primary'
+  // 安全获取 status，如果还没有数据则给空字符串
+  const s = manuscript.value.status || ''
+  const sub = manuscript.value.subStatus || ''
+
+  // 打印日志帮助调试（数据加载回来后你会看到正确的日志）
+  if (s) console.log('当前稿件状态:', s, '子状态:', sub)
+
+  if (s === 'Decided') {
+    return sub === 'Accepted' ? 'success' : 'danger'
+  }
+  if (s === 'Revision') return 'warning'
+  if (s === 'Processing') return 'primary'
+  return 'info'
 })
 
-// 简易进度条映射
+// --- 修正后的进度条逻辑 ---
 const activeStep = computed(() => {
-  const s = manuscript.value.status
+  const s = manuscript.value.status || ''
+
+  // 1. 如果数据还没加载回来 (s 是空)，直接返回 0
   if (!s) return 0
-  if (s.includes('Submit')) return 1
-  if (s.includes('Check') || s.includes('Form')) return 2
-  if (s.includes('Editor') || s.includes('Assign')) return 3
-  if (s.includes('Review')) return 4
-  if (s.includes('Decision') || s.includes('Accept') || s.includes('Reject') || s.includes('Revision')) return 5
-  return 1
+
+  // 2. 匹配逻辑 (完全匹配 SQL 定义)
+  if (s === 'Incomplete') return 0  // 未完成
+  if (s === 'Processing') return 1  // 处理中
+  if (s === 'Revision')   return 2  // 修回中
+  if (s === 'Decided')    return 4  // 已决议 (直接跳到最后一步)
+
+  // 默认 fallback
+  return 0
 })
 
 const formatDate = (str) => {
@@ -181,18 +195,46 @@ const formatDate = (str) => {
 }
 
 // 初始化加载
+// 初始化加载
 const loadData = async () => {
   loading.value = true
   try {
+    console.log(">>> [Debug] 准备请求稿件ID:", manuscriptId)
+
     // 1. 获取详情
     const res = await trackManuscript(manuscriptId)
+
+    console.log(">>> [Debug] 后端返回的完整数据:", res)
+
     if (res.code === 200) {
+      // 检查 res.data 是否存在
+      if (!res.data) {
+        console.error(">>> [Error] res.data 是空的！")
+        return
+      }
+
       trackInfo.value = res.data
-      manuscript.value = res.data.manuscript || {}
+
+      // 重点检查 manuscript 对象
+      if (res.data.manuscript) {
+        manuscript.value = res.data.manuscript
+        console.log(">>> [Debug] 成功获取 manuscript 对象:", manuscript.value)
+        console.log(">>> [Debug] 当前状态 (status):", manuscript.value.status)
+      } else {
+        console.error(">>> [Error] res.data 里没有 manuscript 对象！请检查后端 DTO。")
+        // 为了防止页面报错，保持空对象
+        manuscript.value = {}
+      }
+
       historyLogs.value = res.data.historyLogs || []
+    } else {
+      console.error(">>> [Error] 请求非 200:", res)
     }
+
     // 2. 获取消息历史
     loadMessages()
+  } catch (error) {
+    console.error(">>> [Error] 请求发生异常:", error)
   } finally {
     loading.value = false
   }
@@ -205,7 +247,6 @@ const loadMessages = async () => {
   }
 }
 
-// 提交修回
 const handleRevisionSubmit = async () => {
   if (!revisionForm.markedFilePath || !revisionForm.responseLetterPath) {
     ElMessage.error('请上传标记稿和回复信')
@@ -214,21 +255,17 @@ const handleRevisionSubmit = async () => {
   const res = await submitRevision(revisionForm)
   if (res.code === 200) {
     ElMessage.success('修回提交成功')
-    loadData() // 刷新状态
+    loadData()
     activeTab.value = 'track'
   } else {
     ElMessage.error(res.msg || '修回提交失败')
   }
 }
 
-// 发送消息
 const handleSendMessage = async () => {
   if (!newMessage.value.trim()) return
 
-  // 假设发给当前处理该稿件的编辑，或者系统默认接收人
-  // 这里简化处理，Topic 为 MS-{id}
   const payload = {
-    // 如果没有分配编辑，默认发给总编(ID=2)而不是管理员(ID=1)，以匹配后端默认策略
     receiverId: manuscript.value.currentEditorId || 2,
     topic: `MS-${manuscriptId}`,
     title: `关于稿件 ${manuscriptId} 的沟通`,
@@ -268,7 +305,6 @@ onMounted(() => {
   font-size: 12px;
   color: #999;
 }
-/* 聊天样式 */
 .chat-container {
   max-width: 800px;
 }
