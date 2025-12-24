@@ -27,6 +27,7 @@ public class ManuscriptController {
     @PostMapping("/submit")
     @Operation(summary = "投稿/保存草稿", description = "actionType传'SUBMIT'为正式提交，'SAVE'为保存草稿")
     public Result<String> submit(@RequestBody ManuscriptDTO manuscriptDTO) {
+        // 注：DTO中已经包含了 anonymousFilePath，Service层在保存Version时会使用
         manuscriptService.submitManuscript(manuscriptDTO);
         return Result.success(
                 "SUBMIT".equalsIgnoreCase(manuscriptDTO.getActionType()) ? "投稿成功" : "草稿已保存"
@@ -39,32 +40,31 @@ public class ManuscriptController {
     @GetMapping("/my-manuscripts")
     @Operation(summary = "获取我的稿件列表")
     public Result<PageInfo<Manuscript>> getMyManuscripts(
-            @RequestParam(required = false) String status, // 接收前端传来的大状态，如 'Processing'
+            @RequestParam(required = false) String status,
             @RequestParam(required = false) String substatus,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize
     ) {
-        // 调用 Service
         return Result.success(manuscriptService.getManuscriptList(pageNum, pageSize, status, substatus));
     }
-
-    // 在 ManuscriptController 类中添加：
 
     /**
      * 提交修回 (Revision)
      * 作者在收到 "Revise" 决定后，上传修改稿和回复信
      */
     @PostMapping("/submit-revision")
-    @Operation(summary = "提交修回稿件", description = "必须包含 manuscriptId, originalFilePath, markedFilePath, responseLetterPath")
+    @Operation(summary = "提交修回稿件", description = "必须包含 manuscriptId, originalFilePath, anonymousFilePath, markedFilePath, responseLetterPath")
     public Result<String> submitRevision(@RequestBody ManuscriptDTO manuscriptDTO) {
         // 1. 基础校验
         if (manuscriptDTO.getManuscriptId() == null) {
             return Result.error("稿件ID不能为空");
         }
 
-        // 2. 校验关键文件是否存在 (根据业务需求，修回通常必须要有回复信和标记版)
-        if (manuscriptDTO.getMarkedFilePath() == null || manuscriptDTO.getResponseLetterPath() == null) {
-            return Result.error("必须上传标记修改版(Marked Version)和回复信(Response Letter)");
+        // 2. 校验关键文件是否存在 (修改部分：增加对 anonymousFilePath 的校验)
+        if (manuscriptDTO.getMarkedFilePath() == null ||
+                manuscriptDTO.getResponseLetterPath() == null ||
+                manuscriptDTO.getAnonymousFilePath() == null) {
+            return Result.error("必须上传匿名稿(Anonymous)、标记修改版(Marked)和回复信(Response)");
         }
 
         // 3. 调用 Service

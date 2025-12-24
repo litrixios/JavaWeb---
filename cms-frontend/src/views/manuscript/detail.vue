@@ -53,6 +53,19 @@
               </el-upload>
             </el-form-item>
 
+            <el-form-item label="匿名稿 (Anonymous)" required>
+              <el-upload
+                  action="/api/common/upload"
+                  :headers="uploadHeaders"
+                  :limit="1"
+                  :on-success="(res) => revisionForm.anonymousFilePath = res.data"
+                  :on-error="handleUploadError"
+              >
+                <el-button type="primary">上传 Anonymous PDF</el-button>
+              </el-upload>
+              <div class="tip">必须上传 (用于第二轮盲审)</div>
+            </el-form-item>
+
             <el-form-item label="标记稿 (Marked)" required>
               <el-upload
                   action="/api/common/upload"
@@ -142,10 +155,11 @@ const manuscript = ref({})
 const historyLogs = ref([])
 const trackInfo = ref({})
 
-// 修回表单
+// 修回表单 - 修改部分：增加 anonymousFilePath
 const revisionForm = reactive({
   manuscriptId: parseInt(manuscriptId),
   originalFilePath: null,
+  anonymousFilePath: null,
   markedFilePath: null,
   responseLetterPath: null
 })
@@ -154,16 +168,10 @@ const revisionForm = reactive({
 const messages = ref([])
 const newMessage = ref('')
 
-
-// --- 修正后的状态颜色逻辑 ---
+// (以下 computed, formatDate 等辅助函数保持不变)
 const statusType = computed(() => {
-  // 安全获取 status，如果还没有数据则给空字符串
   const s = manuscript.value.status || ''
   const sub = manuscript.value.subStatus || ''
-
-  // 打印日志帮助调试（数据加载回来后你会看到正确的日志）
-  if (s) console.log('当前稿件状态:', s, '子状态:', sub)
-
   if (s === 'Decided') {
     return sub === 'Accepted' ? 'success' : 'danger'
   }
@@ -172,20 +180,13 @@ const statusType = computed(() => {
   return 'info'
 })
 
-// --- 修正后的进度条逻辑 ---
 const activeStep = computed(() => {
   const s = manuscript.value.status || ''
-
-  // 1. 如果数据还没加载回来 (s 是空)，直接返回 0
   if (!s) return 0
-
-  // 2. 匹配逻辑 (完全匹配 SQL 定义)
-  if (s === 'Incomplete') return 0  // 未完成
-  if (s === 'Processing') return 1  // 处理中
-  if (s === 'Revision')   return 2  // 修回中
-  if (s === 'Decided')    return 4  // 已决议 (直接跳到最后一步)
-
-  // 默认 fallback
+  if (s === 'Incomplete') return 0
+  if (s === 'Processing') return 1
+  if (s === 'Revision')   return 2
+  if (s === 'Decided')    return 4
   return 0
 })
 
@@ -194,47 +195,22 @@ const formatDate = (str) => {
   return new Date(str).toLocaleString()
 }
 
-// 初始化加载
-// 初始化加载
 const loadData = async () => {
   loading.value = true
   try {
-    console.log(">>> [Debug] 准备请求稿件ID:", manuscriptId)
-
-    // 1. 获取详情
     const res = await trackManuscript(manuscriptId)
-
-    console.log(">>> [Debug] 后端返回的完整数据:", res)
-
-    if (res.code === 200) {
-      // 检查 res.data 是否存在
-      if (!res.data) {
-        console.error(">>> [Error] res.data 是空的！")
-        return
-      }
-
+    if (res.code === 200 && res.data) {
       trackInfo.value = res.data
-
-      // 重点检查 manuscript 对象
       if (res.data.manuscript) {
         manuscript.value = res.data.manuscript
-        console.log(">>> [Debug] 成功获取 manuscript 对象:", manuscript.value)
-        console.log(">>> [Debug] 当前状态 (status):", manuscript.value.status)
       } else {
-        console.error(">>> [Error] res.data 里没有 manuscript 对象！请检查后端 DTO。")
-        // 为了防止页面报错，保持空对象
         manuscript.value = {}
       }
-
       historyLogs.value = res.data.historyLogs || []
-    } else {
-      console.error(">>> [Error] 请求非 200:", res)
     }
-
-    // 2. 获取消息历史
     loadMessages()
   } catch (error) {
-    console.error(">>> [Error] 请求发生异常:", error)
+    console.error(error)
   } finally {
     loading.value = false
   }
@@ -247,9 +223,10 @@ const loadMessages = async () => {
   }
 }
 
+// 修改部分：修回提交校验
 const handleRevisionSubmit = async () => {
-  if (!revisionForm.markedFilePath || !revisionForm.responseLetterPath) {
-    ElMessage.error('请上传标记稿和回复信')
+  if (!revisionForm.markedFilePath || !revisionForm.responseLetterPath || !revisionForm.anonymousFilePath) {
+    ElMessage.error('请上传匿名稿、标记稿和回复信')
     return
   }
   const res = await submitRevision(revisionForm)
@@ -264,16 +241,13 @@ const handleRevisionSubmit = async () => {
 
 const handleSendMessage = async () => {
   if (!newMessage.value.trim()) return
-
   const payload = {
     receiverId: manuscript.value.currentEditorId || 2,
     topic: `MS-${manuscriptId}`,
     title: `关于稿件 ${manuscriptId} 的沟通`,
     content: newMessage.value
   }
-
   const res = await sendMessage(payload)
-
   if (res.code === 200) {
     ElMessage.success('发送成功')
     newMessage.value = ''
