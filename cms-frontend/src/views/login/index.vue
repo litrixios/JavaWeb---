@@ -6,9 +6,7 @@
           <span>系统登录</span>
         </div>
       </template>
-      <el-form-item>
-        <el-button style="width: 100%;" @click="returnto">返回到主界面</el-button>
-      </el-form-item>
+
       <el-form :model="form" label-width="60px">
         <el-form-item label="账号">
           <el-input v-model="form.username" placeholder="请输入用户名" />
@@ -20,7 +18,7 @@
           <el-select v-model="form.role" placeholder="请选择身份" style="width: 100%">
             <el-option label="超级管理员" value="SuperAdmin" />
             <el-option label="管理员" value="SystemAdmin" />
-            <el-option label="编辑管理员" value="EditorialAdmin" />
+            <el-option label="编辑部管理员" value="EditorialAdmin" />
             <el-option label="主编" value="EditorInChief" />
             <el-option label="编辑" value="Editor" />
             <el-option label="审稿人" value="Reviewer" />
@@ -76,7 +74,7 @@ const handleLogin = async () => {
     console.log('完整的登录响应:', result) // 查看完整的响应结构
 
     if (result.code==200) {
-
+      ElMessage.success('登录成功')
 
       // 根据实际返回的数据结构调整
       // 后端返回的是 {user: ..., token: ...}，不是 {data: {user: ..., token: ...}}
@@ -85,51 +83,47 @@ const handleLogin = async () => {
 
       console.log('用户数据:', userData)
       console.log('token:', token)
-      if(userData.status==1){
-        if (userData && token) {
-          // 保存token和用户信息到本地存储
-          localStorage.setItem('token', token)
-          localStorage.setItem('userInfo', JSON.stringify(userData))
-          ElMessage.success('登录成功')
-          // 根据用户角色跳转到不同页面
-          const userRole = userData.role
-          console.log('用户角色:', userRole)
 
-          switch (userRole) {
-            case 'SuperAdmin':
-              router.push('/SuperAdmin/superadmin')
-              break
-            case 'SystemAdmin':
-              router.push('/Systemadmin/systemadmin')
-              break
-            case 'Editor':
-              router.push('/editor/my-manuscripts')
-              break
-            case 'Author':
-              router.push('/manuscript/list')
-              break
-            case 'Reviewer':
-              router.push('/reviewer/dashboard')
-              break
-            case 'EditorialAdmin':
-              router.push('/layout/index')
-              break
-            case 'EditorInChief':
-              router.push('/eic/audit')
-              break
-            default:
-              router.push('/manuscript/list')
-          }
-        } else {
-          ElMessage.error('返回的用户数据为空')
+      if (userData && token) {
+        // 保存token和用户信息到本地存储
+        localStorage.setItem('token', token)
+        localStorage.setItem('userInfo', JSON.stringify(userData))
+
+        // 根据用户角色跳转到不同页面
+        const userRole = userData.role
+        console.log('用户角色:', userRole)
+
+        switch (userRole) {
+          case 'SuperAdmin':
+            router.push('/layout/index')
+            break
+          case 'SystemAdmin':
+            router.push('/layout/index')
+            break
+          case 'Editor':
+            router.push('/layout/index')
+            break
+          case 'Author':
+            router.push('/manuscript/list')
+            break
+          case 'Reviewer':
+            router.push('/layout/index')
+            break
+          case 'EditorialAdmin':
+            router.push('/editorial-admin')
+            break
+          case 'EditorInChief':
+            router.push('/layout/index')
+            break
+          default:
+            router.push('/manuscript/list')
         }
       } else {
-        ElMessage.error(result.message || '登录失败')
+        ElMessage.error('返回的用户数据为空')
       }
-    }else{
-      ElMessage.error( '该用户已被禁用')
+    } else {
+      ElMessage.error(result.message || '登录失败')
     }
-
   } catch (error) {
     console.error('登录错误:', error)
     ElMessage.error('网络错误，请检查后端服务是否启动')
@@ -140,10 +134,6 @@ const handleLogin = async () => {
 const goToRegister = () => {
   router.push('/register')
 }
-const returnto = () =>{
-  window.location.href = 'http://localhost:8080/index'
-}
-
 </script>
 
 <style scoped>

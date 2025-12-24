@@ -54,31 +54,45 @@ const routes = [
         ]
     },
 
-    // ... 其他路由 ...
-
-    // 4. 审稿人功能模块
+    //编辑部管理员
     {
-        path: '/reviewer',
-        component: Layout,
-        redirect: '/reviewer/dashboard',
-        meta: { title: '审稿工作台', icon: 'EditPen', roles: ['Reviewer'] }, // 需确保有对应的 Icon
+        path: '/editorial-admin',
+        name: 'EditorialAdmin',
+        component: () => import('@/layout/AdminLayout.vue'),
+        meta: { role: 'EDITORIAL_ADMIN' },
+        redirect: '/editorial-admin/tech-check',  // 添加默认重定向
         children: [
+            // 形式审查路由
             {
-                path: 'dashboard',
-                name: 'ReviewerDashboard',
-                component: () => import('@/views/reviewer/dashboard.vue'),
-                meta: { title: '我的审稿任务' }
+                path: 'tech-check',
+                name: 'TechCheckList',
+                component: () => import('@/views/editorial-admin/tech-check/list.vue')
             },
             {
-                path: 'process/:reviewId',
-                name: 'ReviewProcess',
-                component: () => import('@/views/reviewer/process.vue'),
-                meta: { title: '审稿详情', hidden: true }
+                path: 'tech-check/detail',
+                name: 'TechCheckDetail',
+                component: () => import('@/views/editorial-admin/tech-check/detail.vue')
+            },
+            // 新闻管理路由
+            {
+                path: 'news',
+                name: 'NewsList',
+                component: () => import('@/views/editorial-admin/news/list.vue')
+            },
+            {
+                path: 'news/add',
+                name: 'AddNews',
+                component: () => import('@/views/editorial-admin/news/form.vue')
+            },
+            {
+                path: 'news/edit',
+                name: 'EditNews',
+                component: () => import('@/views/editorial-admin/news/form.vue')
             }
         ]
-    },
+    }
 
-    // ...
+
 ]
 
 const router = createRouter({
