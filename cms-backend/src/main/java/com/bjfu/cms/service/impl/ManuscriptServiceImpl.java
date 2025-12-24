@@ -192,32 +192,23 @@ public class ManuscriptServiceImpl implements ManuscriptService {
      * 处理新投稿的通知：发邮件给作者 + 站内信通知作者
      */
     private void sendSubmissionNotifications(Integer authorId, Manuscript manuscript) {
-        // 1. 获取作者信息
+
         User author = userMapper.selectById(authorId);
         if (author == null) return;
 
         String title = manuscript.getTitle();
-        String manuscriptIdStr = "MS-" + manuscript.getManuscriptId(); // 模拟稿件编号
+        String manuscriptIdStr = "MS-" + manuscript.getManuscriptId();
 
-        // 2. 发送邮件确认
-        String emailSubject = "【投稿确认】您的稿件已成功提交: " + manuscriptIdStr;
-        String emailContent = "<h3>尊敬的 " + author.getUsername() + ":</h3>" +
-                "<p>您好！感谢您向本期刊投稿。</p>" +
-                "<p>您的稿件 <b>" + title + "</b> 已成功接收，系统编号为 <b>" + manuscriptIdStr + "</b>。</p>" +
-                "<p>您可以在系统中追踪稿件的最新状态。</p>" +
-                "<br/><p>此邮件由系统自动发送，请勿回复。</p>";
-
-        // 异步发送邮件
-        emailService.sendHtmlMail(author.getEmail(), null, emailSubject, emailContent);
-
-        // TODO 等待系统管理员站内信功能
-//        // 3. 发送站内信 (系统 -> 作者)
-//        // 假设 SYSTEM_ADMIN_ID 为发件人
-//        String msgTitle = "投稿成功通知";
-//        String msgContent = "您的稿件《" + title + "》已成功提交，目前正在进行形式审查。";
-//
-//        // 调用站内信服务
-//        communicationService.sendMessage(SYSTEM_ADMIN_ID, authorId, "Submission", msgTitle, msgContent);
+        communicationService.sendMessage(1, authorId,
+                "Submission",
+                "【投稿确认】您的稿件已成功提交: " + manuscriptIdStr,
+                "<h3>尊敬的 " + author.getUsername() + ":</h3>" +
+                        "<p>您好！感谢您向本期刊投稿。</p>" +
+                        "<p>您的稿件 <b>" + title + "</b> 已成功接收，系统编号为 <b>"
+                        + manuscriptIdStr + "</b>。</p>" +
+                        "<p>您可以在系统中追踪稿件的最新状态。</p>" +
+                        "<br/><p>此邮件由系统自动发送，请勿回复。</p>",
+                0);
     }
 
     /**
@@ -230,14 +221,16 @@ public class ManuscriptServiceImpl implements ManuscriptService {
 
         String title = manuscript.getTitle();
 
-        // 2. 发送邮件确认给作者
-        String emailSubject = "【修回确认】您的稿件修改版已提交";
-        String emailContent = "<h3>尊敬的 " + author.getUsername() + ":</h3>" +
-                "<p>您好！</p>" +
-                "<p>您的稿件 <b>" + title + "</b> 的修改版本（Revision）已成功上传。</p>" +
-                "<p>编辑部将尽快处理您的稿件。</p>";
-
-        emailService.sendHtmlMail(author.getEmail(), null, emailSubject, emailContent);
+        // 发送确认信息给作者
+        communicationService.sendMessage(1, author.getUserId(),
+                "Revision",
+                "【修回确认】您的稿件修改版已提交",
+                "<h3>尊敬的 " + author.getUsername() + ":</h3>" +
+                        "<p>您好！</p>" +
+                        "<p>您的稿件 <b>" + title +
+                        "</b> 的修改版本（Revision）已成功上传。</p>" +
+                        "<p>编辑部将尽快处理您的稿件。</p>",
+                0);
 
         // 3. 发送站内信通知编辑 (如果当前有负责编辑)
         if (manuscript.getCurrentEditorId() != null) {
@@ -246,11 +239,12 @@ public class ManuscriptServiceImpl implements ManuscriptService {
 
             // 作者 -> 编辑 (或者 系统 -> 编辑)
             communicationService.sendMessage(
-                    SYSTEM_ADMIN_ID, // 发件人
-                    manuscript.getCurrentEditorId(), // 收件人: 当前编辑
+                    1,
+                    manuscript.getCurrentEditorId(),
                     "Revision",
                     msgTitle,
-                    msgContent
+                    msgContent,
+                    0
             );
         }
     }

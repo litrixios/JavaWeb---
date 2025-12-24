@@ -31,6 +31,9 @@ import java.util.stream.Collectors;
 public class EditorServiceImpl implements EditorService {
 
     @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
     private EditorMapper editorMapper;
 
     // 修复点 1: 必须注入 ManuscriptMapper 才能调用 selectById
@@ -49,10 +52,6 @@ public class EditorServiceImpl implements EditorService {
     @Autowired
     private com.bjfu.cms.service.SftpService sftpService;
 
-    @Autowired
-    private UserMapper userMapper; // 注入 UserMapper 用于查询作者和审稿人
-
-
     @Override
     public void sendRemindMail(Integer manuscriptId, Integer reviewId, String content) {
         // 1. 获取催审详情 (SQL 中可以增加对 manuscriptId 的匹配校验)
@@ -68,14 +67,16 @@ public class EditorServiceImpl implements EditorService {
             throw new RuntimeException("催审失败：稿件与评审任务不匹配。");
         }
 
-        String toEmail = (String) detail.get("email");
-        String manuscriptTitle = (String) detail.get("title");
+        String subject = "【催审通知】稿件(ID:" + manuscriptId + ")评审进度提醒：" + detail.get("manuscriptTitle");
 
-        // 2. 构建邮件主题
-        String subject = "【催审通知】稿件(ID:" + manuscriptId + ")评审进度提醒：" + manuscriptTitle;
-
-        // 3. 发送邮件
-        emailService.sendHtmlMail(toEmail, null, subject, content);
+        communicationService.sendMessage(
+                1,
+                reviewId,
+                "MS-" + manuscriptId,
+                subject,
+                content,
+                0
+        );
     }
 
     @Override
@@ -92,13 +93,16 @@ public class EditorServiceImpl implements EditorService {
         // 注意：实际项目中可能需要根据配置获取主编ID，这里示例获取 ID 为 1 的主编或通过 Role 查询
         Integer eicId = editorMapper.findUserByRole("EditorInChief");
 
+        User user = userMapper.selectById(UserContext.getUserId());
+
         if (eicId != null) {
             communicationService.sendMessage(
-                    UserContext.getUserId(),
+                    1,
                     eicId,
                     "MS-" + m.getManuscriptId(),
                     "稿件建议提醒: " + originalMs.getTitle(),
-                    "编辑已提交建议结论：" + m.getEditorRecommendation() + "。请及时审核。"
+                    "编辑" + user.getFullName() + "已提交建议结论：" + m.getEditorRecommendation() + "。请及时审核。",
+                    0
             );
         }
     }

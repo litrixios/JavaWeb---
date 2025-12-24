@@ -12,8 +12,8 @@ CREATE TABLE Users (
                        Affiliation NVARCHAR(100),                 -- 单位
                        ResearchDirection NVARCHAR(200),           -- 研究方向
                        RegisterTime DATETIME DEFAULT GETDATE(),   -- 注册时间
-                       Status INT DEFAULT 0,                       -- 状态 (0: 待审核/未激活, 1: 正常, 2: 禁用)
-                       AvatarUrl NVARCHAR(500) NULL                 -- 新增：存储个人头像的图片路径
+                       Status INT DEFAULT 0,                      -- 状态 (0: 待审核/未激活, 1: 正常, 2: 禁用)
+                       AvatarUrl NVARCHAR(500) NULL               -- 新增：存储个人头像的图片路径
 );
 GO
 
@@ -36,7 +36,7 @@ GO
 -- =============================================
 -- 3. 稿件表 (Manuscript)
 -- 稿件的核心存储，包括元数据和当前状态
--- =============================================
+-- =============================================2
 CREATE TABLE Manuscript (
                             ManuscriptID INT PRIMARY KEY IDENTITY(1,1),    -- 稿件ID
                             AuthorID INT NOT NULL,                         -- 提交作者ID (外键)
