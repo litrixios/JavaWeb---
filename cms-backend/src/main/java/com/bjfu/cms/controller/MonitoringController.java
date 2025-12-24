@@ -26,6 +26,7 @@ public class MonitoringController {
     @PostMapping("/remind")
     public Result remindReviewer(@RequestBody Map<String, Object> params) {
         // 从 params 获取 reviewId。注意前端传参类型
+        Integer msId = (Integer) params.get("manuscriptId"); // 新增
         Integer reviewId = (Integer) params.get("reviewId");
         String content = (String) params.get("content");
 
@@ -34,7 +35,7 @@ public class MonitoringController {
         }
 
         // 调用实现类逻辑
-        editorService.sendRemindMail(reviewId, content);
+        editorService.sendRemindMail(msId, reviewId, content);
         return Result.success("催审指令已发出");
     }
 }

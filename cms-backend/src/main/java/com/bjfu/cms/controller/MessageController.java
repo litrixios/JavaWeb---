@@ -3,6 +3,7 @@ package com.bjfu.cms.controller;
 import com.bjfu.cms.common.result.Result;
 import com.bjfu.cms.common.utils.UserContext;
 import com.bjfu.cms.entity.InternalMessage;
+import com.bjfu.cms.entity.dto.MessageSendDTO;
 import com.bjfu.cms.service.CommunicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -15,50 +16,37 @@ public class MessageController {
     @Autowired
     private CommunicationService communicationService;
 
-    // 发送消息
+
+    // 1. 发送接口 (统一入口，前端传 type)
     @PostMapping("/send")
     public Result<String> sendMessage(@RequestBody MessageSendDTO dto) {
         Integer senderId = UserContext.getUserId();
+        // 默认认为是聊天(1)，除非前端显式传0
+        Integer type = dto.getMsgType() != null ? dto.getMsgType() : 1;
+
         communicationService.sendMessage(
                 senderId,
                 dto.getReceiverId(),
                 dto.getTopic(),
                 dto.getTitle(),
-                dto.getContent()
+                dto.getContent(),
+                type
         );
         return Result.success("发送成功");
     }
 
-    // 查看列表
-    @GetMapping("/list")
-    public Result<List<InternalMessage>> getMyList() {
-        return Result.success(communicationService.getMyMessages());
+    // 2. 获取【系统通知】列表 (用于右上角铃铛或通知中心)
+    @GetMapping("/system-notifications")
+    public Result<List<InternalMessage>> getSystemNotifications() {
+        return Result.success(communicationService.getSystemNotifications());
     }
 
-    @GetMapping("/history/{manuscriptId}")
-    public Result<List<InternalMessage>> getManuscriptHistory(@PathVariable Integer manuscriptId) {
-        // 约定：Topic 格式为 "MS-" + 稿件ID
+    // 3. 获取【特定稿件的聊天记录】 (用于聊天窗口)
+    @GetMapping("/chat/{manuscriptId}")
+    public Result<List<InternalMessage>> getChatHistory(@PathVariable Integer manuscriptId) {
         String topic = "MS-" + manuscriptId;
-        List<InternalMessage> history = communicationService.getMessagesByTopic(topic);
-        return Result.success(history);
+        return Result.success(communicationService.getChatHistory(topic));
     }
 
-    // DTO 内部类
-    public static class MessageSendDTO {
-        private Integer receiverId;
-        private String topic;
-        private String title;
-        private String content;
-        // Getters & Setters
-        public Integer getReceiverId() { return receiverId; }
-        public void setReceiverId(Integer receiverId) { this.receiverId = receiverId; }
-        public String getTopic() { return topic; }
-        public void setTopic(String topic) { this.topic = topic; }
-        public String getTitle() { return title; }
-        public void setTitle(String title) { this.title = title; }
-        public String getContent() { return content; }
-        public void setContent(String content) { this.content = content; }
 
-
-    }
 }

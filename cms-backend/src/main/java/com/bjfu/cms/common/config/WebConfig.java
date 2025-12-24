@@ -27,7 +27,12 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/auth/register",  // 注册
                         "/api/news/**",        // 公开新闻 (根据需求可选)
                         "/api/files/download/**", // 文件下载 (视情况而定)
+                        "/api/editorial-admin/manuscripts/pdf/**",
                         "/index/**",
+                        "/about",
+                        "/submit",
+                        "/articles",
+                        "/guide",
                         "/"
                 );
     }

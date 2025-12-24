@@ -8,6 +8,7 @@ import com.bjfu.cms.service.EditorialAdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,6 +53,10 @@ public class EditorialAdminController {
         return editorialAdminService.getTechCheckFileAnalysis(manuscriptId);
     }
 
-
+    @Operation(summary = "PDF在线预览（根据稿件最新版本OriginalFilePath，SFTP直出流）")
+    @GetMapping("/manuscripts/pdf/preview")
+    public void previewLatestPdf(@RequestParam Integer manuscriptId, HttpServletResponse response) {
+        editorialAdminService.previewLatestPdf(manuscriptId, response);
+    }
 
 }
