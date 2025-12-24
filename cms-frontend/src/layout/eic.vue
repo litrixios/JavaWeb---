@@ -10,14 +10,6 @@
           default-active="1"
           router
       >
-        <el-menu-item index="/manuscript/list">
-          <el-icon><Document /></el-icon>
-          <span>我的稿件</span>
-        </el-menu-item>
-        <el-menu-item index="/manuscript/submit">
-          <el-icon><Edit /></el-icon>
-          <span>在线投稿</span>
-        </el-menu-item>
         <el-sub-menu index="/eic">
           <template #title>
             <el-icon><User /></el-icon>

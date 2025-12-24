@@ -85,20 +85,18 @@ const total = ref(0)
 const queryParams = reactive({
   pageNum: 1,
   pageSize: 10,
-  status: 'PROCESSING' // 默认大状态
+  status: 'PROCESSING'
 })
 
-// 状态映射辅助函数
+// --- 修改点：状态映射修正 ---
 const getStatusTag = (status) => {
   const map = {
-    'Saved': 'info',
-    'Submitted': 'primary',
-    'Under Review': 'warning',
-    'Accepted': 'success',
-    'Rejected': 'danger',
-    'Need Revision': 'warning'
+    'Incomplete': 'info',
+    'Processing': 'primary',
+    'Revision': 'warning',
+    'Decided': 'success'
   }
-  return map[status] || ''
+  return map[status] || 'info'
 }
 
 const formatDate = (dateStr) => {

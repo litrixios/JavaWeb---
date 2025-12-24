@@ -1,36 +1,22 @@
 import request from '@/utils/request'
 
-// 1. 获取所有稿件全览 (对应 @GetMapping("/manuscript/list"))
+// ================== 稿件全览 ==================
 export function getAllManuscripts(status) {
     return request({
-        // 必须补上 /api，因为后端 RequestMapping 包含它，且你的 baseURL 为空
         url: '/api/eic/manuscript/list',
         method: 'get',
         params: { status }
     })
 }
 
-// 2. 指派副主编 (对应 @PostMapping("/assign-editor"))
-// 参数 dto 包含: { manuscriptId: xx, editorId: xx }
-export function assignEditor(dto) {
+export function getManuscriptStatistics() {
     return request({
-        url: '/api/eic/assign-editor',
-        method: 'post',
-        data: dto // 后端是 @RequestBody，所以用 data
+        url: '/api/eic/manuscript/statistics',
+        method: 'get'
     })
 }
 
-// 3. 撤稿操作 (对应 @PostMapping("/retract"))
-// 参数 dto 包含: { manuscriptId: xx, comments: '理由' }
-export function withdrawManuscript(dto) {
-    return request({
-        url: '/api/eic/retract',
-        method: 'post',
-        data: dto // 后端是 @RequestBody，所以用 data
-    })
-}
-
-// 4. 初审决策 (对应 @PostMapping("/desk-review"))
+// ================== 初审功能 ==================
 export function deskReview(dto) {
     return request({
         url: '/api/eic/desk-review',
@@ -39,11 +25,94 @@ export function deskReview(dto) {
     })
 }
 
-// 5. 移除审稿人 (对应 @PostMapping("/reviewer/remove"))
+// ================== 新增：批量初审函数 ==================
+export function batchDeskReview(dtos) {
+    return request({
+        url: '/api/eic/desk-review/batch',
+        method: 'post',
+        data: dtos
+    })
+}
+
+// ================== 撤销决定 ==================
+export function rescindDecision(manuscriptId, newStatus, reason) {
+    return request({
+        url: '/api/eic/rescind-decision',
+        method: 'post',
+        params: { manuscriptId, newStatus, reason }
+    })
+}
+
+// ================== 编辑管理 ==================
+export function getEditorList() {
+    return request({
+        url: '/api/eic/editor/list',
+        method: 'get'
+    })
+}
+
+export function getEditorsByExpertise(expertise) {
+    return request({
+        url: '/api/eic/editor/expertise',
+        method: 'get',
+        params: { expertise }
+    })
+}
+
+export function assignEditor(dto) {
+    return request({
+        url: '/api/eic/assign-editor',
+        method: 'post',
+        data: dto
+    })
+}
+
+// ================== 终审决策 ==================
+export function makeFinalDecision(dto) {
+    return request({
+        url: '/api/eic/final-decision',
+        method: 'post',
+        data: dto
+    })
+}
+
+// ================== 特殊权限 ==================
+export function withdrawManuscript(dto) {
+    return request({
+        url: '/api/eic/retract',
+        method: 'post',
+        data: dto
+    })
+}
+
+// ================== 审稿人管理 ==================
+export function getReviewerList() {
+    return request({
+        url: '/api/eic/reviewer/list',
+        method: 'get'
+    })
+}
+
+export function inviteReviewer(dto) {
+    return request({
+        url: '/api/eic/reviewer/invite',
+        method: 'post',
+        data: dto
+    })
+}
+
+export function auditReviewer(userId, status) {
+    return request({
+        url: '/api/eic/reviewer/audit',
+        method: 'post',
+        params: { userId, status }
+    })
+}
+
 export function removeReviewer(userId, reason) {
     return request({
         url: '/api/eic/reviewer/remove',
         method: 'post',
-        params: { userId, reason } // 后端是 @RequestParam，所以用 params
+        params: { userId, reason }
     })
 }

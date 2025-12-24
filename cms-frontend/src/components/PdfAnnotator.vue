@@ -79,11 +79,16 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import VuePdfEmbed from 'vue-pdf-embed'
 import { ZoomIn, ZoomOut } from '@element-plus/icons-vue'
-// 引入 pdf.js worker，必须配置，否则无法渲染
 import * as pdfjsLib from 'pdfjs-dist'
 
-// 设置 Worker 源 (使用 CDN 以避免复杂的构建配置，或者指向本地 public 目录)
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+// --- 修改部分开始 ---
+// 使用 Vite 的 ?url 显式导入语法引入本地 worker 文件
+// 这样 Vite 会处理路径，并在构建时正确引用 node_modules 中的文件
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+
+// 设置 Worker 源为本地引入的路径
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
+// --- 修改部分结束 ---
 
 const props = defineProps({
   source: {

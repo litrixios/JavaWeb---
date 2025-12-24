@@ -3,8 +3,9 @@ package com.bjfu.cms.mapper;
 import com.bjfu.cms.entity.User;
 import com.bjfu.cms.entity.UserPermission;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Param;
+import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface UserMapper {
@@ -23,7 +24,11 @@ public interface UserMapper {
 
     // 插入权限
     int insertPermissions(UserPermission permissions);
+    // 查询编辑列表（角色为Editor或AssociateEditor）
+    List<User> selectEditors();
 
+    // 根据角色查询用户
+    List<User> selectByRole(@Param("role") String role);
 
     void insertLog(@Param("operationTime") String operationTime,
                    @Param("operatorId") Integer operatorId,
@@ -37,4 +42,13 @@ public interface UserMapper {
     User findByEmail(String email);
     // 插入用户权限
     void insertUserPermissions(UserPermission permissions);
+
+    // 新增：查询所有审稿人
+    List<User> selectReviewers();
+
+    // 新增：统计稿件数量
+    Integer countManuscriptsByStatus(@Param("status") String status);
+
+    // 新增：查询稿件及其作者信息
+    List<Map<String, Object>> selectManuscriptsWithAuthors(@Param("status") String status);
 }

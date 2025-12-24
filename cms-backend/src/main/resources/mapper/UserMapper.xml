@@ -13,7 +13,8 @@
         <result property="fullName" column="FullName"/>
         <result property="registerTime" column="RegisterTime"/>
         <result property="status" column="Status"/>
-
+        <result property="affiliation" column="Affiliation"/>
+        <result property="researchDirection" column="ResearchDirection"/>
         <association property="permissions" javaType="com.bjfu.cms.entity.UserPermission">
             <id property="userId" column="UserID"/>
             <result property="canSubmitManuscript" column="CanSubmitManuscript"/>
@@ -63,6 +64,67 @@
     <select id="findByEmail" resultType="com.bjfu.cms.entity.User">
         SELECT * FROM Users WHERE Email = #{email}
     </select>
+
+    <select id="selectUsersByRole" resultType="com.bjfu.cms.entity.User">
+        SELECT UserID, FullName, Email, Affiliation, ResearchDirection
+        FROM Users
+        WHERE Role = #{role} AND Status = 1
+    </select>
+
+    <!-- 查询编辑列表 -->
+    <select id="selectEditors" resultMap="UserMap">
+        SELECT u.*
+        FROM Users u
+        WHERE u.Role IN ('Editor', 'AssociateEditor')
+          AND u.Status = 1  -- 只查询正常状态的用户
+        ORDER BY u.FullName
+    </select>
+
+    <!-- 根据角色查询用户 -->
+    <select id="selectByRole" resultMap="UserMap">
+        SELECT u.*
+        FROM Users u
+        WHERE u.Role = #{role}
+        ORDER BY u.FullName
+    </select>
+
+    <!-- 查询所有审稿人 -->
+    <select id="selectReviewers" resultMap="UserMap">
+        SELECT u.*
+        FROM Users u
+        WHERE u.Role = 'Reviewer'
+          AND u.Status = 1
+        ORDER BY u.FullName
+    </select>
+
+    <!-- 统计稿件数量 -->
+    <select id="countManuscriptsByStatus" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM Manuscript WHERE Status = #{status}
+    </select>
+
+    <!-- 查询稿件及其作者信息 -->
+    <select id="selectManuscriptsWithAuthors" resultType="java.util.Map">
+        SELECT
+        m.ManuscriptID as manuscriptId,
+        m.Title as title,
+        m.Abstract as abstractText,
+        m.AuthorList as authorList,
+        m.Status as status,
+        m.SubStatus as subStatus,
+        m.CurrentEditorID as currentEditorId,
+        m.SubmissionTime as submissionTime,
+        m.Decision as decision,
+        m.DecisionTime as decisionTime,
+        u.FullName as authorName,
+        u.Email as authorEmail
+        FROM Manuscript m
+        LEFT JOIN Users u ON m.AuthorID = u.UserID
+        <if test="status != null">
+            WHERE m.Status = #{status}
+        </if>
+        ORDER BY m.SubmissionTime DESC
+    </select>
+
 
     <!-- 插入新用户 -->
 <!--    <insert id="insertUser" parameterType="com.bjfu.cms.entity.User" useGeneratedKeys="true" keyProperty="userId">-->

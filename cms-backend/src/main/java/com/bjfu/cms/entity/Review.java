@@ -15,7 +15,7 @@ public class Review {
     private Integer reviewerID;        // 审稿人ID（对应ReviewerID）
     private String commentsToAuthor;   // 给作者的公开意见（对应CommentsToAuthor）
     private String confidentialComments; // 给编辑的保密意见（对应ConfidentialComments，存储拒绝理由）
-    private Integer score;             // 打分（对应Score）
+    private Double score;             // 打分（对应Score）
     private String suggestion;         // 建议（对应Suggestion）
     private Date inviteDate;           // 邀请日期（对应InviteDate）
     private Date deadline;             // 截止日期（对应Deadline）
