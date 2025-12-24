@@ -53,4 +53,11 @@ public class MessageController {
         return Result.success(communicationService.getMyAllMessages());
     }
 
+    @GetMapping("/sessions")
+    public Result<List<com.bjfu.cms.entity.dto.ChatSessionDTO>> getChatSessions() {
+        Integer userId = UserContext.getUserId();
+        // 确保 communicationService 中有这个方法
+        return Result.success(communicationService.getChatSessions());
+    }
+
 }
