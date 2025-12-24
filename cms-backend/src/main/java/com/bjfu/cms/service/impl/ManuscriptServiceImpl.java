@@ -137,10 +137,8 @@ public class ManuscriptServiceImpl implements ManuscriptService {
         if (manuscript == null) {
             throw new RuntimeException("稿件不存在");
         }
-        // 根据业务需求，通常只允许在 'Revision' 或特定状态下修回
-        // if (!"Revision".equalsIgnoreCase(manuscript.getStatus())) { ... }
 
-        // 2. 插入新版本
+        // 2. 插入新版本 (保持原有逻辑不变)
         Integer maxVersion = manuscriptMapper.selectMaxVersion(dto.getManuscriptId());
         int nextVersion = (maxVersion == null ? 0 : maxVersion) + 1;
 
@@ -154,16 +152,27 @@ public class ManuscriptServiceImpl implements ManuscriptService {
                 dto.getResponseLetterPath()
         );
 
+        // =========== 修改开始 ===========
         // 3. 更新状态
         manuscript.setStatus("Processing");
-        manuscript.setSubStatus("TechCheck"); // 或 "WithEditor"，视流程而定
+
+        // 修改逻辑：判断是否已有负责编辑
+        // 如果有原责编 (currentEditorId != null)，直接跳过 TechCheck，进入 WithEditor 状态
+        if (manuscript.getCurrentEditorId() != null) {
+            manuscript.setSubStatus("WithEditor");
+        } else {
+            // 如果意外情况没有责编，则还是走形式审查兜底
+            manuscript.setSubStatus("TechCheck");
+        }
+
         manuscript.setSubmissionTime(new Date());
-        manuscript.setDecision(null); // 清空旧决策
+        manuscript.setDecision(null); // 清空旧决策（Revise -> null）
         manuscript.setDecisionTime(null);
+        // =========== 修改结束 ===========
 
         manuscriptMapper.updateManuscript(manuscript);
 
-        // === 4. 新增：通知逻辑 (修回通知) ===
+        // 4. 通知逻辑 (保持原有逻辑不变)
         sendRevisionNotifications(manuscript);
     }
 
