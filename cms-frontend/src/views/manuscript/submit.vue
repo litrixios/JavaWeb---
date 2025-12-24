@@ -34,7 +34,12 @@
         </el-row>
 
         <el-form-item label="项目资助" prop="fundingInfo">
-          <el-input v-model="form.fundingInfo" placeholder="如：国家自然科学基金 (No. 123456)" />
+          <div v-for="(item, index) in fundingList" :key="index" style="display: flex; margin-bottom: 10px; width: 100%">
+            <el-input v-model="item.value" placeholder="如：国家自然科学基金 (No. 123456)" style="flex: 1; margin-right: 10px;" />
+            <el-button type="danger" icon="Delete" circle @click="removeFunding(index)" v-if="fundingList.length > 1"></el-button>
+            <el-button type="primary" icon="Plus" circle @click="addFunding" v-if="index === fundingList.length - 1"></el-button>
+          </div>
+          <div class="tip">请填写项目资助信息，多项资助请点击“+”号添加</div>
         </el-form-item>
 
         <el-divider content-position="left">作者列表 (Authors)</el-divider>
@@ -72,9 +77,24 @@
               :on-error="handleUploadError"
               :file-list="manuscriptFileList"
           >
-            <el-button type="primary">点击上传 PDF/Word</el-button>
+            <el-button type="primary">点击上传 PDF/Word (含作者信息)</el-button>
           </el-upload>
           <div class="tip">请上传包含完整作者信息的原稿</div>
+        </el-form-item>
+
+        <el-form-item label="匿名手稿" prop="anonymousFilePath">
+          <el-upload
+              class="upload-demo"
+              action="/api/common/upload"
+              :headers="uploadHeaders"
+              :limit="1"
+              :on-success="handleAnonymousSuccess"
+              :on-error="handleUploadError"
+              :file-list="anonymousFileList"
+          >
+            <el-button type="primary">点击上传 PDF (匿名)</el-button>
+          </el-upload>
+          <div class="tip">请上传已隐去作者姓名和单位的匿名稿件，用于盲审</div>
         </el-form-item>
 
         <el-form-item label="Cover Letter" prop="coverLetterPath">
@@ -120,9 +140,8 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const formRef = ref(null)
-const isEdit = ref(false) // 这里可以根据路由 query.id 判断是否为编辑模式
+const isEdit = ref(false)
 
-// --- 新增代码开始 ---
 const token = localStorage.getItem('token')
 const uploadHeaders = {
   Authorization: token
@@ -131,7 +150,9 @@ const handleUploadError = (err) => {
   ElMessage.error('上传失败，请检查登录状态或文件大小')
   console.error(err)
 }
-// --- 新增代码结束 ---
+
+// 资助信息列表
+const fundingList = ref([{ value: '' }])
 
 const form = reactive({
   manuscriptId: null,
@@ -139,23 +160,34 @@ const form = reactive({
   abstractText: '',
   keywords: '',
   topic: '',
-  fundingInfo: '',
+  fundingInfo: '', // 最终提交时拼接
   authors: [
     { name: '', email: '', unit: '', isCorresponding: true }
   ],
   recommendedReviewers: [],
   originalFilePath: '',
+  anonymousFilePath: '', // 新增字段
   coverLetterPath: ''
 })
 
 const manuscriptFileList = ref([])
+const anonymousFileList = ref([]) // 新增文件列表
 const coverLetterFileList = ref([])
 
 const rules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
   abstractText: [{ required: true, message: '请输入摘要', trigger: 'blur' }],
   topic: [{ required: true, message: '请选择研究主题', trigger: 'change' }],
-  originalFilePath: [{ required: true, message: '请上传手稿文件', trigger: 'change' }]
+  originalFilePath: [{ required: true, message: '请上传手稿文件', trigger: 'change' }],
+  anonymousFilePath: [{ required: true, message: '请上传匿名手稿', trigger: 'change' }] // 新增校验
+}
+
+// 资助信息操作
+const addFunding = () => {
+  fundingList.value.push({ value: '' })
+}
+const removeFunding = (index) => {
+  fundingList.value.splice(index, 1)
 }
 
 // 作者操作
@@ -183,6 +215,14 @@ const handleManuscriptSuccess = (res) => {
     ElMessage.error(res.msg || '手稿上传失败')
   }
 }
+const handleAnonymousSuccess = (res) => {
+  if(res.code === 200) {
+    form.anonymousFilePath = res.data
+    ElMessage.success('匿名手稿上传成功')
+  } else {
+    ElMessage.error(res.msg || '匿名手稿上传失败')
+  }
+}
 const handleCoverLetterSuccess = (res) => {
   if(res.code === 200) {
     form.coverLetterPath = res.data
@@ -199,6 +239,12 @@ const handleSubmit = async (actionType) => {
   if (actionType === 'SUBMIT') {
     await formRef.value.validate()
   }
+
+  // 拼接资助信息
+  form.fundingInfo = fundingList.value
+      .map(item => item.value)
+      .filter(val => val && val.trim() !== '')
+      .join('; ')
 
   const payload = {
     ...form,
