@@ -9,6 +9,7 @@ import com.bjfu.cms.entity.dto.TechCheckAnalysisDTO;
 import com.bjfu.cms.entity.dto.TechCheckDTO;
 import com.bjfu.cms.mapper.ManuscriptMapper;
 import com.bjfu.cms.mapper.UserMapper;
+import com.bjfu.cms.service.CommunicationService;
 import com.bjfu.cms.service.EmailService;
 import com.bjfu.cms.service.EditorialAdminService;
 import com.bjfu.cms.service.SftpService;
@@ -33,6 +34,9 @@ public class EditorialAdminServiceImpl implements EditorialAdminService {
     @Value("${file.temp.path}")
     private String localTempPath;
 
+
+    @Autowired
+    private CommunicationService communicationService;
 
     @Autowired
     private SftpService sftpService;
@@ -69,6 +73,16 @@ public class EditorialAdminServiceImpl implements EditorialAdminService {
         if (dto.getPassed()) {
             // 形式审查通过，进入下一阶段
             manuscriptMapper.updateStatus(dto.getManuscriptId(), "Processing", "PendingDeskReview");
+            // 形式审查通过，发送站内信通知作者
+            communicationService.sendMessage(
+                    1,
+                    manuscript.getAuthorId(),
+                    "MS-" + manuscript.getManuscriptId(),
+                    "形式审查通过",
+                    "您的稿件已通过形式审查，即将进入初审阶段。",
+                    0
+            );
+
         } else {
             // 形式审查不通过，调用退回修改方法
             unsubmitManuscript(dto);
@@ -111,12 +125,21 @@ public class EditorialAdminServiceImpl implements EditorialAdminService {
         // 更新稿件状态为"Incomplete"
         manuscriptMapper.updateManuscriptSpecial(dto.getManuscriptId(), "Incomplete", null);
 
-        // 发送邮件给作者（修正参数匹配问题）
-        String subject = "稿件形式审查未通过";
-        String content = String.format("您的稿件《%s》形式审查未通过，原因如下：<br/>%s<br/><br/>请修改后重新提交。",
-                manuscript.getTitle(), dto.getFeedback());
-        // 补充cc参数（null表示无抄送），使用作者邮箱作为收件人
-        emailService.sendHtmlMail(author.getEmail(), null, subject, content);
+//        // 发送邮件给作者（修正参数匹配问题）
+//        String subject = "稿件形式审查未通过";
+//        String content = String.format("您的稿件《%s》形式审查未通过，原因如下：<br/>%s<br/><br/>请修改后重新提交。",
+//                manuscript.getTitle(), dto.getFeedback());
+//        // 补充cc参数（null表示无抄送），使用作者邮箱作为收件人
+//        emailService.sendHtmlMail(author.getEmail(), null, subject, content);
+
+        communicationService.sendMessage(
+                1,
+                author.getUserId(),
+                "MS-" + manuscript.getManuscriptId(),
+                "形式审查未通过",
+                "您的稿件形式审查未通过，原因：" + dto.getFeedback() + "。请修改后重新提交。",
+                0
+        );
 
         // 记录日志
         String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
