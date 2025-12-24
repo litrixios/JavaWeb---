@@ -3,6 +3,7 @@ package com.bjfu.cms.controller;
 import com.bjfu.cms.common.result.Result;
 import com.bjfu.cms.entity.*;
 import com.bjfu.cms.entity.dto.ReviewInviteDTO;
+import com.bjfu.cms.entity.dto.ReviewTrackingDTO;
 import com.bjfu.cms.service.EditorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -81,5 +82,14 @@ public class EditorController {
         List<User> list = editorService.recommendReviewers(manuscriptId);
         return Result.success(list);
     }
+    // 2. 新增：获取评审跟踪列表（UnderReview + 聚合意见）
+    @Operation(summary = "查询评审跟踪中的稿件")
+    @GetMapping("/manuscripts/tracking")
+    public Result<List<ReviewTrackingDTO>> getTrackingList(@RequestParam("editorId") Integer editorId) {
+        // 前端直接在 URL 后面带上 ?editorId=xxx
+        List<ReviewTrackingDTO> list = editorService.getReviewTrackingList(editorId);
+        return Result.success(list);
+    }
+
 }
 

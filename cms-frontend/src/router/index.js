@@ -200,6 +200,14 @@ const routes = [
                 // 确保文件名 Monitoring.vue 路径正确
                 component: () => import('@/views/editor/Monitoring.vue'),
                 meta: { title: '审稿监控', roles: ['Editor'] }
+            },
+            {
+                // 确保这里的 path 是小写 'tracking'
+                path: 'tracking',
+                name: 'Tracking',
+                // 确保文件名 ReviewTracking.vue 路径正确
+                component: () => import('@/views/editor/ReviewTracking.vue'),
+                meta: { title: '审稿进度', roles: ['Editor'] }
             }
         ]
     },

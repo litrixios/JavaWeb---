@@ -3,6 +3,7 @@ package com.bjfu.cms.service.impl;
 import com.bjfu.cms.common.utils.UserContext;
 import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.User;
+import com.bjfu.cms.entity.dto.ReviewTrackingDTO;
 import com.bjfu.cms.mapper.EditorMapper;
 import com.bjfu.cms.mapper.ManuscriptMapper; // 确保有这个Mapper
 import com.bjfu.cms.mapper.UserMapper;
@@ -51,6 +52,7 @@ public class EditorServiceImpl implements EditorService {
 
     @Autowired
     private UserMapper userMapper; // 注入 UserMapper 用于查询作者和审稿人
+
 
 
     @Override
@@ -126,7 +128,7 @@ public class EditorServiceImpl implements EditorService {
 
         // 2. 更新状态 (必须严格匹配数据库的 CHECK 约束值)
         // 根据你的约束：Status 应为 'Processing', SubStatus 应为 'UnderReview'
-        editorMapper.updateManuscriptStatus(msId, "Processing", "UnderReview");
+        //editorMapper.updateManuscriptStatus(msId, "Processing", "UnderReview");
     }
 
 
@@ -225,4 +227,9 @@ public class EditorServiceImpl implements EditorService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<ReviewTrackingDTO> getReviewTrackingList(Integer editorId) {
+        // 调用我们刚刚在 XML 里写的聚合查询
+        return manuscriptMapper.selectTrackingWithOpinions(editorId);
+    }
 } // 所有的实现方法必须在这个大括号内！

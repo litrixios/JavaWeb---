@@ -17,6 +17,10 @@
           <el-icon><Edit /></el-icon>
           <span>审稿监控</span>
         </el-menu-item>
+        <el-menu-item index="/editor/tracking">
+          <el-icon><Edit /></el-icon>
+          <span>审稿进度</span>
+        </el-menu-item>
       </el-menu>
     </div>
 
