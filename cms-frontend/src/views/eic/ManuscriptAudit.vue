@@ -85,7 +85,6 @@
             <el-table-column prop="title" label="稿件标题" min-width="200" show-overflow-tooltip />
             <el-table-column prop="authorList" label="作者列表" width="150" />
             <el-table-column prop="keywords" label="关键词" width="120" />
-
             <el-table-column label="投稿时间" width="180">
               <template #default="scope">
                 {{ formatDate(scope.row.submissionTime) }}
@@ -236,7 +235,29 @@
             </el-table-column>
           </el-table>
         </el-tab-pane>
+        <el-dialog v-model="detailVisible" title="稿件详情" width="650px">
+          <div v-if="currentManuscript" class="manuscript-detail">
+            <div class="detail-item">
+              <label>标题：</label>
+              <div class="content title">{{ currentManuscript.title }}</div>
+            </div>
 
+            <div class="detail-item">
+              <label>作者列表：</label>
+              <div class="content">{{ currentManuscript.authorList }}</div>
+            </div>
+
+            <div class="detail-item">
+              <label>关键词：</label>
+              <div class="content">{{ currentManuscript.keywords }}</div>
+            </div>
+
+            <div class="detail-item">
+              <label>摘要：</label>
+              <div class="content abstract">{{ currentManuscript.abstractText || '暂无摘要内容' }}</div>
+            </div>
+          </div>
+        </el-dialog>
         <!-- 已有决定 -->
         <el-tab-pane label="已有决定" name="decided">
           <el-table
@@ -667,10 +688,9 @@ const editorMap = ref({})
 // 可用的新状态选项（用于撤销决定）
 const availableStatuses = ref([
   { value: 'PendingDeskReview', label: '待初审' },  // 新增：待初审
-  { value: 'PendingAssign', label: '待分配编辑' },
+  { value: 'PendingAssign', label: '待分配' },
   { value: 'WithEditor', label: '编辑处理中' },
-  { value: 'UnderReview', label: '正在审稿' },
-  { value: 'TechCheck', label: '技术检查' }
+  { value: 'UnderReview', label: '正在审稿' }
 ])
 
 // 表单数据
@@ -758,18 +778,13 @@ const truncateText = (text, length) => {
 
 const getStatusLabel = (key) => {
   const labels = {
-    'Incomplete': '待完成',
-    'Processing': '处理中',
-    'Revision': '需修改',
-    'Decided': '已有决定',
-    'Rejected': '已拒绝',
     'avgReviewDays': '平均审稿天数',
-    // 子状态标签
-    'PendingAssign': '待分配编辑',
-    'PendingDeskReview':'待初审',
+    'PendingDeskReview': '待初审',
+    'PendingAssign': '待分配',
     'WithEditor': '编辑处理中',
     'UnderReview': '正在审稿',
-    'TechCheck': '技术检查'
+    'Revision': '需要修改',
+    'Decided': '已有决定'
   }
   return labels[key] || key
 }
@@ -869,11 +884,14 @@ const refreshData = () => {
   ElMessage.success('数据已刷新')
 }
 
+const detailVisible = ref(false)
+const currentManuscript = ref(null)
+
 // 查看详情
 const viewDetail = (row) => {
-  // 这里可以跳转到稿件详情页
-  console.log('查看稿件详情:', row)
-  ElMessage.info('稿件ID: ' + row.manuscriptId + ' - ' + row.title)
+  // 此时 row 已经包含了从后端获取的 title, authorList 和 abstractText [cite: 157, 158]
+  currentManuscript.value = row
+  detailVisible.value = true
 }
 
 // 新增：打开撤销决定对话框
@@ -1380,5 +1398,29 @@ onMounted(() => {
   white-space: nowrap;
   color: #606266;
   font-size: 13px;
+}
+.detail-item {
+  margin-bottom: 20px;
+}
+.detail-item label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8px;
+  color: #606266;
+}
+.detail-item .content {
+  line-height: 1.6;
+  color: #333;
+}
+.detail-item .title {
+  font-size: 18px;
+  color: #409EFF;
+}
+.detail-item .abstract {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 4px;
+  max-height: 300px;
+  overflow-y: auto;
 }
 </style>

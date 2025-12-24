@@ -231,6 +231,43 @@ const routes = [
                 meta: { title: '审稿详情', hidden: true }
             }
         ]
+    },
+    //编辑部管理员
+    {
+        path: '/editorial-admin',
+        name: 'EditorialAdmin',
+        component: () => import('@/layout/AdminLayout.vue'),
+        meta: { role: 'EDITORIAL_ADMIN' },
+        redirect: '/editorial-admin/tech-check',  // 添加默认重定向
+        children: [
+            // 形式审查路由
+            {
+                path: 'tech-check',
+                name: 'TechCheckList',
+                component: () => import('@/views/editorial-admin/tech-check/list.vue')
+            },
+            {
+                path: 'tech-check/detail',
+                name: 'TechCheckDetail',
+                component: () => import('@/views/editorial-admin/tech-check/detail.vue')
+            },
+            // 新闻管理路由
+            {
+                path: 'news',
+                name: 'NewsList',
+                component: () => import('@/views/editorial-admin/news/list.vue')
+            },
+            {
+                path: 'news/add',
+                name: 'AddNews',
+                component: () => import('@/views/editorial-admin/news/form.vue')
+            },
+            {
+                path: 'news/edit',
+                name: 'EditNews',
+                component: () => import('@/views/editorial-admin/news/form.vue')
+            }
+        ]
     }
 
 

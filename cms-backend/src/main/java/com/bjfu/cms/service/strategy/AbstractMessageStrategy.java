@@ -21,7 +21,7 @@ public abstract class AbstractMessageStrategy {
     /**
      * 【模板方法】统一的发送流程
      */
-    public void executeSend(Integer senderId, Integer receiverId, String topic, String title, String content) {
+    public void executeSend(Integer senderId, Integer receiverId, String topic, String title, String content, Integer msgType) {
         // 1. 准备数据
         User sender = userMapper.selectById(senderId);
         User receiver = userMapper.selectById(receiverId);
@@ -31,7 +31,7 @@ public abstract class AbstractMessageStrategy {
         }
 
         // 2. 【钩子】权限校验 (交由子类实现)
-        checkPermission(sender, receiver);
+        checkPermission(sender, receiver, msgType, topic);
 
         // 3. 存入数据库 (站内信)
         InternalMessage msg = new InternalMessage();
@@ -40,6 +40,7 @@ public abstract class AbstractMessageStrategy {
         msg.setTopic(topic);
         msg.setTitle(title);
         msg.setContent(content);
+        msg.setMsgType(msgType);
         msg.setSendTime(new Date());
         msg.setIsRead(false);
 
@@ -52,7 +53,7 @@ public abstract class AbstractMessageStrategy {
     /**
      * 抽象方法：子类必须实现具体的权限规则
      */
-    protected abstract void checkPermission(User sender, User receiver);
+    protected abstract void checkPermission(User sender, User receiver, Integer msgType, String topic);
 
     // 辅助方法：发邮件
     private void sendEmailNotification(User receiver, String topic, String title, String content) {

@@ -32,35 +32,32 @@ public class CommunicationServiceImpl implements CommunicationService {
     private Map<String, AbstractMessageStrategy> strategyMap;
 
     @Override
-    public void sendMessage(Integer senderId, Integer receiverId, String topic, String title, String content) {
-        // 1. 获取发送者信息
+    public void sendMessage(Integer senderId, Integer receiverId, String topic, String title, String content, Integer msgType) {
         User sender = userMapper.selectById(senderId);
-        if (sender == null) {
-            throw new RuntimeException("发送者不存在");
-        }
-
-        // 2. 拼接策略名称 (数据库Role字段 + "_STRATEGY")
-        // 例如：Role是 "Author"，拼接成 "Author_STRATEGY"
         String strategyName = sender.getRole() + "_STRATEGY";
-
-        // 3. 从 Map 中取出对应的策略处理类
         AbstractMessageStrategy strategy = strategyMap.get(strategyName);
 
         if (strategy == null) {
-            // 如果没找到特定策略（比如管理员可能没写策略），可以抛错或者用默认策略
-            // 这里为了调试方便，直接打印错误
-            System.err.println("未找到角色策略: " + strategyName);
-            throw new RuntimeException("该角色暂无发送消息权限或策略未定义");
+            // 系统自动发送的消息可能没有sender(senderId=0或-1)，需要特殊处理，或者赋予管理员策略
+            throw new RuntimeException("未找到发送策略");
         }
 
-        // 4. 执行策略 (模板方法)
-        strategy.executeSend(senderId, receiverId, topic, title, content);
+        strategy.executeSend(senderId, receiverId, topic, title, content, msgType);
     }
 
     @Override
-    public List<InternalMessage> getMyMessages() {
-        Integer currentUserId = UserContext.getUserId();
-        return messageMapper.selectByReceiverId(currentUserId);
+    public List<InternalMessage> getSystemNotifications() {
+        Integer userId = UserContext.getUserId();
+        // 需要在 XML 实现 selectByTypeAndReceiver(type=0, userId)
+        return messageMapper.selectByTypeAndReceiver(0, userId);
+    }
+
+    @Override
+    public List<InternalMessage> getChatHistory(String topic) {
+        Integer userId = UserContext.getUserId();
+        // 获取该稿件下的聊天 (Type=1)
+        // XML selectByTopicAndUser 需要增加 AND msg_type = 1
+        return messageMapper.selectByTopicAndUser(topic, userId);
     }
 
     @Override
@@ -68,10 +65,4 @@ public class CommunicationServiceImpl implements CommunicationService {
         messageMapper.markAsRead(messageId);
     }
 
-    @Override
-    public List<InternalMessage> getMessagesByTopic(String topic) {
-        Integer currentUserId = UserContext.getUserId();
-        // 调用 Mapper 新增的方法，查询 topic 匹配且与当前用户有关（发件人或收件人）的消息
-        return messageMapper.selectByTopicAndUser(topic, currentUserId);
-    }
 }

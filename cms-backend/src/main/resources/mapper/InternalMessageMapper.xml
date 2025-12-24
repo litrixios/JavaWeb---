@@ -14,6 +14,8 @@
         <result property="isRead" column="IsRead"/>
         <result property="sendTime" column="SendTime"/>
 
+        <result property="msgType" column="MsgType"/>
+
         <result property="senderName" column="SenderName"/>
         <result property="senderRole" column="SenderRole"/>
     </resultMap>
@@ -30,8 +32,12 @@
     </select>
 
     <insert id="insertMessage" useGeneratedKeys="true" keyProperty="messageId">
-        INSERT INTO InternalMessage (SenderID, ReceiverID, Topic, Title, Content, IsRead, SendTime)
-        VALUES (#{senderId}, #{receiverId}, #{topic}, #{title}, #{content}, 0, GETDATE())
+        INSERT INTO InternalMessage (
+            SenderID, ReceiverID, Topic, Title, Content, IsRead, SendTime, MsgType
+        )
+        VALUES (
+                   #{senderId}, #{receiverId}, #{topic}, #{title}, #{content}, 0, GETDATE(), #{msgType}
+               )
     </insert>
 
     <update id="markAsRead">
@@ -47,6 +53,18 @@
                  LEFT JOIN Users sender ON m.SenderID = sender.UserID
         WHERE m.Topic = #{topic}
           AND (m.SenderID = #{userId} OR m.ReceiverID = #{userId})
+        ORDER BY m.SendTime ASC
+    </select>
+
+    <select id="selectByTypeAndReceiver" resultMap="MessageMap">
+        SELECT
+            m.*,
+            u.FullName AS SenderName,
+            u.Role AS SenderRole
+        FROM InternalMessage m
+                 LEFT JOIN Users u ON m.SenderID = u.UserID
+        WHERE m.ReceiverID = #{receiverId}
+          AND m.MsgType = #{msgType}
         ORDER BY m.SendTime DESC
     </select>
 

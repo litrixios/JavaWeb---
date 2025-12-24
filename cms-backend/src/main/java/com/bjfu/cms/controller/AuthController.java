@@ -27,8 +27,6 @@ public class AuthController {
        // System.out.println(loginDTO);
         User user = userMapper.findByUsername(loginDTO.getUsername());
 
-
-
         // 2. 校验用户是否存在
         if (user == null) {
             System.out.println("用户不存在");
