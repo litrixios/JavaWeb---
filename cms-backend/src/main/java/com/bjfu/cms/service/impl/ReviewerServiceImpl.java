@@ -8,6 +8,7 @@ import com.bjfu.cms.entity.dto.ReviewSubmitDTO;
 import com.bjfu.cms.mapper.ManuscriptMapper;
 import com.bjfu.cms.mapper.ReviewMapper;
 import com.bjfu.cms.mapper.UserMapper;
+import com.bjfu.cms.service.CommunicationService;
 import com.bjfu.cms.service.EmailService;
 import com.bjfu.cms.service.ReviewerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class ReviewerServiceImpl implements ReviewerService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private CommunicationService communicationService;
 
     @Value("${aliyun.ecs.remote-dir}")
     private String remoteBaseDir;  // 远程根目录
@@ -73,14 +77,14 @@ public class ReviewerServiceImpl implements ReviewerService {
     public void acceptInvitation(Integer reviewId) {
         Integer reviewerId = UserContext.getUserId();
 
-        // 更新审稿状态为已接受
         int rows = reviewMapper.updateStatus(reviewId, reviewerId, "Accepted");
         if (rows == 0) {
             throw new RuntimeException("更新审稿状态失败，请重试");
         }
 
-        // 记录操作日志
         Review review = reviewMapper.selectById(reviewId);
+        Manuscript manuscript = manuscriptMapper.selectById(review.getManuscriptID());
+
         String logDesc = String.format("审稿人ID=%d接受了稿件ID=%d的审稿邀请", reviewerId, review.getManuscriptID());
         userMapper.insertLog(
                 new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()),
@@ -89,6 +93,7 @@ public class ReviewerServiceImpl implements ReviewerService {
                 review.getManuscriptID(),
                 logDesc
         );
+
     }
 
     @Override
