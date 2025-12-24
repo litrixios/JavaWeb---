@@ -94,6 +94,18 @@ public class ReviewerServiceImpl implements ReviewerService {
                 logDesc
         );
 
+        Manuscript m = manuscriptMapper.selectById(review.getManuscriptID());
+        if (m != null && m.getCurrentEditorId() != null) {
+            communicationService.sendMessage(
+                    1,
+                    m.getCurrentEditorId(), // Sender: 1 (System Admin)
+                    "MS-" + m.getManuscriptId(),
+                    "审稿邀请已接受",
+                    "审稿人 (ID=" + reviewerId + ") 已接受审稿邀请。",
+                    0
+            );
+        }
+
     }
 
     @Override
@@ -126,13 +138,17 @@ public class ReviewerServiceImpl implements ReviewerService {
         if (manuscript != null && manuscript.getCurrentEditorId() != null) {
             User editor = userMapper.selectById(manuscript.getCurrentEditorId());
             if (editor != null && editor.getEmail() != null) {
-                // 发送邮件通知逻辑（可调用现有的邮件服务）
-                String emailTitle = String.format("审稿邀请拒绝通知（稿件ID=%d）", review.getManuscriptID());
-                String emailContent = String.format("审稿人ID=%d拒绝了稿件ID=%d的审稿邀请，理由：%s",
-                        reviewerId, review.getManuscriptID(), reason);
-                // 发送邮件通知逻辑（调用现有邮件服务）
-                emailService.sendHtmlMail(editor.getEmail(), null, emailTitle, emailContent);
+                emailService.sendHtmlMail(editor.getEmail(), null, "审稿拒绝通知", "理由：" + reason);
             }
+
+            communicationService.sendMessage(
+                    1,
+                    manuscript.getCurrentEditorId(),
+                    "MS-" + manuscript.getManuscriptId(),
+                    "审稿邀请被拒绝",
+                    "审稿人 (ID=" + reviewerId + ") 拒绝了邀请。理由：" + reason,
+                    0
+            );
         }
     }
 
@@ -200,7 +216,18 @@ public class ReviewerServiceImpl implements ReviewerService {
         // 4. 记录日志
         userMapper.insertLog(now, reviewerId, "SubmitReview", review.getManuscriptID(), "审稿人提交了审稿意见");
 
-        // 5. 通知编辑（加分项逻辑可在此添加）
+        // 5. 通知编辑
+        Manuscript m = manuscriptMapper.selectById(review.getManuscriptID());
+        if (m != null && m.getCurrentEditorId() != null) {
+            communicationService.sendMessage(
+                    1,
+                    m.getCurrentEditorId(),
+                    "MS-" + m.getManuscriptId(),
+                    "审稿意见已提交",
+                    "审稿人 (ID=" + reviewerId + ") 已提交审稿意见，请及时处理。",
+                    0
+            );
+        }
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.bjfu.cms.entity.dto.EicDecisionDTO;
 import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.mapper.ManuscriptMapper;
 import com.bjfu.cms.mapper.UserMapper;
+import com.bjfu.cms.service.CommunicationService;
 import com.bjfu.cms.service.EditorInChiefService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class EditorInChiefServiceImpl implements EditorInChiefService {
+
+    @Autowired
+    private CommunicationService communicationService;
 
     @Autowired
     private ManuscriptMapper manuscriptMapper;
@@ -153,6 +157,14 @@ public class EditorInChiefServiceImpl implements EditorInChiefService {
                 saveLog("DeskAccept", dto.getManuscriptId(),
                         "稿件通过初审，等待指派编辑" +
                                 (dto.getComments() != null ? "，备注：" + dto.getComments() : ""));
+
+                communicationService.sendMessage(
+                        1,
+                        manuscript.getAuthorId(),
+                        "MS-" + dto.getManuscriptId(),
+                        "初审通过通知",
+                        "您的稿件已通过初审，正在安排编辑处理。", 0
+                );
             }
         } catch (Exception e) {
             saveLog("DeskReviewError", dto.getManuscriptId(),
@@ -196,6 +208,15 @@ public class EditorInChiefServiceImpl implements EditorInChiefService {
         String reason = dto.getComments() != null ? dto.getComments() : "根据编辑专长匹配";
         saveLog("AssignEditor", dto.getManuscriptId(),
                 "指派编辑ID: " + dto.getEditorId() + "，理由: " + reason);
+
+        communicationService.sendMessage(
+                1,
+                dto.getEditorId(),
+                "MS-" + dto.getManuscriptId(),
+                "新稿件指派",
+                "您有新的稿件待处理。稿件ID：" + dto.getManuscriptId(),
+                0
+        );
     }
 
     @Override
@@ -233,6 +254,16 @@ public class EditorInChiefServiceImpl implements EditorInChiefService {
         // 记录终审决策
         saveLog("FinalDecision", dto.getManuscriptId(),
                 "终审决策: " + dto.getDecision() + "，理由: " + dto.getComments());
+
+        Manuscript m = manuscriptMapper.selectById(dto.getManuscriptId());
+        communicationService.sendMessage(
+                1,
+                m.getAuthorId(),
+                "MS-" + dto.getManuscriptId(),
+                "终审结果通知",
+                "您的稿件有了新的决定：" + dto.getDecision() + "。备注：" + dto.getComments(),
+                0
+        );
     }
 
     @Override
@@ -328,6 +359,15 @@ public class EditorInChiefServiceImpl implements EditorInChiefService {
                     "Involuntary"       // RetractType
             );
 
+            communicationService.sendMessage(
+                    1,
+                    manuscript.getAuthorId(),
+                    "MS-" + dto.getManuscriptId(),
+                    "撤稿通知",
+                    "您的稿件已被执行撤稿处理。原因：" + dto.getComments(),
+                    0
+            );
+
             // 记录日志
             String operatorName = dto.getOperatorName() != null ?
                     dto.getOperatorName() : "未知用户";
@@ -341,11 +381,21 @@ public class EditorInChiefServiceImpl implements EditorInChiefService {
             throw new RuntimeException("撤稿失败: " + e.getMessage(), e);
         }
     }
+
     @Override
     @Transactional
     public void rescindDecision(Integer manuscriptId, String newStatus, String reason) {
         manuscriptMapper.updateManuscriptSpecial(manuscriptId, "Processing", newStatus);
         saveLog("Rescind", manuscriptId, "撤销决定，新状态: " + newStatus + "，原因: " + reason);
+
+        Manuscript m = manuscriptMapper.selectById(manuscriptId);
+        communicationService.sendMessage(
+                1,
+                m.getAuthorId(),
+                "MS-" + manuscriptId, "决定撤销通知",
+                "之前的审稿决定已被撤销，稿件状态已恢复为：" + newStatus + "。原因：" + reason,
+                0
+        );
     }
 
     private void saveLog(String type, Integer manuscriptId, String desc) {
