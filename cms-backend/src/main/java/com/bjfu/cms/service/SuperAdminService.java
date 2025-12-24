@@ -3,10 +3,12 @@ package com.bjfu.cms.service;
 import com.bjfu.cms.entity.User;
 import com.bjfu.cms.entity.UserPermission;
 import com.bjfu.cms.entity.dto.AdminUserDTO;
+import com.bjfu.cms.entity.dto.LogQueryDTO;
 import com.bjfu.cms.entity.dto.UserCreateDTO;
 import com.bjfu.cms.common.result.Result;
 
 import java.util.List;
+import java.util.Map;
 
 public interface SuperAdminService {
 
@@ -33,4 +35,13 @@ public interface SuperAdminService {
 
     // 检查用户名是否存在
     Result<Boolean> checkUsernameExists(String username);
+
+    // 新增：获取系统日志
+    Result<Map<String, Object>> getSystemLogs(LogQueryDTO queryDTO);
+
+    // 新增：清空系统日志
+    Result<String> clearSystemLogs();
+
+    // 新增：获取系统信息
+    Result<Map<String, Object>> getSystemInfo();
 }

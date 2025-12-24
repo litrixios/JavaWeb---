@@ -4,6 +4,7 @@ import com.bjfu.cms.common.result.Result;
 import com.bjfu.cms.entity.User;
 import com.bjfu.cms.entity.UserPermission;
 import com.bjfu.cms.entity.dto.AdminUserDTO;
+import com.bjfu.cms.entity.dto.LogQueryDTO;
 import com.bjfu.cms.entity.dto.RolePermissionDTO;
 import com.bjfu.cms.entity.dto.UserCreateDTO;
 import com.bjfu.cms.service.SuperAdminService;
@@ -12,6 +13,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -118,39 +123,42 @@ public class SystemAdminController {
 
     @GetMapping("/logs")
     @Operation(summary = "获取系统日志", description = "获取系统操作日志")
-    public Result<List<Map<String, Object>>> getSystemLogs(
+    public Result<Map<String, Object>> getSystemLogs(
             @RequestParam(required = false) String operationType,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
 
-        try {
-            // 模拟日志数据 - 实际项目中应该从数据库查询
-            List<Map<String, Object>> logs = List.of(
-                    Map.of(
-                            "logId", 1,
-                            "operationTime", "2024-12-21 10:00:00",
-                            "operatorName", "systemadmin",
-                            "operationType", "Login",
-                            "manuscriptId", "",
-                            "description", "系统管理员登录系统"
-                    ),
-                    Map.of(
-                            "logId", 2,
-                            "operationTime", "2024-12-21 10:05:00",
-                            "operatorName", "systemadmin",
-                            "operationType", "User",
-                            "manuscriptId", "",
-                            "description", "查询用户列表"
-                    )
-            );
+        LogQueryDTO queryDTO = new LogQueryDTO();
+        queryDTO.setOperationType(operationType);
+        queryDTO.setPageNum(pageNum);
+        queryDTO.setPageSize(pageSize);
 
-            return Result.success(logs);
-        } catch (Exception e) {
-            return Result.error("获取日志失败: " + e.getMessage());
+        // 日期转换
+        try {
+            if (startDate != null && !startDate.isEmpty()) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                queryDTO.setStartDate(sdf.parse(startDate));
+            }
+            if (endDate != null && !endDate.isEmpty()) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                Date end = sdf.parse(endDate);
+                // 结束日期设置为当天的23:59:59
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(end);
+                calendar.set(Calendar.HOUR_OF_DAY, 23);
+                calendar.set(Calendar.MINUTE, 59);
+                calendar.set(Calendar.SECOND, 59);
+                queryDTO.setEndDate(calendar.getTime());
+            }
+        } catch (ParseException e) {
+            return Result.error("日期格式错误");
         }
+
+        return superAdminService.getSystemLogs(queryDTO);
     }
+
 
     @DeleteMapping("/logs")
     @Operation(summary = "清空系统日志", description = "清空所有系统操作日志")

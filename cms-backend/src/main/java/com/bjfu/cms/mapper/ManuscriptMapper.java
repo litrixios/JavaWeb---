@@ -2,9 +2,11 @@ package com.bjfu.cms.mapper;
 
 import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.SystemLog;
-import com.bjfu.cms.entity.Version; // 需新建 Version 实体，或直接用 Map 传参，这里建议新建实体
+import com.bjfu.cms.entity.SystemLog;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.Date;
 import java.util.List;
 
 @Mapper
@@ -44,29 +46,48 @@ public interface ManuscriptMapper {
     List<Manuscript> selectAllManuscripts(@Param("status") String status);
 
 
+    // 根据主键查询
+    Manuscript selectByPrimaryKey(@Param("manuscriptId") Integer manuscriptId);
+
     // 更新状态
-    void updateStatus(@Param("id") Integer id,
+    void updateStatus(@Param("manuscriptId") Integer manuscriptId,
                       @Param("status") String status,
                       @Param("subStatus") String subStatus);
 
-    // 指派编辑
+    // 更新最终决定
+    void updateFinalDecision(@Param("manuscriptId") Integer manuscriptId,
+                             @Param("decision") String decision,
+                             @Param("status") String status,
+                             @Param("subStatus") String subStatus,
+                             @Param("finalDecisionDate") String finalDecisionDate,
+                             @Param("comments") String comments);
+
+    // 更新当前编辑
+    void updateCurrentEditor(@Param("manuscriptId") Integer manuscriptId,
+                             @Param("editorId") Integer editorId,
+                             @Param("subStatus") String subStatus);
+
+    // 更新编辑和状态
     void updateCurrentEditorAndStatus(@Param("manuscriptId") Integer manuscriptId,
                                       @Param("editorId") Integer editorId,
                                       @Param("status") String status,
                                       @Param("subStatus") String subStatus);
 
-    // 终审决策
-    void updateFinalDecision(@Param("id") Integer id,
-                             @Param("decision") String decision,
-                             @Param("status") String status,
-                             @Param("subStatus") String subStatus,
-                             @Param("decisionTime") String decisionTime,
-                             @Param("editorSummary") String editorSummary);
-
-    // 🔥 新增：特殊权限操作（如撤稿、撤销决定）
-    void updateManuscriptSpecial(@Param("id") Integer id,
+    // 特殊更新（用于撤稿等）
+    void updateManuscriptSpecial(@Param("manuscriptId") Integer manuscriptId,
                                  @Param("status") String status,
                                  @Param("subStatus") String subStatus);
+
+    // 新增：更新撤稿信息的专门方法
+    void updateRetractManuscript(@Param("manuscriptId") Integer manuscriptId,
+                                 @Param("status") String status,
+                                 @Param("subStatus") String subStatus,
+                                 @Param("decision") String decision,
+                                 @Param("retractTime") Date retractTime,
+                                 @Param("retractByUserId") Integer retractByUserId,
+                                 @Param("retractReason") String retractReason,
+                                 @Param("retractType") String retractType);
+
     // 新增：根据ID查询，方便校验归属
     Manuscript selectById(@Param("id") Integer id);
 

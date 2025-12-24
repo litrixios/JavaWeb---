@@ -18,4 +18,10 @@ public class EicDecisionDTO {
     private String fullName;          // 必须有这个
     private String researchDirection; // 必须有这个
     private String email;
+    private String username;
+    private String affiliation;   // 必须有这个
+
+    // 新增：撤稿操作用户信息
+    private Integer operatorId;    // 操作用户ID
+    private String operatorName;   // 操作用户姓名
 }

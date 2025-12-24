@@ -6,9 +6,7 @@
           <span>系统登录</span>
         </div>
       </template>
-      <el-form-item>
-        <el-button style="width: 100%;" @click="returnto">返回到主界面</el-button>
-      </el-form-item>
+
       <el-form :model="form" label-width="60px">
         <el-form-item label="账号">
           <el-input v-model="form.username" placeholder="请输入用户名" />
@@ -20,7 +18,7 @@
           <el-select v-model="form.role" placeholder="请选择身份" style="width: 100%">
             <el-option label="超级管理员" value="SuperAdmin" />
             <el-option label="管理员" value="SystemAdmin" />
-            <el-option label="编辑管理员" value="EditorialAdmin" />
+            <el-option label="编辑部管理员" value="EditorialAdmin" />
             <el-option label="主编" value="EditorInChief" />
             <el-option label="编辑" value="Editor" />
             <el-option label="审稿人" value="Reviewer" />
@@ -97,25 +95,25 @@ const handleLogin = async () => {
 
         switch (userRole) {
           case 'SuperAdmin':
-            router.push('/SuperAdmin/superadmin')
+            router.push('/layout/index')
             break
           case 'SystemAdmin':
-            router.push('/Systemadmin/systemadmin')
+            router.push('/layout/index')
             break
           case 'Editor':
-            router.push('/editor/my-manuscripts')
+            router.push('/layout/index')
             break
           case 'Author':
             router.push('/manuscript/list')
             break
           case 'Reviewer':
-            router.push('/reviewer/dashboard')
-            break
-          case 'EditorialAdmin':
             router.push('/layout/index')
             break
+          case 'EditorialAdmin':
+            router.push('/editorial-admin')
+            break
           case 'EditorInChief':
-            router.push('/eic/audit')
+            router.push('/layout/index')
             break
           default:
             router.push('/manuscript/list')
@@ -136,10 +134,6 @@ const handleLogin = async () => {
 const goToRegister = () => {
   router.push('/register')
 }
-const returnto = () =>{
-  window.location.href = 'http://localhost:8080/index'
-}
-
 </script>
 
 <style scoped>
