@@ -181,7 +181,7 @@ public class EditorialAdminServiceImpl implements EditorialAdminService {
     // 查重模拟方法（实际需替换为真实查重逻辑）
     private double checkPlagiarism(String localFilePath) {
         // 示例：随机返回0-15%的查重率
-        return Math.random() * 0.15;
+        return Math.random() * 0.30;
     }
 
     @Override
