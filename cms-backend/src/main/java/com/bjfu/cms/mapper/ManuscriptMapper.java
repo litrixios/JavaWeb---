@@ -92,6 +92,12 @@ public interface ManuscriptMapper {
     // 新增：根据ID查询，方便校验归属
     Manuscript selectById(@Param("id") Integer id);
 
+    // 【新增】根据作者ID查询其所有稿件
+    List<Manuscript> selectByAuthorId(@Param("authorId") Integer authorId);
+
+    // 【新增】根据编辑ID查询其当前负责的所有稿件
+    List<Manuscript> selectByEditorId(@Param("editorId") Integer editorId);
+
     // ManuscriptMapper.java 补充
     /**
      * 获取稿件最新版本的匿名文件路径 (AnonymousFilePath)

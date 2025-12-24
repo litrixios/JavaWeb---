@@ -14,6 +14,7 @@ CREATE TABLE InternalMessage (
     -- 状态字段
                                  IsRead BIT DEFAULT 0,                    -- 站内信是否已读
                                  SendTime DATETIME DEFAULT GETDATE(),     -- 产生时间
+                                 MsgType INT,
 
     -- 外键约束
                                  CONSTRAINT FK_Message_Receiver FOREIGN KEY (ReceiverID) REFERENCES Users(UserID)

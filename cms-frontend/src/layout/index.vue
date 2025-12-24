@@ -18,20 +18,12 @@
           <el-icon><Edit /></el-icon>
           <span>在线投稿</span>
         </el-menu-item>
-        <el-sub-menu index="/eic">
-          <template #title>
-            <el-icon><User /></el-icon>
-            <span>主编管理</span>
-          </template>
-          <el-menu-item index="/eic/reviewer">
-            <el-icon><Avatar /></el-icon>
-            <span>审稿人管理</span>
-          </el-menu-item>
-          <el-menu-item index="/eic/audit">
-            <el-icon><Search /></el-icon>
-            <span>稿件全览</span>
-          </el-menu-item>
-        </el-sub-menu>
+
+        <el-menu-item index="/message/index">
+          <el-icon><Bell /></el-icon>
+          <span>消息中心</span>
+        </el-menu-item>
+
       </el-menu>
     </div>
 
@@ -50,7 +42,7 @@
 </template>
 
 <script setup>
-import { Document, Edit, User, Avatar, Search } from '@element-plus/icons-vue'
+import { Document, Edit, User, Avatar, Search, Bell } from '@element-plus/icons-vue'
 </script>
 
 <style scoped>
