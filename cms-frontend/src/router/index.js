@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 // 确保 Layout 路径正确，如果报错找不到文件，请检查 src/layout/index.vue 是否存在
 import Layout from '@/layout/index.vue'
-
+import Router from '@/layout/eic.vue'
 const routes = [
     // 1. 登录页
     {
@@ -97,6 +97,29 @@ const routes = [
                 path: 'news/edit',
                 name: 'EditNews',
                 component: () => import('@/views/editorial-admin/news/form.vue')
+            }
+        ]
+    },
+    // ================== 新增：主编功能模块 ==================
+    {
+        path: '/eic',
+        component: Router,
+        redirect: '/eic/reviewer',
+        meta: { title: '主编工作台', icon: 'UserFilled' }, // 需确保引入了 UserFilled 图标，或者换成 'User'
+        children: [
+            {
+                path: 'reviewer',
+                name: 'ReviewerManager',
+                // 对应下面第三步创建的文件
+                component: () => import('@/views/eic/ReviewerManager.vue'),
+                meta: { title: '审稿人管理' }
+            },
+            {
+                path: 'audit',
+                name: 'ManuscriptAudit',
+                // 暂时预留，你可以之后再创建这个文件
+                component: () => import('@/views/eic/ManuscriptAudit.vue'),
+                meta: { title: '稿件全览与决策' }
             }
         ]
     }
