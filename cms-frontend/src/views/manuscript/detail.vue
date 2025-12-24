@@ -40,20 +40,38 @@
             <el-alert title="请根据审稿意见上传修改后的文件" type="warning" show-icon :closable="false" style="margin-bottom: 20px;" />
 
             <el-form-item label="修改稿 (Clean)">
-              <el-upload action="/api/common/upload" :limit="1" :on-success="(res) => revisionForm.originalFilePath = res.data">
+              <el-upload
+                  action="/api/common/upload"
+                  :headers="uploadHeaders"
+                  :limit="1"
+                  :on-success="(res) => revisionForm.originalFilePath = res.data"
+                  :on-error="handleUploadError"
+              >
                 <el-button>上传 Clean Version PDF</el-button>
               </el-upload>
             </el-form-item>
 
             <el-form-item label="标记稿 (Marked)" required>
-              <el-upload action="/api/common/upload" :limit="1" :on-success="(res) => revisionForm.markedFilePath = res.data">
+              <el-upload
+                  action="/api/common/upload"
+                  :headers="uploadHeaders"
+                  :limit="1"
+                  :on-success="(res) => revisionForm.markedFilePath = res.data"
+                  :on-error="handleUploadError"
+              >
                 <el-button type="primary">上传 Marked Version PDF</el-button>
               </el-upload>
               <div class="tip">必须上传</div>
             </el-form-item>
 
             <el-form-item label="回复信 (Response)" required>
-              <el-upload action="/api/common/upload" :limit="1" :on-success="(res) => revisionForm.responseLetterPath = res.data">
+              <el-upload
+                  action="/api/common/upload"
+                  :headers="uploadHeaders"
+                  :limit="1"
+                  :on-success="(res) => revisionForm.responseLetterPath = res.data"
+                  :on-error="handleUploadError"
+              >
                 <el-button type="primary">上传 Response Letter</el-button>
               </el-upload>
               <div class="tip">必须上传，逐条回复审稿人意见</div>
@@ -108,6 +126,17 @@ const manuscriptId = route.params.id
 const activeTab = ref(route.query.tab || 'track')
 const loading = ref(false)
 
+// --- 新增代码开始 ---
+const token = localStorage.getItem('token')
+const uploadHeaders = {
+  Authorization: token
+}
+const handleUploadError = (err) => {
+  ElMessage.error('上传失败，请检查登录状态')
+  console.error(err)
+}
+// --- 新增代码结束 ---
+
 // 详情数据
 const manuscript = ref({})
 const historyLogs = ref([])
@@ -137,7 +166,6 @@ const statusType = computed(() => {
 // 简易进度条映射
 const activeStep = computed(() => {
   const s = manuscript.value.status
-  console.log("s:",s)
   if (!s) return 0
   if (s.includes('Submit')) return 1
   if (s.includes('Check') || s.includes('Form')) return 2
@@ -200,7 +228,7 @@ const handleSendMessage = async () => {
   // 假设发给当前处理该稿件的编辑，或者系统默认接收人
   // 这里简化处理，Topic 为 MS-{id}
   const payload = {
-    // 修改点 1：如果没有分配编辑，默认发给总编(ID=2)而不是管理员(ID=1)，以匹配后端默认策略
+    // 如果没有分配编辑，默认发给总编(ID=2)而不是管理员(ID=1)，以匹配后端默认策略
     receiverId: manuscript.value.currentEditorId || 2,
     topic: `MS-${manuscriptId}`,
     title: `关于稿件 ${manuscriptId} 的沟通`,
@@ -209,13 +237,11 @@ const handleSendMessage = async () => {
 
   const res = await sendMessage(payload)
 
-  // 修改点 2：添加 else 分支，处理后端报错
   if (res.code === 200) {
     ElMessage.success('发送成功')
     newMessage.value = ''
     loadMessages()
   } else {
-    // 显示具体错误信息，例如 "您只能回复编辑部工作人员..."
     ElMessage.error(res.msg || '消息发送失败，请稍后重试')
   }
 }
