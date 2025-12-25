@@ -4,6 +4,7 @@ import com.bjfu.cms.common.result.Result;
 import com.bjfu.cms.entity.dto.EicDecisionDTO;
 import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.User;
+import com.bjfu.cms.entity.dto.ManuscriptDetailDTO;
 import com.bjfu.cms.service.EditorInChiefService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -211,7 +212,24 @@ public class EditorInChiefController {
         eicService.auditReviewer(userId, status);
         return Result.success("审核操作成功");
     }
+// ================== 详情与报表 ==================
 
+    /**
+     * 查看稿件详细历史
+     * 包括提交、分配、审稿人意见摘要、决策日志
+     * @param manuscriptId 稿件ID
+     * @return 详情DTO
+     */
+    @GetMapping("/manuscript/{id}/details")
+    @Operation(summary = "查看稿件详细历史", description = "获取稿件详情、操作日志及审稿意见")
+    public Result<ManuscriptDetailDTO> getManuscriptDetails(@PathVariable("id") Integer manuscriptId) {
+        ManuscriptDetailDTO details = eicService.getManuscriptDetails(manuscriptId);
+        return Result.success(details);
+    }
+
+    // exportReport 方法你之前已经有了，现在 Service 实现了逻辑，
+    // 这里只要确保前端通过 window.location.href 或者 blob 下载即可。
+    // 原有的 exportReport 代码无需大改，只需确认 Service 返回了非空字节数组。
     /**
      * 移除审稿人
      * 将审稿人移出库（加入黑名单），需填写理由

@@ -3,6 +3,8 @@ package com.bjfu.cms.service;
 import com.bjfu.cms.entity.dto.EicDecisionDTO;
 import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.User;
+import com.bjfu.cms.entity.dto.ManuscriptDetailDTO;
+
 import java.util.List;
 import java.util.Map;
 
@@ -135,4 +137,6 @@ public interface EditorInChiefService {
      * @param reason 撤销原因
      */
     void rescindDecision(Integer manuscriptId, String newStatus, String reason);
+    // 添加/确认以下方法定义
+    ManuscriptDetailDTO getManuscriptDetails(Integer manuscriptId);
 }
