@@ -351,7 +351,7 @@
     })
     const data = await res.json()
     if (data.code === 200) {
-      ElMessage.success("邀请已发送，状态已更新")
+      ElMessage.success("邀请已发送")
       fetchDetail() // 刷新状态
       selectedReviewers.value = [] // 清空选择
     }

@@ -23,4 +23,6 @@ public interface InternalMessageMapper {
     // 【新增】根据 消息类型 和 接收者 查询 (用于分离 系统通知 和 聊天列表)
     // msgType: 0=系统通知, 1=聊天消息
     List<InternalMessage> selectByTypeAndReceiver(@Param("msgType") Integer msgType, @Param("receiverId") Integer receiverId);
+
+    List<InternalMessage> selectAllMessagesForUser(@Param("userId") Integer userId);
 }

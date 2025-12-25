@@ -3,6 +3,7 @@ package com.bjfu.cms.service.impl;
 import com.bjfu.cms.common.utils.UserContext;
 import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.User;
+import com.bjfu.cms.entity.dto.ReviewTrackingDTO;
 import com.bjfu.cms.mapper.EditorMapper;
 import com.bjfu.cms.mapper.ManuscriptMapper; // 确保有这个Mapper
 import com.bjfu.cms.mapper.UserMapper;
@@ -10,6 +11,7 @@ import com.bjfu.cms.service.EditorService;
 import com.bjfu.cms.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +54,9 @@ public class EditorServiceImpl implements EditorService {
     @Autowired
     private com.bjfu.cms.service.SftpService sftpService;
 
+
+
+
     @Override
     public void sendRemindMail(Integer manuscriptId, Integer reviewId, String content) {
         // 1. 获取催审详情 (SQL 中可以增加对 manuscriptId 的匹配校验)
@@ -77,6 +82,30 @@ public class EditorServiceImpl implements EditorService {
                 content,
                 0
         );
+    }
+
+    @Scheduled(cron = "0 0 2 * * ?") // 每天凌晨 2 点执行一次
+    public void autoCheckOverdueReviews() {
+        // 1. 查找逾期正好 7 天且状态为 'Invited' 或 'Accepted' (未完成) 的评审
+        // 这里的逻辑交给 Mapper 去筛选日期
+        List<Map<String, Object>> overdueReviews = editorMapper.selectOverdueSevenDays();
+
+        for (Map<String, Object> review : overdueReviews) {
+            Integer msId = (Integer) review.get("ManuscriptID");
+            Integer rId = (Integer) review.get("ReviewID");
+            String title = (String) review.get("Title");
+
+            String autoContent = "尊敬的审稿人，您负责的稿件《" + title + "》已逾期 7 天，请尽快提交审稿意见。";
+
+            try {
+                // 直接复用你写好的催审方法
+                this.sendRemindMail(msId, rId, autoContent);
+                System.out.println("自动催审已发送：稿件ID " + msId);
+            } catch (Exception e) {
+                // 防止单个失败影响整体扫描
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -130,7 +159,7 @@ public class EditorServiceImpl implements EditorService {
 
         // 2. 更新状态 (必须严格匹配数据库的 CHECK 约束值)
         // 根据你的约束：Status 应为 'Processing', SubStatus 应为 'UnderReview'
-        editorMapper.updateManuscriptStatus(msId, "Processing", "UnderReview");
+        //editorMapper.updateManuscriptStatus(msId, "Processing", "UnderReview");
     }
 
 
@@ -229,4 +258,9 @@ public class EditorServiceImpl implements EditorService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<ReviewTrackingDTO> getReviewTrackingList(Integer editorId) {
+        // 调用我们刚刚在 XML 里写的聚合查询
+        return manuscriptMapper.selectTrackingWithOpinions(editorId);
+    }
 } // 所有的实现方法必须在这个大括号内！

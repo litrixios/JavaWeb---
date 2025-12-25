@@ -96,4 +96,17 @@
                  JOIN Manuscript m ON r.ManuscriptID = m.ManuscriptID
         WHERE r.ReviewID = #{reviewId}
     </select>
+    <select id="selectOverdueSevenDays" resultType="map">
+        SELECT
+            r.ReviewID,
+            r.ManuscriptID,
+            m.Title
+        FROM Review r
+                 JOIN Manuscript m ON r.ManuscriptID = m.ManuscriptID
+        WHERE r.Status IN ('Invited', 'Accepted') -- 尚未完成的状态
+          AND r.SubmitTime IS NULL                -- 确实没交意见
+          -- DATEDIFF 计算截止日期 Deadline 与当前时间的差值
+          -- 找出那些当前时间比截止日期晚了 7 天的记录
+          AND DATEDIFF(day, r.Deadline, GETDATE()) = 7
+    </select>
 </mapper>

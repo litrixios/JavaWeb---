@@ -42,6 +42,21 @@
         ORDER BY SubmissionTime DESC
     </select>
 
+
+    <select id="selectByAuthorId" resultMap="ManuscriptMap">
+        SELECT * FROM Manuscript
+        WHERE AuthorID = #{authorId}
+        ORDER BY SubmissionTime DESC
+    </select>
+
+    <select id="selectByEditorId" resultMap="ManuscriptMap">
+        SELECT * FROM Manuscript
+        WHERE CurrentEditorID = #{editorId}
+        ORDER BY SubmissionTime DESC
+    </select>
+
+
+
     <insert id="insertManuscript" useGeneratedKeys="true" keyProperty="manuscriptId" keyColumn="ManuscriptID">
         INSERT INTO Manuscript
         (AuthorID, Title, Abstract, Keywords, AuthorList, FundingInfo, Status, SubStatus, SubmissionTime)
@@ -225,6 +240,43 @@
         FROM Versions
         WHERE ManuscriptID = #{manuscriptId}
         ORDER BY VersionNumber DESC
+    </select>
+
+    <resultMap id="ReviewTrackingMap" type="com.bjfu.cms.entity.dto.ReviewTrackingDTO">
+        <id property="manuscriptId" column="ManuscriptID"/>
+        <result property="title" column="Title"/>
+        <result property="keywords" column="Keywords"/>
+        <result property="subStatus" column="SubStatus"/>
+
+        <collection property="opinions" ofType="com.bjfu.cms.entity.dto.ReviewOpinionDTO">
+            <id property="reviewId" column="ReviewID"/>
+            <result property="reviewerName" column="ReviewerName"/>
+            <result property="score" column="Score"/>
+            <result property="suggestion" column="Suggestion"/>
+            <result property="confidentialComments" column="ConfidentialComments"/>
+            <result property="status" column="ReviewStatus"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectTrackingWithOpinions" resultMap="ReviewTrackingMap">
+        SELECT
+            m.ManuscriptID,
+            m.Title,
+            m.Keywords,
+            m.SubStatus,
+            r.ReviewID,
+            u.FullName AS ReviewerName,
+            r.Score,
+            r.Suggestion,
+            r.ConfidentialComments,
+            r.Status AS ReviewStatus
+        FROM Manuscript m
+                 LEFT JOIN Review r ON m.ManuscriptID = r.ManuscriptID
+                 LEFT JOIN Users u ON r.ReviewerID = u.UserID
+        WHERE m.CurrentEditorID = #{editorId}
+          -- 核心修改：只查询处于外审状态的稿件
+          AND m.SubStatus = 'UnderReview'
+        ORDER BY m.ManuscriptID DESC
     </select>
 
 </mapper>

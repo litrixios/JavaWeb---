@@ -2,16 +2,22 @@ package com.bjfu.cms.service.impl;
 
 import com.bjfu.cms.common.utils.UserContext;
 import com.bjfu.cms.entity.InternalMessage;
+import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.User;
+import com.bjfu.cms.entity.dto.ChatSessionDTO;
 import com.bjfu.cms.mapper.InternalMessageMapper;
+import com.bjfu.cms.mapper.ManuscriptMapper;
+import com.bjfu.cms.mapper.ManuscriptMetaMapper;
 import com.bjfu.cms.mapper.UserMapper;
 import com.bjfu.cms.service.CommunicationService;
 import com.bjfu.cms.service.strategy.AbstractMessageStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class CommunicationServiceImpl implements CommunicationService {
@@ -21,6 +27,9 @@ public class CommunicationServiceImpl implements CommunicationService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private ManuscriptMapper manuscriptMapper;
 
     /**
      * 【核心】策略地图
@@ -46,6 +55,12 @@ public class CommunicationServiceImpl implements CommunicationService {
     }
 
     @Override
+    public List<InternalMessage> getMyAllMessages() {
+        Integer userId = UserContext.getUserId();
+        return messageMapper.selectAllMessagesForUser(userId);
+    }
+
+    @Override
     public List<InternalMessage> getSystemNotifications() {
         Integer userId = UserContext.getUserId();
         // 需要在 XML 实现 selectByTypeAndReceiver(type=0, userId)
@@ -63,6 +78,79 @@ public class CommunicationServiceImpl implements CommunicationService {
     @Override
     public void markRead(Integer messageId) {
         messageMapper.markAsRead(messageId);
+    }
+
+    @Override
+    public List<ChatSessionDTO> getChatSessions() {
+        Integer userId = UserContext.getUserId();
+        User currentUser = userMapper.selectById(userId);
+        List<ChatSessionDTO> sessions = new ArrayList<>();
+
+        // 1. 获取该用户相关的所有稿件
+        List<Manuscript> manuscripts;
+        if ("AUTHOR".equalsIgnoreCase(currentUser.getRole())) {
+            // 调用刚在 Mapper 中新增的方法
+            manuscripts = manuscriptMapper.selectByAuthorId(userId);
+        } else if ("EDITOR".equalsIgnoreCase(currentUser.getRole())) {
+            // 调用刚在 Mapper 中新增的方法
+            manuscripts = manuscriptMapper.selectByEditorId(userId);
+        } else {
+            manuscripts = new ArrayList<>();
+        }
+
+        // 2. 获取该用户的所有消息
+        List<InternalMessage> allMessages = messageMapper.selectAllMessagesForUser(userId);
+        Map<String, List<InternalMessage>> msgGroup = allMessages.stream()
+                .filter(m -> m.getMsgType() == 1)
+                .collect(Collectors.groupingBy(InternalMessage::getTopic));
+
+        // 3. 遍历构建 Session
+        for (Manuscript m : manuscripts) {
+            ChatSessionDTO dto = new ChatSessionDTO();
+            String topic = "MS-" + m.getManuscriptId();
+
+            dto.setTopic(topic);
+            dto.setManuscriptId(m.getManuscriptId());
+            dto.setManuscriptTitle(m.getTitle());
+
+            // 确定聊天对象
+            if ("AUTHOR".equalsIgnoreCase(currentUser.getRole())) {
+                dto.setTargetUserId(m.getCurrentEditorId());
+                dto.setTargetUserName(m.getCurrentEditorId() == null ? "待分配编辑" : "编辑"); // 简单处理名字，实际可查表
+                dto.setTargetRole("Editor");
+            } else {
+                // 如果我是编辑，对象就是作者
+                // 注意：这里 AuthorName 可能在 selectByEditorId 中未联查出来，
+                // 如果 Manuscript 实体里没有 authorName 字段值，可能需要额外处理。
+                // 不过 selectByEditorId 返回的是 Manuscript 对象，通常含 AuthorID。
+                // 暂时用 "作者" 代替名字，或者前端再查一次。
+                dto.setTargetUserId(m.getAuthorId());
+                dto.setTargetUserName("作者");
+                dto.setTargetRole("Author");
+            }
+
+            // 填充消息数据
+            if (msgGroup.containsKey(topic)) {
+                List<InternalMessage> msgs = msgGroup.get(topic);
+                if (!msgs.isEmpty()) {
+                    InternalMessage latest = msgs.get(0);
+                    dto.setLastMessageContent(latest.getContent());
+                    dto.setLastMessageTime(latest.getSendTime());
+
+                    // 【修复点】：Boolean 类型判断
+                    long unread = msgs.stream()
+                            .filter(msg -> msg.getReceiverId().equals(userId) && Boolean.FALSE.equals(msg.getIsRead()))
+                            .count();
+                    dto.setUnreadCount((int)unread);
+                }
+            } else {
+                dto.setLastMessageContent("暂无消息");
+                dto.setUnreadCount(0);
+            }
+            sessions.add(dto);
+        }
+
+        return sessions;
     }
 
 }
