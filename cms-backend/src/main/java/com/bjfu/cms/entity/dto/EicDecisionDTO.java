@@ -21,6 +21,8 @@ public class EicDecisionDTO {
     private String username;
     private String affiliation;   // 必须有这个
     private String abstractText;
+    private String editorRecommendation;
+    private String editorSummaryReport;
 
     // 新增：撤稿操作用户信息
     private Integer operatorId;    // 操作用户ID
