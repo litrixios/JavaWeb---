@@ -27,7 +27,7 @@ public class User {
 
     // 对应 Status (INT)
     private Integer status;
-
+    private String avatarUrl;
     // 🔥 扩展字段：为了方便业务，把权限对象直接放这里，虽然数据库是分表的
     private UserPermission permissions;
 
@@ -40,5 +40,7 @@ public class User {
     public void setActiveTasks(Integer activeTasks) {
         this.activeTasks = activeTasks;
     }
+
+    public void setAvatarUrl(String avatarUrl) {this.avatarUrl = avatarUrl;}
     private Double recommendScore;
 }

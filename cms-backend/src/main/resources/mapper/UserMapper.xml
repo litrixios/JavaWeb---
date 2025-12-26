@@ -15,6 +15,7 @@
         <result property="status" column="Status"/>
         <result property="affiliation" column="Affiliation"/>
         <result property="researchDirection" column="ResearchDirection"/>
+        <result property="avatarUrl" column="AvatarUrl"/>
         <association property="permissions" javaType="com.bjfu.cms.entity.UserPermission">
             <id property="userId" column="UserID"/>
             <result property="canSubmitManuscript" column="CanSubmitManuscript"/>
@@ -29,12 +30,32 @@
         WHERE u.Username = #{username}
     </select>
 
+    <update id="updateById">
+        UPDATE Users
+        SET
+            FullName = #{fullName},
+            Email = #{email},
+            Affiliation = #{affiliation},
+            ResearchDirection = #{researchDirection}
+        WHERE UserID = #{userId}
+    </update>
 
+
+    <update id="updateAvatar">
+        UPDATE Users
+        SET AvatarUrl = #{avatarUrl}
+        WHERE UserID = #{userId}
+    </update>
 
     <insert id="insertPermissions">
         INSERT INTO UserPermissions (UserID, CanSubmitManuscript, CanMakeDecision)
         VALUES (#{userId}, #{canSubmitManuscript}, #{canMakeDecision})
     </insert>
+
+    <delete id="deleteUserStatus">
+        DELETE FROM Users
+        WHERE UserID = #{userId}
+    </delete>
 
     <update id="updateUserStatus">
         UPDATE Users
