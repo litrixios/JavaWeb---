@@ -9,16 +9,18 @@ import java.util.Map;
 
 @Mapper
 public interface UserMapper {
-
+    void updateAvatar(@Param("userId") Integer userId, @Param("avatarUrl") String avatarUrl);
 
     User findByUsername(@Param("username") String username);
 
     // 【新增】根据ID查找用户（发送邮件用）
     User selectById(@Param("userId") Integer userId);
-
+    void updateById(User user);
     // 插入新用户
     // 你之前定义的其他方法...
     void updateUserStatus(@Param("userId") Integer userId, @Param("status") Integer status);
+
+    void deleteUserStatus(@Param("userId") Integer userId);
 
     int insertUser(User user);
 

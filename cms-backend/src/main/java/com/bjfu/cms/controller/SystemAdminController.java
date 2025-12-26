@@ -1,6 +1,7 @@
 package com.bjfu.cms.controller;
 
 import com.bjfu.cms.common.result.Result;
+import com.bjfu.cms.common.utils.UserContext;
 import com.bjfu.cms.entity.User;
 import com.bjfu.cms.entity.UserPermission;
 import com.bjfu.cms.entity.dto.AdminUserDTO;
@@ -8,10 +9,17 @@ import com.bjfu.cms.entity.dto.LogQueryDTO;
 import com.bjfu.cms.entity.dto.RolePermissionDTO;
 import com.bjfu.cms.entity.dto.UserCreateDTO;
 import com.bjfu.cms.service.SuperAdminService;
+import com.bjfu.cms.service.UserService;
+import io.github.classgraph.Resource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -27,6 +35,44 @@ public class SystemAdminController {
 
     @Autowired
     private SuperAdminService superAdminService;
+
+    @Autowired
+    private UserService userService;
+
+    @Operation(summary = "上传用户头像")
+    @PostMapping("/avatar/upload")
+    public Result<String> uploadAvatar(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam Integer userId) {
+        // 权限校验：确保当前登录用户只能修改自己的头像
+        return userService.uploadAvatar(userId, file);
+    }
+
+    @Operation(summary = "获取用户头像URL")
+    @GetMapping("/url/{userId}")
+    public Result<String> getAvatarUrl(@PathVariable Integer userId) {
+        return userService.getAvatarUrl(userId);
+    }
+    @Operation(summary = "获取用户头像")
+    @GetMapping(value = "/avatar/{userId}",
+            produces = {MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_GIF_VALUE, MediaType.TEXT_PLAIN_VALUE})
+    public ResponseEntity<byte[]> getAvatar(@PathVariable Integer userId) {
+        return userService.getAvatar(userId);
+    }
+
+    @Operation(summary = "更新用户信息（包含头像上传）")
+    @PostMapping("/update-profile")
+    public Result<String> updateUserProfile(
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam Integer userId,
+            @RequestParam String fullName,
+            @RequestParam String email,
+            @RequestParam(required = false) String affiliation,
+            @RequestParam(required = false) String researchDirection) {
+        // 创建用户信息对象
+        userService.uploadAvatar(userId, file);
+        return userService.updateProfile(userId,fullName, email, affiliation, researchDirection);
+    }
 
     @GetMapping("/users")
     @Operation(summary = "获取用户列表", description = "根据条件查询用户列表")
@@ -52,6 +98,8 @@ public class SystemAdminController {
         user.setUserId(userId);
         return superAdminService.updateUser(user);
     }
+
+
 
     @PutMapping("/users/{userId}/status")
     @Operation(summary = "更新用户状态", description = "启用或禁用用户")
