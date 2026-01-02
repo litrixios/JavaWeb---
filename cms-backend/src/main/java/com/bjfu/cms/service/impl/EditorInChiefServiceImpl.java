@@ -1,22 +1,17 @@
 package com.bjfu.cms.service.impl;
 
 import com.bjfu.cms.common.utils.UserContext;
-import com.bjfu.cms.entity.SystemLog;
 import com.bjfu.cms.entity.User;
 import com.bjfu.cms.entity.dto.EicDecisionDTO;
 import com.bjfu.cms.entity.Manuscript;
-import com.bjfu.cms.entity.dto.ManuscriptDetailDTO;
 import com.bjfu.cms.mapper.ManuscriptMapper;
 import com.bjfu.cms.mapper.UserMapper;
 import com.bjfu.cms.service.CommunicationService;
 import com.bjfu.cms.service.EditorInChiefService;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -58,8 +53,6 @@ public class EditorInChiefServiceImpl implements EditorInChiefService {
         for (Manuscript manuscript : allManuscripts) {
             String status = manuscript.getStatus();
             String subStatus = manuscript.getSubStatus();
-            String editorRecommendation = manuscript.getEditorRecommendation();
-            String editorSummaryReport = manuscript.getEditorSummaryReport();
 
             // 1. 待初审：status='Processing' and subStatus='PendingDeskReview'
             if ("Processing".equals(status) && "PendingDeskReview".equals(subStatus)) {
@@ -73,17 +66,8 @@ public class EditorInChiefServiceImpl implements EditorInChiefService {
             else if ("Processing".equals(status) && "WithEditor".equals(subStatus)) {
                 withEditorCount++;
             }
-            // 4. 正在审稿：必须满足四个条件：
-            //    - status='Processing'
-            //    - subStatus='UnderReview'
-            //    - editorRecommendation 不为空且非空字符串
-            //    - editorSummaryReport 不为空且非空字符串
-            else if ("Processing".equals(status)
-                    && "UnderReview".equals(subStatus)
-                    && editorRecommendation != null
-                    && !editorRecommendation.trim().isEmpty()
-                    && editorSummaryReport != null
-                    && !editorSummaryReport.trim().isEmpty()) {
+            // 4. 正在审稿：status='Processing' and subStatus='UnderReview'
+            else if ("Processing".equals(status) && "UnderReview".equals(subStatus)) {
                 underReviewCount++;
             }
             // 5. 需要修改：status='Revision'
@@ -119,6 +103,14 @@ public class EditorInChiefServiceImpl implements EditorInChiefService {
         }
 
         return stats;
+    }
+
+    @Override
+    public byte[] exportReport(String startDate, String endDate) {
+        // 这里实现导出Excel报表的逻辑
+        // 可以使用Apache POI或EasyExcel来生成Excel文件
+        // 返回字节数组
+        return new byte[0];
     }
 
     @Override
@@ -389,108 +381,7 @@ public class EditorInChiefServiceImpl implements EditorInChiefService {
             throw new RuntimeException("撤稿失败: " + e.getMessage(), e);
         }
     }
-    @Override
-    public ManuscriptDetailDTO getManuscriptDetails(Integer manuscriptId) {
-        ManuscriptDetailDTO dto = new ManuscriptDetailDTO();
 
-        // 1. 获取稿件基本信息
-        Manuscript manuscript = manuscriptMapper.selectById(manuscriptId);
-        if (manuscript == null) {
-            throw new RuntimeException("稿件不存在");
-        }
-        dto.setManuscript(manuscript);
-
-        // 2. 获取历史日志 (已有的 mapper 方法)
-        List<SystemLog> logs = manuscriptMapper.selectLogsByManuscriptId(manuscriptId);
-        dto.setHistoryLogs(logs);
-
-        // 3. 获取审稿意见摘要
-        List<Map<String, Object>> reviews = manuscriptMapper.selectReviewsByManuscriptId(manuscriptId);
-        dto.setReviewSummaries(reviews);
-
-        return dto;
-    }
-
-    @Override
-    public byte[] exportReport(String startDate, String endDate) {
-        // 1. 查询数据
-        // 注意：前端传来的可能是 "yyyy-MM-dd"，需确保格式匹配数据库或在此处转换
-        List<Manuscript> list = manuscriptMapper.selectManuscriptsByDateRange(startDate + " 00:00:00", endDate + " 23:59:59");
-
-        // 2. 创建 Excel
-        try (Workbook workbook = new XSSFWorkbook();
-             ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-
-            Sheet sheet = workbook.createSheet("稿件统计报表");
-
-            // 3. 创建表头
-            Row headerRow = sheet.createRow(0);
-            String[] columns = {"稿件ID", "标题", "作者", "提交时间", "当前状态", "最终决定", "处理时长(天)"};
-
-            CellStyle headerStyle = workbook.createCellStyle();
-            Font font = workbook.createFont();
-            font.setBold(true);
-            headerStyle.setFont(font);
-
-            for (int i = 0; i < columns.length; i++) {
-                Cell cell = headerRow.createCell(i);
-                cell.setCellValue(columns[i]);
-                cell.setCellStyle(headerStyle);
-            }
-
-            // 4. 填充数据
-            int rowNum = 1;
-            long totalDays = 0;
-            int decidedCount = 0;
-
-            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-            for (Manuscript m : list) {
-                Row row = sheet.createRow(rowNum++);
-
-                row.createCell(0).setCellValue(m.getManuscriptId());
-                row.createCell(1).setCellValue(m.getTitle());
-
-                // 获取作者名 (假设 selectManuscriptsByDateRange 的 resultMap 没联表，可能需要单独处理或优化SQL，这里假设已联表或只显示ID)
-                // 建议优化 SQL 使用 selectAllManuscripts 的逻辑联表查询作者名
-                row.createCell(2).setCellValue(m.getAuthorId());
-
-                row.createCell(3).setCellValue(m.getSubmissionTime() != null ? m.getSubmissionTime().toString() : "");
-                row.createCell(4).setCellValue(m.getStatus() + " - " + m.getSubStatus());
-                row.createCell(5).setCellValue(m.getDecision() != null ? m.getDecision() : "-");
-
-                // 计算处理时长
-                long days = 0;
-                if (m.getDecisionTime() != null && m.getSubmissionTime() != null) {
-                    long diff = m.getDecisionTime().getTime() - m.getSubmissionTime().getTime();
-                    days = diff / (1000 * 60 * 60 * 24);
-                    totalDays += days;
-                    decidedCount++;
-                }
-                row.createCell(6).setCellValue(m.getDecisionTime() != null ? String.valueOf(days) : "-");
-            }
-
-            // 5. 添加统计行
-            Row statRow = sheet.createRow(rowNum + 1);
-            statRow.createCell(0).setCellValue("统计汇总：");
-            statRow.createCell(1).setCellValue("总稿件数：" + list.size());
-
-            double avgTime = decidedCount > 0 ? (double) totalDays / decidedCount : 0;
-            statRow.createCell(3).setCellValue("平均审稿周期(天)：" + String.format("%.2f", avgTime));
-
-            // 自动调整列宽
-            for (int i = 0; i < columns.length; i++) {
-                sheet.autoSizeColumn(i);
-            }
-
-            workbook.write(bos);
-            return bos.toByteArray();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("生成Excel报表失败: " + e.getMessage());
-        }
-    }
     @Override
     @Transactional
     public void rescindDecision(Integer manuscriptId, String newStatus, String reason) {

@@ -201,24 +201,6 @@
         WHERE l.ManuscriptID = #{manuscriptId}
         ORDER BY l.OperationTime DESC
     </select>
-    <select id="selectManuscriptsByDateRange" resultMap="ManuscriptMap">
-        SELECT * FROM Manuscript
-        WHERE SubmissionTime BETWEEN #{startDate} AND #{endDate}
-        ORDER BY SubmissionTime ASC
-    </select>
-
-    <select id="selectReviewsByManuscriptId" resultType="java.util.Map">
-        SELECT
-            r.ReviewID,
-            r.Score,
-            r.Suggestion as Advice,           r.CommentsToAuthor as Comments,   r.SubmitTime,
-            u.FullName as ReviewerName
-        FROM Review r
-                 LEFT JOIN Users u ON r.ReviewerID = u.UserID
-        WHERE r.ManuscriptID = #{manuscriptId}
-          AND r.Status = 'Completed'
-        ORDER BY r.SubmitTime DESC
-    </select>
 
     <resultMap id="ManuscriptReviewMap" type="com.bjfu.cms.entity.Manuscript">
         <id property="manuscriptId" column="ManuscriptID"/>

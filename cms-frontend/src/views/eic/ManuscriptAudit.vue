@@ -235,30 +235,31 @@
             </el-table-column>
           </el-table>
         </el-tab-pane>
+        <el-dialog v-model="detailVisible" title="稿件详情" width="650px">
+          <div v-if="currentManuscript" class="manuscript-detail">
+            <div class="detail-item">
+              <label>标题：</label>
+              <div class="content title">{{ currentManuscript.title }}</div>
+            </div>
 
+            <div class="detail-item">
+              <label>作者列表：</label>
+              <div class="content">{{ currentManuscript.authorList }}</div>
+            </div>
+
+            <div class="detail-item">
+              <label>关键词：</label>
+              <div class="content">{{ currentManuscript.keywords }}</div>
+            </div>
+
+            <div class="detail-item">
+              <label>摘要：</label>
+              <div class="content abstract">{{ currentManuscript.abstractText || '暂无摘要内容' }}</div>
+            </div>
+          </div>
+        </el-dialog>
         <!-- 已有决定 -->
         <el-tab-pane label="已有决定" name="decided">
-          <!-- 导出报表按钮放在表格外部 -->
-          <div class="header-actions" style="margin-bottom: 15px;">
-            <el-date-picker
-                v-model="exportDateRange"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="结束日期"
-                value-format="YYYY-MM-DD"
-                size="small"
-                style="margin-right: 10px; width: 240px;"
-            />
-            <el-button type="success" size="small" @click="handleExportReport" :loading="exportLoading">
-              <el-icon><Download /></el-icon> 导出报表
-            </el-button>
-            <el-button type="primary" size="small" @click="refreshData">
-              <el-icon><Refresh /></el-icon> 刷新
-            </el-button>
-          </div>
-
-          <!-- 稿件表格 -->
           <el-table
               :data="decidedManuscripts"
               border
@@ -293,7 +294,7 @@
               </template>
             </el-table-column>
 
-            <el-table-column label="操作" width="320" fixed="right" align="center">
+            <el-table-column label="操作" width="260" fixed="right" align="center">
               <template #default="scope">
                 <!-- 撤稿按钮 -->
                 <el-button
@@ -311,15 +312,6 @@
                 >
                   撤销决定
                 </el-button>
-                <!-- 新增：查看详细历史按钮 -->
-                <el-button
-                    type="primary"
-                    size="small"
-                    @click="handleViewDetail(scope.row)"
-                >
-                  历史
-                </el-button>
-                <!-- 查看基本信息按钮 -->
                 <el-button
                     type="info"
                     size="small"
@@ -333,68 +325,6 @@
         </el-tab-pane>
       </el-tabs>
     </el-card>
-
-    <!-- 基本信息详情对话框 -->
-    <el-dialog v-model="detailVisible" title="稿件详情" width="650px">
-      <div v-if="currentManuscript" class="manuscript-detail">
-        <div class="detail-item">
-          <label>标题：</label>
-          <div class="content title">{{ currentManuscript.title }}</div>
-        </div>
-
-        <div class="detail-item">
-          <label>作者列表：</label>
-          <div class="content">{{ currentManuscript.authorList }}</div>
-        </div>
-
-        <div class="detail-item">
-          <label>关键词：</label>
-          <div class="content">{{ currentManuscript.keywords }}</div>
-        </div>
-
-        <div class="detail-item">
-          <label>摘要：</label>
-          <div class="content abstract">{{ currentManuscript.abstractText || '暂无摘要内容' }}</div>
-        </div>
-      </div>
-    </el-dialog>
-
-    <!-- 详细历史对话框 -->
-    <el-dialog
-        v-model="detailDialogVisible"
-        title="稿件详细历史与审稿意见"
-        width="800px"
-        destroy-on-close
-    >
-      <div v-if="detailLoading" v-loading="true" style="height: 200px;"></div>
-      <div v-else-if="manuscriptDetail">
-        <h3>审稿意见摘要</h3>
-        <el-table :data="manuscriptDetail.reviewSummaries" border stripe style="margin-bottom: 20px;">
-          <el-table-column prop="ReviewerName" label="审稿人" width="120" />
-          <el-table-column prop="Score" label="评分" width="80" align="center">
-            <template #default="scope">
-              <el-tag :type="scope.row.Score >= 4 ? 'success' : 'warning'">{{ scope.row.Score }}分</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="Advice" label="建议" width="120" />
-          <el-table-column prop="Comments" label="具体意见" show-overflow-tooltip />
-        </el-table>
-
-        <h3>全生命周期日志</h3>
-        <el-timeline>
-          <el-timeline-item
-              v-for="(log, index) in manuscriptDetail.historyLogs"
-              :key="index"
-              :timestamp="formatDate(log.operationTime)"
-              :type="log.operationType === 'Decision' ? 'primary' : 'info'"
-          >
-            <h4>{{ log.operationType }}</h4>
-            <p><strong>操作人：</strong>{{ log.operatorName }}</p>
-            <p><strong>详情：</strong>{{ log.description }}</p>
-          </el-timeline-item>
-        </el-timeline>
-      </div>
-    </el-dialog>
 
     <!-- 初审对话框 -->
     <el-dialog v-model="deskReviewVisible" title="稿件初审" width="500px">
@@ -512,7 +442,7 @@
           <el-radio-group v-model="finalDecisionForm.decision">
             <el-radio label="Accept">录用</el-radio>
             <el-radio label="Reject">拒稿</el-radio>
-            <el-radio label="Revise">需要修改</el-radio>
+            <el-radio label="Revise">修改后录用</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="决策理由" required>
@@ -720,8 +650,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Refresh, Download } from '@element-plus/icons-vue'
-import axios from 'axios'
+import { Refresh } from '@element-plus/icons-vue'
 import {
   getAllManuscripts,
   getManuscriptStatistics,
@@ -732,82 +661,8 @@ import {
   getEditorsByExpertise,
   makeFinalDecision,
   batchDeskReview,
-  rescindDecision
+  rescindDecision  // 新增导入撤销决定API
 } from '@/api/eic'
-
-// --- 详情弹窗相关变量 ---
-const detailDialogVisible = ref(false)
-const detailLoading = ref(false)
-const manuscriptDetail = ref(null)
-
-// --- 报表导出相关变量 ---
-const exportDateRange = ref([])
-const exportLoading = ref(false)
-
-// 1. 查看详细历史方法
-const handleViewDetail = async (row) => {
-  detailDialogVisible.value = true
-  detailLoading.value = true
-  try {
-    const response = await axios.get(`/api/eic/manuscript/${row.manuscriptId}/details`)
-    if (response.data.success) {
-      manuscriptDetail.value = response.data.data
-    } else {
-      ElMessage.error('获取详情失败：' + response.data.msg)
-    }
-  } catch (error) {
-    ElMessage.error('网络请求错误')
-  } finally {
-    detailLoading.value = false
-  }
-}
-
-// 2. 导出报表方法
-const handleExportReport = async () => {
-  if (!exportDateRange.value || exportDateRange.value.length !== 2) {
-    ElMessage.warning('请选择导出时间范围')
-    return
-  }
-
-  exportLoading.value = true
-  try {
-    const [startDate, endDate] = exportDateRange.value
-
-    // 修复请求路径：使用正确的后端API路径
-    const response = await axios.get('/api/eic/report/export', {
-      params: {
-        startDate: startDate,
-        endDate: endDate
-      },
-      responseType: 'blob'
-    })
-
-    // 创建下载链接
-    const url = window.URL.createObjectURL(new Blob([response.data]))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `稿件统计报表_${startDate}_至_${endDate}.xlsx`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-
-    ElMessage.success('报表导出成功')
-  } catch (error) {
-    console.error('导出失败:', error)
-    if (error.response) {
-      // 服务器返回错误状态
-      ElMessage.error(`导出失败: ${error.response.data.msg || error.response.status}`)
-    } else if (error.request) {
-      // 请求已发出但没有响应
-      ElMessage.error('导出失败: 服务器无响应')
-    } else {
-      // 请求设置时出错
-      ElMessage.error(`导出失败: ${error.message}`)
-    }
-  } finally {
-    exportLoading.value = false
-  }
-}
 
 // 响应式数据
 const manuscriptList = ref([])
@@ -820,21 +675,19 @@ const assignVisible = ref(false)
 const deskReviewVisible = ref(false)
 const finalDecisionVisible = ref(false)
 const retractVisible = ref(false)
-const rescindVisible = ref(false)
-const detailVisible = ref(false)
+const rescindVisible = ref(false) // 新增：撤销决定对话框控制
 
 // 数据
 const tempTitle = ref('')
-const tempDecision = ref('')
+const tempDecision = ref('') // 新增：存储原决定
 const expertiseFilter = ref('')
 const allEditors = ref([])
 const filteredEditors = ref([])
 const editorMap = ref({})
-const currentManuscript = ref(null)
 
 // 可用的新状态选项（用于撤销决定）
 const availableStatuses = ref([
-  { value: 'PendingDeskReview', label: '待初审' },
+  { value: 'PendingDeskReview', label: '待初审' },  // 新增：待初审
   { value: 'PendingAssign', label: '待分配' },
   { value: 'WithEditor', label: '编辑处理中' },
   { value: 'UnderReview', label: '正在审稿' }
@@ -865,15 +718,12 @@ const retractForm = ref({
   comments: ''
 })
 
+// 新增：撤销决定表单数据
 const rescindForm = ref({
   manuscriptId: null,
   newStatus: '',
   reason: ''
 })
-
-// 新增：批量初审相关数据
-const batchDeskReviewVisible = ref(false)
-const batchDeskReviewData = ref([])
 
 // 计算属性：从后端数据计算各种状态的稿件
 const incompleteManuscripts = computed(() => {
@@ -896,12 +746,7 @@ const withEditorManuscripts = computed(() => {
 
 const underReviewManuscripts = computed(() => {
   return manuscriptList.value.filter(m =>
-      m.status === 'Processing' &&
-      m.subStatus === 'UnderReview' &&
-      m.editorRecommendation &&
-      m.editorRecommendation.trim() !== '' &&
-      m.editorSummaryReport &&
-      m.editorSummaryReport.trim() !== ''
+      m.status === 'Processing' && m.subStatus === 'UnderReview'
   )
 })
 
@@ -916,29 +761,6 @@ const decidedManuscripts = computed(() => {
 const selectedEditorName = computed(() => {
   const editor = allEditors.value.find(e => e.userId === assignForm.value.editorId)
   return editor ? `${editor.fullName} (${editor.researchDirection}) - ${editor.affiliation}` : ''
-})
-
-// 新增：计算属性
-const pendingAcceptCount = computed(() => {
-  return batchDeskReviewData.value.filter(item => item.decision === 'DeskAccept').length
-})
-
-const pendingRejectCount = computed(() => {
-  return batchDeskReviewData.value.filter(item => item.decision === 'DeskReject').length
-})
-
-const validBatchCount = computed(() => {
-  return batchDeskReviewData.value.filter(item => {
-    if (!item.decision) return false
-    if (item.decision === 'DeskReject') {
-      return item.comments && item.comments.trim().length > 0
-    }
-    return true
-  }).length
-})
-
-const canSubmitBatchReview = computed(() => {
-  return validBatchCount.value > 0
 })
 
 // 方法
@@ -1062,8 +884,12 @@ const refreshData = () => {
   ElMessage.success('数据已刷新')
 }
 
-// 查看基本信息
+const detailVisible = ref(false)
+const currentManuscript = ref(null)
+
+// 查看详情
 const viewDetail = (row) => {
+  // 此时 row 已经包含了从后端获取的 title, authorList 和 abstractText [cite: 157, 158]
   currentManuscript.value = row
   detailVisible.value = true
 }
@@ -1071,6 +897,7 @@ const viewDetail = (row) => {
 // 新增：打开撤销决定对话框
 const openRescindDialog = (row) => {
   tempTitle.value = row.title
+  // 显示原决定
   tempDecision.value = row.subStatus === 'Accepted' ? '录用' : '拒稿'
   rescindForm.value.manuscriptId = row.manuscriptId
   rescindForm.value.newStatus = ''
@@ -1088,6 +915,7 @@ const submitRescind = async () => {
     return ElMessage.warning('请输入撤销理由')
   }
 
+  // 确认提示
   try {
     await ElMessageBox.confirm(
         `确定要撤销稿件【${tempTitle.value}】的决定吗？\n撤销后稿件将重新进入${getStatusLabel(rescindForm.value.newStatus)}状态。`,
@@ -1100,7 +928,7 @@ const submitRescind = async () => {
         }
     )
   } catch {
-    return
+    return // 用户取消
   }
 
   loading.value = true
@@ -1114,6 +942,8 @@ const submitRescind = async () => {
     if (res && res.code === 200) {
       ElMessage.success('撤销决定成功')
       rescindVisible.value = false
+
+      // 刷新数据
       await loadManuscripts()
       await loadStatistics()
     } else {
@@ -1127,6 +957,33 @@ const submitRescind = async () => {
   }
 }
 
+// 新增：批量初审相关数据
+const batchDeskReviewVisible = ref(false)
+const batchDeskReviewData = ref([])
+
+// 新增：计算属性
+const pendingAcceptCount = computed(() => {
+  return batchDeskReviewData.value.filter(item => item.decision === 'DeskAccept').length
+})
+
+const pendingRejectCount = computed(() => {
+  return batchDeskReviewData.value.filter(item => item.decision === 'DeskReject').length
+})
+
+const validBatchCount = computed(() => {
+  return batchDeskReviewData.value.filter(item => {
+    if (!item.decision) return false
+    if (item.decision === 'DeskReject') {
+      return item.comments && item.comments.trim().length > 0
+    }
+    return true
+  }).length
+})
+
+const canSubmitBatchReview = computed(() => {
+  return validBatchCount.value > 0
+})
+
 // 新增：方法
 const getPlaceholder = (decision) => {
   if (!decision) return '请先选择决策'
@@ -1135,6 +992,7 @@ const getPlaceholder = (decision) => {
 }
 
 const handleDecisionChange = (row) => {
+  // 如果切换到通过初审，清空理由（可选）
   if (row.decision === 'DeskAccept') {
     row.comments = ''
   }
@@ -1156,6 +1014,7 @@ const getBatchRowClassName = ({ row }) => {
 
 // 打开批量初审对话框
 const openBatchDeskReviewDialog = () => {
+  // 获取待初审的稿件
   const pendingManuscripts = incompleteManuscripts.value
 
   if (pendingManuscripts.length === 0) {
@@ -1163,12 +1022,13 @@ const openBatchDeskReviewDialog = () => {
     return
   }
 
+  // 初始化批量初审数据
   batchDeskReviewData.value = pendingManuscripts.map(manuscript => ({
     manuscriptId: manuscript.manuscriptId,
     title: manuscript.title,
     authorList: manuscript.authorList,
-    decision: '',
-    comments: '',
+    decision: '', // 初始为空
+    comments: '', // 初始为空
     originalStatus: manuscript.status,
     originalSubStatus: manuscript.subStatus
   }))
@@ -1178,6 +1038,7 @@ const openBatchDeskReviewDialog = () => {
 
 // 提交批量初审
 const submitBatchDeskReview = async () => {
+  // 验证数据
   const invalidItems = []
   batchDeskReviewData.value.forEach((item, index) => {
     if (item.decision === 'DeskReject' && (!item.comments || item.comments.trim() === '')) {
@@ -1190,6 +1051,7 @@ const submitBatchDeskReview = async () => {
     return
   }
 
+  // 确认提示
   try {
     await ElMessageBox.confirm(
         `确定要批量处理${batchDeskReviewData.value.length}篇稿件吗？\n其中：${pendingAcceptCount.value}篇通过，${pendingRejectCount.value}篇拒绝。`,
@@ -1201,11 +1063,12 @@ const submitBatchDeskReview = async () => {
         }
     )
   } catch {
-    return
+    return // 用户取消
   }
 
+  // 构建提交数据
   const dtos = batchDeskReviewData.value
-      .filter(item => item.decision)
+      .filter(item => item.decision) // 只处理已选择决策的
       .map(item => ({
         manuscriptId: item.manuscriptId,
         decision: item.decision,
@@ -1219,10 +1082,13 @@ const submitBatchDeskReview = async () => {
 
   loading.value = true
   try {
+    // 调用批量初审API
     const res = await batchDeskReview(dtos)
     if (res && res.code === 200) {
       ElMessage.success(`批量初审完成，成功处理${dtos.length}篇稿件`)
       batchDeskReviewVisible.value = false
+
+      // 刷新数据
       await loadManuscripts()
       await loadStatistics()
     } else {
@@ -1251,6 +1117,7 @@ const submitDeskReview = async () => {
     return ElMessage.warning('请选择初审决策')
   }
 
+  // 如果是拒稿，需要理由
   if (deskReviewForm.value.decision === 'DeskReject' && !deskReviewForm.value.comments) {
     return ElMessage.warning('请输入拒稿理由')
   }
@@ -1281,6 +1148,8 @@ const openAssignDialog = (row) => {
   assignForm.value.editorId = null
   assignForm.value.comments = ''
   expertiseFilter.value = ''
+
+  // 加载编辑列表
   loadEditors()
   assignVisible.value = true
 }
@@ -1368,16 +1237,23 @@ const submitRetract = async () => {
     return ElMessage.warning('请输入撤稿原因')
   }
 
-  const currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}')
+  // 添加当前用户ID（假设可以从登录信息获取）
+  const currentUser = JSON.parse(localStorage.getItem('userInfo') || '{}');
+  console.log('当前用户信息:', currentUser); // 添加这行
+
+  // 构建完整的数据对象
   const data = {
     manuscriptId: retractForm.value.manuscriptId,
     comments: retractForm.value.comments,
-    operatorId: currentUser.userId || 1,
+    operatorId: currentUser.userId || 1,  // 确保有默认值
     operatorName: currentUser.fullName || '系统管理员'
   }
 
+  console.log('提交撤稿数据:', data); // 添加这行便于调试
+
   loading.value = true
   try {
+    // 重要：传递 data 而不是 retractForm.value
     const res = await withdrawManuscript(data)
     if (res && res.code === 200) {
       ElMessage.success('撤稿成功')
