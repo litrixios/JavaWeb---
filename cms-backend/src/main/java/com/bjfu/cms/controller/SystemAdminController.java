@@ -43,6 +43,7 @@ public class SystemAdminController {
     @PostMapping("/avatar/upload")
     public Result<String> uploadAvatar(
             @RequestParam("file") MultipartFile file,
+
             @RequestParam Integer userId) {
         // 权限校验：确保当前登录用户只能修改自己的头像
         return userService.uploadAvatar(userId, file);
@@ -63,12 +64,12 @@ public class SystemAdminController {
     @Operation(summary = "更新用户信息（包含头像上传）")
     @PostMapping("/update-profile")
     public Result<String> updateUserProfile(
-            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "file") MultipartFile file,
             @RequestParam Integer userId,
             @RequestParam String fullName,
             @RequestParam String email,
-            @RequestParam(required = false) String affiliation,
-            @RequestParam(required = false) String researchDirection) {
+            @RequestParam String affiliation,
+            @RequestParam String researchDirection) {
         // 创建用户信息对象
         userService.uploadAvatar(userId, file);
         return userService.updateProfile(userId,fullName, email, affiliation, researchDirection);

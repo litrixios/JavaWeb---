@@ -6,7 +6,9 @@
           <span>系统登录</span>
         </div>
       </template>
-
+      <el-form-item>
+        <el-button style="width: 100%;" @click="returnto">返回到主界面</el-button>
+      </el-form-item>
       <el-form :model="form" label-width="60px">
         <el-form-item label="账号">
           <el-input v-model="form.username" placeholder="请输入用户名" />
@@ -135,6 +137,9 @@ const handleLogin = async () => {
 }
 const goToRegister = () => {
   router.push('/register')
+}
+const returnto = () =>{
+  window.location.href = 'http://localhost:8080/index'
 }
 </script>
 

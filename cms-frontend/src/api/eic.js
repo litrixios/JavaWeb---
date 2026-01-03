@@ -111,7 +111,7 @@ export function auditReviewer(userId, status) {
 
 export function removeReviewer(userId, reason) {
     return request({
-        url: '/api/eic/reviewer/remove',
+        url: '/api/eic/reviewer/removes',
         method: 'post',
         params: { userId, reason }
     })
