@@ -1,27 +1,22 @@
-<!-- src/views/editorial-admin/news/form.vue -->
 <template>
   <el-card>
-    <div slot="header">
-      <el-button @click="$router.go(-1)" icon="ArrowLeft" size="small">返回</el-button>
-      <h2 style="display: inline-block; margin-left: 16px;">{{ isEdit ? '编辑新闻' : '新增新闻' }}</h2>
-    </div>
+    <template #header>
+      <h2 style="display:inline-block;">
+        {{ isEdit ? '编辑新闻' : '新增新闻' }}
+      </h2>
+    </template>
 
     <el-form ref="formRef" :model="newsForm" label-width="120px" class="mt-4">
-      <el-form-item label="新闻标题" prop="title" :rules="[{ required: true, message: '请输入标题', trigger: 'blur' }]">
-        <el-input
-            v-model="newsForm.title"
-            placeholder="请输入新闻标题"
-            style="width: 600px;"
-        />
+      <el-form-item
+          label="新闻标题"
+          prop="title"
+          :rules="[{ required: true, message: '请输入标题', trigger: 'blur' }]"
+      >
+        <el-input v-model="newsForm.title" placeholder="请输入新闻标题" style="width: 600px;" />
       </el-form-item>
 
-      <!-- 发布时间：区分新增/编辑状态的不同逻辑 -->
-      <el-form-item
-          label="发布时间"
-          prop="scheduledPublishDate"
-          :rules="getPublishDateRules()"
-      >
-        <!-- 新增新闻：保留原有立即/定时发布逻辑 -->
+      <el-form-item label="发布时间" prop="scheduledPublishDate" :rules="getPublishDateRules()">
+        <!-- 新增 -->
         <template v-if="!isEdit">
           <div class="publish-time-container">
             <el-radio-group v-model="publishType" @change="handlePublishTypeChange" class="radio-group">
@@ -41,7 +36,7 @@
           </div>
         </template>
 
-        <!-- 编辑新闻：新的交互逻辑 -->
+        <!-- 编辑 -->
         <template v-else>
           <div class="edit-publish-time-container">
             <div class="original-time">
@@ -50,7 +45,11 @@
             </div>
 
             <div class="modify-controls">
-              <el-radio-group v-model="isModifyPublishDate" @change="handleModifyPublishDateChange" class="radio-group">
+              <el-radio-group
+                  v-model="isModifyPublishDate"
+                  @change="handleModifyPublishDateChange"
+                  class="radio-group"
+              >
                 <el-radio :label="false">不修改</el-radio>
                 <el-radio :label="true">修改</el-radio>
               </el-radio-group>
@@ -70,7 +69,11 @@
         </template>
       </el-form-item>
 
-      <el-form-item label="新闻内容" prop="content" :rules="[{ required: true, message: '请输入内容', trigger: 'blur' }]">
+      <el-form-item
+          label="新闻内容"
+          prop="content"
+          :rules="[{ required: true, message: '请输入内容', trigger: 'blur' }]"
+      >
         <el-input
             type="textarea"
             v-model="newsForm.content"
@@ -82,7 +85,6 @@
 
       <el-form-item label="附件上传">
         <div class="attachment-wrapper">
-          <!-- 上传按钮 -->
           <el-upload
               action="#"
               :http-request="handleFileUpload"
@@ -90,21 +92,15 @@
               :auto-upload="true"
               :limit="5"
           >
-            <el-button type="primary" icon="Upload">
-              上传附件
-            </el-button>
-
+            <el-button type="primary" icon="Upload">上传附件</el-button>
             <template #tip>
-              <div class="el-upload__tip">
-                支持上传 PDF、Word 等格式文件
-              </div>
+              <div class="el-upload__tip">支持上传 PDF、Word 等格式文件</div>
             </template>
           </el-upload>
 
-          <!-- 附件列表（始终在下面） -->
           <el-table
-              v-if="fileList.length > 0"
-              :data="fileList"
+              v-if="displayFileList.length > 0"
+              :data="displayFileList"
               border
               size="small"
               class="attachment-table"
@@ -112,11 +108,7 @@
             <el-table-column prop="name" label="文件名" />
             <el-table-column label="操作" width="100">
               <template #default="scope">
-                <el-button
-                    type="text"
-                    text-color="#ff4d4f"
-                    @click="handleFileRemove(scope.row)"
-                >
+                <el-button type="text" text-color="#ff4d4f" @click="handleFileRemove(scope.row)">
                   删除
                 </el-button>
               </template>
@@ -124,17 +116,11 @@
           </el-table>
         </div>
       </el-form-item>
-
     </el-form>
 
     <div style="margin-top: 20px; text-align: right;">
-      <el-button @click="$router.go(-1)">取消</el-button>
-      <el-button
-          type="primary"
-          @click="submitForm"
-          :loading="submitting"
-          style="margin-left: 10px;"
-      >
+      <el-button @click="handleCancel">取消</el-button>
+      <el-button type="primary" @click="submitForm" :loading="submitting" style="margin-left: 10px;">
         {{ isEdit ? '保存修改' : '保存并发布' }}
       </el-button>
     </div>
@@ -142,10 +128,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-// 可选：推荐使用dayjs格式化时间，需先安装：npm install dayjs
 import dayjs from 'dayjs'
+import { ElMessage } from 'element-plus'
 import {
   addNews,
   updateNews,
@@ -154,21 +140,32 @@ import {
   getNewsFiles,
   deleteNewsFile
 } from '@/api/editorialAdmin'
-import { ElMessage, ElMessageBox } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
+
 const newsId = computed(() => route.query.newsId)
 const isEdit = computed(() => !!newsId.value)
 
 const formRef = ref(null)
 const loading = ref(false)
 const submitting = ref(false)
-const publishType = ref('immediate') // 新增新闻用：立即/定时发布
+
+const publishType = ref('immediate')
+
+// 新增模式：本地附件暂存
 const fileList = ref([])
-// 新增：编辑新闻用的变量
-const originalPublishDate = ref(null) // 存储原发布时间（统一为YYYY-MM-DD HH:mm:ss格式的字符串）
-const isModifyPublishDate = ref(false) // 是否修改发布时间（默认不修改）
+
+// 编辑模式：后端原始附件快照 + 暂存新增 + 暂存删除
+const originalFileList = ref([])        // 原始附件列表（含 fileId）
+const addedFiles = ref([])              // 新增暂存：{ name, raw, isNew: true }
+const removedFileIds = ref(new Set())   // 暂存删除：Set<fileId>
+
+// 新闻表单原始快照（用于取消还原）
+const originalNewsSnapshot = ref(null)
+
+const originalPublishDate = ref(null)
+const isModifyPublishDate = ref(false)
 
 const newsForm = reactive({
   newsId: newsId.value || null,
@@ -177,56 +174,59 @@ const newsForm = reactive({
   scheduledPublishDate: null
 })
 
-// 修复：优化格式化时间函数，增强对不同时间类型的兼容处理
 const formatDate = (date) => {
   if (!date) return '无'
-  // 统一用dayjs处理，兼容字符串、时间戳、Date对象
-  const dayjsDate = dayjs(date)
-  // 校验时间是否有效，无效则返回'无'
-  return dayjsDate.isValid() ? dayjsDate.format('YYYY-MM-DD HH:mm:ss') : '无'
+  const d = dayjs(date)
+  return d.isValid() ? d.format('YYYY-MM-DD HH:mm:ss') : '无'
 }
 
-// 新增：封装时间转换函数，将任意时间类型转为标准的YYYY-MM-DD HH:mm:ss字符串
 const convertToStandardDate = (date) => {
   if (!date) return null
-  const dayjsDate = dayjs(date)
-  return dayjsDate.isValid() ? dayjsDate.format('YYYY-MM-DD HH:mm:ss') : null
+  const d = dayjs(date)
+  return d.isValid() ? d.format('YYYY-MM-DD HH:mm:ss') : null
 }
 
-// 新增：动态获取发布时间的验证规则
+// 编辑模式：展示“原始-已标记删除 + 暂存新增”；新增模式：展示 fileList
+const displayFileList = computed(() => {
+  if (!isEdit.value) return fileList.value
+
+  const removed = removedFileIds.value
+  const keptOriginal = originalFileList.value.filter((f) => !removed.has(f.fileId))
+
+  const stagedNew = addedFiles.value.map((f) => ({
+    name: f.name,
+    isNew: true
+  }))
+
+  return [
+    ...keptOriginal.map((f) => ({
+      ...f,
+      name: f.fileName || f.name
+    })),
+    ...stagedNew
+  ]
+})
+
 const getPublishDateRules = () => {
   if (!isEdit.value) {
-    // 新增状态：定时发布时必填
-    return [{
-      required: publishType.value === 'scheduled',
-      message: '请选择定时发布时间',
-      trigger: 'blur'
-    }]
-  } else {
-    // 编辑状态：选择修改时必填
-    return [{
-      required: isModifyPublishDate.value,
-      message: '请选择新的发布时间',
-      trigger: 'blur'
-    }]
+    return [{ required: publishType.value === 'scheduled', message: '请选择定时发布时间', trigger: 'blur' }]
   }
+  return [{ required: isModifyPublishDate.value, message: '请选择新的发布时间', trigger: 'blur' }]
 }
 
-// 修复：处理是否修改发布时间的变化，使用统一的时间转换函数
 const handleModifyPublishDateChange = (val) => {
-  if (val) {
-    // 让 date-picker 直接显示原时间（字符串也可以，因为 value-format 是字符串）
-    newsForm.scheduledPublishDate = originalPublishDate.value || null
-  } else {
-    // 不修改：直接还原为原时间（而不是置空）
-    newsForm.scheduledPublishDate = originalPublishDate.value || null
-  }
+  // 你的原逻辑这里其实两边都赋 originalPublishDate；保留但更直观一点
+  if (val) newsForm.scheduledPublishDate = originalPublishDate.value || null
+  else newsForm.scheduledPublishDate = originalPublishDate.value || null
 }
 
-// 获取新闻详情
+const handlePublishTypeChange = (val) => {
+  if (val === 'immediate') newsForm.scheduledPublishDate = null
+}
+
+// 获取编辑详情
 const getNewsDetailInfo = async () => {
   if (!isEdit.value) return
-
   loading.value = true
   try {
     const res = await getNewsDetail(newsId.value)
@@ -235,137 +235,170 @@ const getNewsDetailInfo = async () => {
       newsForm.title = data.title
       newsForm.content = data.content
 
-      // 修复：1. 使用封装的函数统一转换为标准时间格式 2. 去掉new Date()默认值，改为null（避免显示当前时间）
-      originalPublishDate.value = convertToStandardDate(data.publishDate) || convertToStandardDate(data.scheduledPublishDate) || null
-      // 初始化：如果有定时发布时间，设置为表单值（编辑时备用）
+      originalPublishDate.value =
+          convertToStandardDate(data.publishDate) ||
+          convertToStandardDate(data.scheduledPublishDate) ||
+          null
+
       if (data.scheduledPublishDate) {
         newsForm.scheduledPublishDate = convertToStandardDate(data.scheduledPublishDate)
       }
 
-      // 获取附件列表
-      getFileList()
+      // ✅ 表单原始快照（取消还原）
+      originalNewsSnapshot.value = {
+        title: newsForm.title,
+        content: newsForm.content,
+        scheduledPublishDate: newsForm.scheduledPublishDate,
+        publishType: 'immediate', // 编辑界面不使用 publishType，但留个字段不影响
+        isModifyPublishDate: false
+      }
+
+      await getFileList()
     }
-  } catch (error) {
-    console.error('获取新闻详情失败', error)
+  } catch (e) {
     ElMessage.error('获取新闻详情失败')
   } finally {
     loading.value = false
   }
 }
 
-// 获取附件列表
+// 获取附件列表（编辑：保存为原始快照并清空暂存）
 const getFileList = async () => {
   try {
     const res = await getNewsFiles(newsId.value)
     if (res.success) {
-      fileList.value = res.data.map(file => ({
+      originalFileList.value = res.data.map((file) => ({
         ...file,
         name: file.fileName,
         url: ''
       }))
+
+      // ✅ 清空暂存改动
+      addedFiles.value = []
+      removedFileIds.value = new Set()
     }
-  } catch (error) {
-    console.error('获取附件列表失败', error)
+  } catch {
     ElMessage.error('获取附件列表失败')
   }
 }
 
-// 处理发布类型变更（新增新闻用）
-const handlePublishTypeChange = (val) => {
-  if (val === 'immediate') {
-    newsForm.scheduledPublishDate = null
-  }
-}
-
-// 处理文件上传
+// 上传附件：新增/编辑都先暂存；编辑不立刻上传
 const handleFileUpload = async (params) => {
   const file = params.file
-  const formData = new FormData()
-  formData.append('file', file)
+  const staged = { name: file.name, raw: file, isNew: true }
 
   if (isEdit.value) {
-    try {
-      const res = await uploadNewsFile(newsId.value, formData)
-      if (res.success) {
-        ElMessage.success('文件上传成功')
-        getFileList()
-      }
-    } catch (error) {
-      console.error('文件上传失败', error)
-      ElMessage.error('文件上传失败')
-      params.onError()
-    }
-  } else {
-    fileList.value.push({
-      name: file.name,
-      raw: file,
-      isNew: true
-    })
+    addedFiles.value.push(staged)
+    ElMessage.success('文件已加入（待保存后上传）')
     params.onSuccess()
+    return
   }
+
+  fileList.value.push(staged)
+  params.onSuccess()
 }
 
-// 处理文件删除
+// 删除附件：新增直接移除本地；编辑仅标记删除或移除暂存
 const handleFileRemove = async (file) => {
-  // ===== 编辑新闻：后端已存在的附件 =====
-  if (isEdit.value && file.fileId) {
-    try {
-      const res = await deleteNewsFile(file.fileId)
-      if (res.success) {
-        ElMessage.success('文件删除成功')
-        fileList.value = fileList.value.filter(
-            f => f.fileId !== file.fileId
-        )
-      }
-    } catch (error) {
-      console.error('文件删除失败', error)
-      ElMessage.error('文件删除失败')
+  if (isEdit.value) {
+    // 删除暂存新增文件
+    if (file.isNew) {
+      addedFiles.value = addedFiles.value.filter((f) => f.name !== file.name)
+      ElMessage.success('已移除（未保存，不会影响后台）')
+      return
+    }
+
+    // 标记删除原始文件
+    if (file.fileId) {
+      const newSet = new Set(removedFileIds.value)
+      newSet.add(file.fileId)
+      removedFileIds.value = newSet
+      ElMessage.success('已标记删除（待保存后生效）')
     }
     return
   }
 
-  // ===== 新增新闻：本地未上传的附件 =====
-  fileList.value = fileList.value.filter(f => f !== file)
+  fileList.value = fileList.value.filter((f) => f !== file)
 }
 
+// 取消：新增清空本地；编辑丢弃暂存并还原表单
+const handleCancel = () => {
+  if (!isEdit.value) {
+    // 新增：清空所有本地编辑痕迹
+    newsForm.title = ''
+    newsForm.content = ''
+    newsForm.scheduledPublishDate = null
+    publishType.value = 'immediate'
+    fileList.value = []
+    router.go(-1)
+    return
+  }
 
-// 提交表单
+  // 编辑：还原表单
+  if (originalNewsSnapshot.value) {
+    newsForm.title = originalNewsSnapshot.value.title
+    newsForm.content = originalNewsSnapshot.value.content
+    newsForm.scheduledPublishDate = originalNewsSnapshot.value.scheduledPublishDate
+  }
+
+  // 编辑：丢弃附件暂存
+  addedFiles.value = []
+  removedFileIds.value = new Set()
+  isModifyPublishDate.value = false
+
+  router.go(-1)
+}
+
+const toBackendIso = (val) => {
+  if (!val) return null
+  const d = dayjs(val, ['YYYY-MM-DD HH:mm:ss', dayjs.ISO_8601], true)
+  if (!d.isValid()) return null
+  return d.format('YYYY-MM-DD[T]HH:mm:ss.SSSZ').replace(/([+-]\d{2})(\d{2})$/, '$1:$2')
+}
+
 const submitForm = async () => {
   if (!formRef.value) return
-
-  newsForm.scheduledPublishDate = toBackendIso(newsForm.scheduledPublishDate)
 
   try {
     await formRef.value.validate()
     submitting.value = true
 
-    // 新增：编辑状态下处理发布时间逻辑
-    if (isEdit.value) {
-      if (!isModifyPublishDate.value) {
-        // 不修改发布时间：使用原时间（标准格式）
-        newsForm.scheduledPublishDate = originalPublishDate.value
-      }
-      // 修改的话：直接使用表单中的选择值
-    }
+    // ✅ 不管是否修改，都保证发给后端的是 ISO
+    const finalDate = (isEdit.value && !isModifyPublishDate.value)
+        ? originalPublishDate.value
+        : newsForm.scheduledPublishDate
 
-    // 处理新闻保存
+    newsForm.scheduledPublishDate = toBackendIso(finalDate)
+
     let res
-    if (isEdit.value) {
-      res = await updateNews(newsForm)
-    } else {
-      res = await addNews(newsForm)
-    }
+    if (isEdit.value) res = await updateNews(newsForm)
+    else res = await addNews(newsForm)
 
     if (res.success) {
       const currentNewsId = isEdit.value ? newsId.value : res.data
 
-      // 处理新增的文件上传
-      if (!isEdit.value && fileList.value.length > 0) {
-        for (const file of fileList.value) {
-          if (file.isNew && file.raw) {
-            const formData = new FormData()
-            formData.append('file', file.raw)
-            await uploadNewsFile(currentNewsId, formData)
+      // ✅ 附件统一提交
+      if (isEdit.value) {
+        // 1) 删除（仅删除用户标记删除的原始附件）
+        for (const id of removedFileIds.value) {
+          await deleteNewsFile(id)
+        }
+
+        // 2) 上传（仅上传用户暂存新增的附件）
+        for (const f of addedFiles.value) {
+          if (f.raw) {
+            const fd = new FormData()
+            fd.append('file', f.raw)
+            await uploadNewsFile(currentNewsId, fd)
+          }
+        }
+      } else {
+        // 新增：上传本地暂存附件
+        for (const f of fileList.value) {
+          if (f.isNew && f.raw) {
+            const fd = new FormData()
+            fd.append('file', f.raw)
+            await uploadNewsFile(currentNewsId, fd)
           }
         }
       }
@@ -373,23 +406,12 @@ const submitForm = async () => {
       ElMessage.success(isEdit.value ? '新闻更新成功' : '新闻发布成功')
       router.push('/editorial-admin/news')
     }
-  } catch (error) {
-    console.error(isEdit.value ? '更新新闻失败' : '发布新闻失败', error)
+  } catch (e) {
     ElMessage.error(isEdit.value ? '更新失败，请重试' : '发布失败，请重试')
   } finally {
     submitting.value = false
   }
 }
-
-const toBackendIso = (val) => {
-  if (!val) return null
-  // val 可能是字符串（因为 value-format），也可能是 Date
-  const d = dayjs(val, ['YYYY-MM-DD HH:mm:ss', dayjs.ISO_8601], true)
-  if (!d.isValid()) return null
-  // 输出：2025-12-03T00:00:00.000+08:00 （带冒号）
-  return d.format('YYYY-MM-DD[T]HH:mm:ss.SSSZ').replace(/([+-]\d{2})(\d{2})$/, '$1:$2')
-}
-
 
 onMounted(() => {
   getNewsDetailInfo()
@@ -397,11 +419,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.upload-demo {
-  margin-bottom: 20px;
-}
-
-/* 发布时间容器样式 */
 .publish-time-container,
 .modify-controls {
   display: flex;
@@ -434,10 +451,6 @@ onMounted(() => {
   font-weight: 500;
 }
 
-.radio-group {
-  flex-shrink: 0;
-}
-
 .date-picker {
   width: 240px;
   flex-shrink: 0;
@@ -453,7 +466,6 @@ onMounted(() => {
   width: 800px;
 }
 
-/* 响应式调整 */
 @media screen and (max-width: 768px) {
   .publish-time-container,
   .modify-controls {
@@ -461,11 +473,8 @@ onMounted(() => {
     align-items: flex-start;
     gap: 8px;
   }
-
   .date-picker {
     width: 100%;
   }
 }
 </style>
-
-

@@ -7,11 +7,7 @@
 
     <!-- 技术分析按钮 -->
     <div class="analysis-action">
-      <el-button
-          type="primary"
-          :loading="analysisLoading"
-          @click="loadAnalysis"
-      >
+      <el-button type="primary" :loading="analysisLoading" @click="loadAnalysis">
         获取稿件详情 / 技术分析
       </el-button>
     </div>
@@ -19,62 +15,34 @@
     <!-- 技术分析结果卡片 -->
     <el-card class="analysis-card" shadow="never">
       <div class="analysis-metrics">
-        <!-- 字数 -->
         <div class="metric">
           <div class="metric-label">字数统计</div>
-          <div
-              class="metric-value"
-              :class="{ danger: isWordOverflow }"
-          >
+          <div class="metric-value" :class="{ danger: isWordOverflow }">
             <span v-if="analysisLoaded">{{ analysis.wordCount }}</span>
             <span v-else>-</span>
             <span class="unit">字</span>
-
-            <el-tag
-                v-if="analysisLoaded && isWordOverflow"
-                type="danger"
-                size="small"
-                class="metric-tag"
-            >
+            <el-tag v-if="analysisLoaded && isWordOverflow" type="danger" size="small" class="metric-tag">
               字数超限
             </el-tag>
           </div>
         </div>
 
-        <!-- 查重率 -->
         <div class="metric">
           <div class="metric-label">查重率</div>
-          <div
-              class="metric-value"
-              :class="{ danger: isHighSimilarity }"
-          >
-            <span v-if="analysisLoaded">
-              {{ (analysis.plagiarismRate * 100).toFixed(2) }}
-            </span>
+          <div class="metric-value" :class="{ danger: isHighSimilarity }">
+            <span v-if="analysisLoaded">{{ (analysis.plagiarismRate * 100).toFixed(2) }}</span>
             <span v-else>-</span>
             <span class="unit">%</span>
-
-            <el-tag
-                v-if="analysisLoaded && isHighSimilarity"
-                type="danger"
-                size="small"
-                class="metric-tag"
-            >
+            <el-tag v-if="analysisLoaded && isHighSimilarity" type="danger" size="small" class="metric-tag">
               高相似度
             </el-tag>
           </div>
         </div>
       </div>
 
-      <!-- 审查反馈 -->
       <div class="feedback">
         <div class="feedback-label">审查反馈</div>
-        <el-input
-            v-model="form.feedback"
-            type="textarea"
-            :rows="4"
-            placeholder="不通过时必填"
-        />
+        <el-input v-model="form.feedback" type="textarea" :rows="4" placeholder="不通过时必填" />
       </div>
     </el-card>
 
@@ -83,60 +51,34 @@
       <span class="pdf-title">稿件 PDF 预览</span>
 
       <span class="pdf-toggle">
-    <el-icon>
-      <ArrowUp v-if="pdfVisible" />
-      <ArrowDown v-else />
-    </el-icon>
-    <span class="toggle-text">
-      {{ pdfVisible ? '收起' : '展开' }}
-    </span>
-  </span>
+        <el-icon>
+          <ArrowUp v-if="pdfVisible" />
+          <ArrowDown v-else />
+        </el-icon>
+        <span class="toggle-text">{{ pdfVisible ? '收起' : '展开' }}</span>
+      </span>
     </div>
 
-
-    <!-- PDF 在线预览 -->
     <div v-if="pdfVisible" class="pdf-wrapper">
-      <iframe
-          :src="pdfPreviewUrl"
-          width="100%"
-          height="800px"
-          frameborder="0"
-      />
+      <iframe :src="pdfPreviewUrl" width="100%" height="800px" frameborder="0" />
     </div>
 
-    <!-- 审查操作 -->
     <div class="actions">
-      <el-button
-          type="warning"
-          :loading="submitting"
-          @click="reject"
-      >
+      <el-button type="warning" :loading="submitting" @click="reject">
         退回修改
       </el-button>
 
-      <el-button
-          type="success"
-          :loading="submitting"
-          :disabled="!analysisLoaded"
-          @click="pass"
-      >
+      <el-button type="success" :loading="submitting" :disabled="!analysisLoaded" @click="pass">
         通过审查
       </el-button>
     </div>
   </el-card>
 </template>
 
-
-
-
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  getTechCheckAnalysis,
-  techCheck,
-  unsubmitManuscript
-} from '@/api/editorialAdmin'
+import { getTechCheckAnalysis, techCheck, unsubmitManuscript } from '@/api/editorialAdmin'
 import { ElMessage } from 'element-plus'
 import { ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 
@@ -150,10 +92,9 @@ const analysisLoaded = ref(false)
 const analysisLoading = ref(false)
 const submitting = ref(false)
 
-// ✅ 新增
 const pdfVisible = ref(false)
-const pdfPreviewUrl = computed(() =>
-    `/api/editorial-admin/manuscripts/pdf/preview?manuscriptId=${manuscriptId.value}`
+const pdfPreviewUrl = computed(
+    () => `/api/editorial-admin/manuscripts/pdf/preview?manuscriptId=${manuscriptId.value}`
 )
 
 const form = ref({
@@ -172,22 +113,18 @@ const loadAnalysis = async () => {
       form.value.wordCount = res.data.wordCount
       form.value.plagiarismRate = res.data.plagiarismRate
       analysisLoaded.value = true
-
-      // ✅ 分析成功后自动展开 PDF
       pdfVisible.value = true
-
       ElMessage.success('稿件已下载并完成分析')
     } else {
       ElMessage.error(res.message || '稿件分析失败')
     }
-  } catch (e) {
+  } catch {
     ElMessage.error('稿件下载或分析失败')
   } finally {
     analysisLoading.value = false
   }
 }
 
-// 通过 / 退回（原样保留）
 const pass = async () => {
   submitting.value = true
   try {
@@ -214,21 +151,13 @@ const reject = async () => {
   }
 }
 
-// 阈值判断
-const isWordOverflow = computed(() =>
-    analysisLoaded.value && analysis.value.wordCount > 8000
-)
+const isWordOverflow = computed(() => analysisLoaded.value && analysis.value.wordCount > 8000)
+const isHighSimilarity = computed(() => analysisLoaded.value && analysis.value.plagiarismRate > 0.2)
 
-const isHighSimilarity = computed(() =>
-    analysisLoaded.value && analysis.value.plagiarismRate > 0.2
-)
-
-// PDF 展开 / 收起
 const togglePdf = () => {
   pdfVisible.value = !pdfVisible.value
 }
 </script>
-
 
 <style scoped>
 .title {
@@ -237,18 +166,15 @@ const togglePdf = () => {
   font-size: 16px;
 }
 
-/* 顶部按钮区 */
 .analysis-action {
   margin-bottom: 16px;
 }
 
-/* 技术分析卡片 */
 .analysis-card {
   margin-bottom: 24px;
   background-color: #fafafa;
 }
 
-/* 指标区 */
 .analysis-metrics {
   display: flex;
   gap: 40px;
@@ -287,41 +213,12 @@ const togglePdf = () => {
   margin-left: 6px;
 }
 
-/* 审查反馈 */
 .feedback-label {
   font-size: 14px;
   color: #606266;
   margin-bottom: 6px;
 }
 
-/* PDF 头部 */
-.pdf-header {
-  margin: 32px 0 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
-}
-
-.pdf-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #303133;
-}
-
-/* PDF 容器 */
-.pdf-wrapper {
-  border: 1px solid #ebeef5;
-  margin-bottom: 24px;
-}
-
-/* 底部操作区 */
-.actions {
-  margin-top: 32px;
-  text-align: right;
-}
-
-/* PDF 区块头部（可折叠） */
 .pdf-header {
   margin: 32px 0 12px;
   display: flex;
@@ -338,7 +235,6 @@ const togglePdf = () => {
   color: #303133;
 }
 
-/* 收起 / 展开 控制 */
 .pdf-toggle {
   display: flex;
   align-items: center;
@@ -351,10 +247,17 @@ const togglePdf = () => {
   line-height: 1;
 }
 
-/* hover 效果 */
 .pdf-header:hover .pdf-toggle {
   color: #66b1ff;
 }
 
-</style>
+.pdf-wrapper {
+  border: 1px solid #ebeef5;
+  margin-bottom: 24px;
+}
 
+.actions {
+  margin-top: 32px;
+  text-align: right;
+}
+</style>
