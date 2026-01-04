@@ -37,9 +37,7 @@
         UPDATE Manuscript
         SET EditorRecommendation = #{editorRecommendation},
             EditorSummaryReport = #{editorSummaryReport},
-            RecommendationDate = GETDATE(),
-            SubStatus = 'WithEditor',
-            Status = 'Processing'
+            RecommendationDate = GETDATE()
         WHERE ManuscriptID = #{manuscriptId}
     </update>
 

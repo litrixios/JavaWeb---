@@ -21,7 +21,11 @@
     >
       <el-table-column prop="manuscriptId" label="稿件ID" width="80" align="center" />
       <el-table-column prop="title" label="稿件标题" min-width="200" show-overflow-tooltip />
-      <el-table-column prop="authorList" label="作者列表" width="150" />
+      <el-table-column label="作者" width="200">
+        <template #default="{ row }">
+          {{ formatAuthorList(row.authorList) }}
+        </template>
+      </el-table-column>
 
       <el-table-column label="投稿时间" width="180">
         <template #default="scope">

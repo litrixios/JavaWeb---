@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.Map;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
@@ -31,6 +34,8 @@ import java.util.stream.Collectors;
 @Service
 public class EditorServiceImpl implements EditorService {
 
+    @Autowired
+    private com.bjfu.cms.mapper.LogMapper logMapper;
     @Autowired
     private UserMapper userMapper;
 
@@ -117,24 +122,34 @@ public class EditorServiceImpl implements EditorService {
         Integer currentUserId = UserContext.getUserId();
         m.setCurrentEditorId(currentUserId);
 
-        // 2. 更新数据库中的建议和报告
+        // 2. 更新建议内容
         editorMapper.updateRecommendation(m);
 
-        // 3. 获取主编 ID
-        Integer eicId = editorMapper.findUserByRole("EditorInChief");
+        // 3. 显式维持状态为 UnderReview
+        editorMapper.updateManuscriptStatus(m.getManuscriptId(), "Processing", "UnderReview");
 
-        // 4. 获取当前编辑的姓名（增加健壮性检查）
+        // --- 【新增：记录到历史日志】 ---
+        com.bjfu.cms.entity.Log operationLog = new com.bjfu.cms.entity.Log();
+        operationLog.setOperatorId(currentUserId);
+        operationLog.setManuscriptId(m.getManuscriptId());
+        operationLog.setOperationType("SubmitRecommendation"); // 建议结论提交
+        operationLog.setDescription("编辑提交了建议结论：[" + m.getEditorRecommendation() + "]");
+        // 注意：你的 Mapper 中 insertLog 使用了 GETDATE()，所以 Java 这边可以不用传时间
+        logMapper.insertLog(operationLog);
+        // ----------------------------
+
+        // 4. 获取主编 ID 并发送通知
+        Integer eicId = editorMapper.findUserByRole("EditorInChief");
         User user = userMapper.selectById(currentUserId);
-        // 如果查不到 User 对象，则降级显示“未知编辑”或直接显示 ID
         String editorName = (user != null) ? user.getFullName() : "ID:" + currentUserId;
 
         if (eicId != null) {
             communicationService.sendMessage(
-                    1, // 发送者 ID (系统)
+                    1, // 发送人（系统）
                     eicId,
                     "MS-" + m.getManuscriptId(),
-                    "稿件建议提醒: " + originalMs.getTitle(),
-                    "编辑 [" + editorName + "] 已提交建议结论：" + m.getEditorRecommendation() + "。请及时审核。",
+                    "稿件建议已提交: " + originalMs.getTitle(),
+                    "编辑 [" + editorName + "] 已提交建议结论：" + m.getEditorRecommendation() + "。稿件目前状态保持为：正在审稿中(UnderReview)。",
                     0
             );
         }

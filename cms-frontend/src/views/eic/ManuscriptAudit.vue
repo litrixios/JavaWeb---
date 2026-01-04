@@ -58,7 +58,11 @@
           >
             <el-table-column prop="manuscriptId" label="稿件ID" width="80" align="center" />
             <el-table-column prop="title" label="稿件标题" min-width="200" show-overflow-tooltip />
-            <el-table-column prop="authorList" label="作者列表" width="150" />
+            <el-table-column label="作者列表" width="200">
+              <template #default="{ row }">
+                {{ formatAuthorList(row.authorList) }}
+              </template>
+            </el-table-column>
             <el-table-column prop="keywords" label="关键词" width="120" />
 
             <el-table-column label="投稿时间" width="180">
@@ -106,7 +110,11 @@
           >
             <el-table-column prop="manuscriptId" label="稿件ID" width="80" align="center" />
             <el-table-column prop="title" label="稿件标题" min-width="200" show-overflow-tooltip />
-            <el-table-column prop="authorList" label="作者列表" width="150" />
+            <el-table-column label="作者列表" width="200">
+              <template #default="{ row }">
+                {{ formatAuthorList(row.authorList) }}
+              </template>
+            </el-table-column>
             <el-table-column prop="keywords" label="关键词" width="120" />
             <el-table-column label="投稿时间" width="180">
               <template #default="scope">
@@ -153,7 +161,11 @@
           >
             <el-table-column prop="manuscriptId" label="稿件ID" width="80" align="center" />
             <el-table-column prop="title" label="稿件标题" min-width="200" show-overflow-tooltip />
-            <el-table-column prop="authorList" label="作者列表" width="150" />
+            <el-table-column label="作者列表" width="200">
+              <template #default="{ row }">
+                {{ formatAuthorList(row.authorList) }}
+              </template>
+            </el-table-column>
             <el-table-column label="当前编辑" width="120">
               <template #default="scope">
                 <span v-if="scope.row.currentEditorId">
@@ -201,7 +213,11 @@
           >
             <el-table-column prop="manuscriptId" label="稿件ID" width="80" align="center" />
             <el-table-column prop="title" label="稿件标题" min-width="200" show-overflow-tooltip />
-            <el-table-column prop="authorList" label="作者列表" width="150" />
+            <el-table-column label="作者列表" width="200">
+              <template #default="{ row }">
+                {{ formatAuthorList(row.authorList) }}
+              </template>
+            </el-table-column>
             <el-table-column label="当前编辑" width="120">
               <template #default="scope">
                 <span v-if="scope.row.currentEditorId">
@@ -256,7 +272,11 @@
           >
             <el-table-column prop="manuscriptId" label="稿件ID" width="80" align="center" />
             <el-table-column prop="title" label="稿件标题" min-width="200" show-overflow-tooltip />
-            <el-table-column prop="authorList" label="作者列表" width="150" />
+            <el-table-column label="作者列表" width="200">
+              <template #default="{ row }">
+                {{ formatAuthorList(row.authorList) }}
+              </template>
+            </el-table-column>
             <el-table-column prop="revisionDeadline" label="修改截止日" width="120">
               <template #default="scope">
                 {{ formatDate(scope.row.revisionDeadline) }}
@@ -318,7 +338,11 @@
           >
             <el-table-column prop="manuscriptId" label="稿件ID" width="80" align="center" />
             <el-table-column prop="title" label="稿件标题" min-width="200" show-overflow-tooltip />
-            <el-table-column prop="authorList" label="作者列表" width="150" />
+            <el-table-column label="作者列表" width="200">
+              <template #default="{ row }">
+                {{ formatAuthorList(row.authorList) }}
+              </template>
+            </el-table-column>
             <el-table-column label="决定" width="100">
               <template #default="scope">
                 <el-tag :type="scope.row.subStatus === 'Accepted' ? 'success' : 'danger'">
@@ -394,7 +418,9 @@
         <el-descriptions title="基本信息" :column="2" border style="margin-bottom: 20px;">
           <el-descriptions-item label="稿件ID">{{ manuscriptHistory.manuscript?.manuscriptId || currentManuscriptId }}</el-descriptions-item>
           <el-descriptions-item label="标题">{{ manuscriptHistory.manuscript?.title || tempTitle }}</el-descriptions-item>
-          <el-descriptions-item label="作者">{{ manuscriptHistory.manuscript?.authorList || '未知' }}</el-descriptions-item>
+          <el-descriptions-item label="作者">
+            {{ formatAuthorList(manuscriptHistory.manuscript?.authorList) }}
+          </el-descriptions-item>
           <el-descriptions-item label="投稿时间">{{ formatDate(manuscriptHistory.manuscript?.submissionTime) }}</el-descriptions-item>
           <el-descriptions-item label="当前状态">
             <el-tag size="small">{{ getStatusLabel(manuscriptHistory.manuscript?.subStatus || manuscriptHistory.manuscript?.status) }}</el-tag>
@@ -691,7 +717,11 @@
           >
             <el-table-column prop="manuscriptId" label="稿件ID" width="80" align="center" fixed="left" />
             <el-table-column prop="title" label="稿件标题" min-width="200" show-overflow-tooltip />
-            <el-table-column prop="authorList" label="作者" width="120" />
+            <el-table-column label="作者" width="200">
+              <template #default="{ row }">
+                {{ formatAuthorList(row.authorList) }}
+              </template>
+            </el-table-column>
 
             <el-table-column label="初审决策" width="150" align="center">
               <template #default="scope">
@@ -1435,7 +1465,29 @@ const submitBatchDeskReview = async () => {
     loading.value = false
   }
 }
+// 通用的作者格式化函数
+const formatAuthorList = (authorData) => {
+  if (!authorData) return '未知'
 
+  let authors = authorData
+
+  // 1. 如果是 JSON 字符串格式 (例如: '["张三", "李四"]')，尝试解析
+  if (typeof authors === 'string' && authors.startsWith('[')) {
+    try {
+      authors = JSON.parse(authors)
+    } catch (e) {
+      return authors // 解析失败则返回原始字符串
+    }
+  }
+
+  // 2. 如果解析后是数组，进行 map 拼接
+  if (Array.isArray(authors)) {
+    return authors.map(item => item.name || item).join('，')
+  }
+
+  // 3. 如果是普通字符串，直接返回
+  return authors
+}
 // 初始化
 onMounted(() => {
   loadManuscripts()
