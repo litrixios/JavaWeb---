@@ -511,7 +511,7 @@ public class EditorInChiefServiceImpl implements EditorInChiefService {
         String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
         // === 修复点：增加空值判断 ===
-        Integer operatorId = 1; // 默认给一个系统管理员ID，防止报错
+        Integer operatorId = 2; // 默认给一个系统管理员ID，防止报错
         try {
             if (UserContext.getUserId() != null) {
                 operatorId = UserContext.getUserId();

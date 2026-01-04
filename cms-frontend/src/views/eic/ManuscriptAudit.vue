@@ -313,23 +313,6 @@
 
         <!-- 已有决定 -->
         <el-tab-pane label="已有决定" name="decided">
-          <!-- 新增：报表导出控制区域 -->
-          <div class="table-actions" style="margin-bottom: 15px;">
-            <el-date-picker
-                v-model="exportDateRange"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="结束日期"
-                value-format="YYYY-MM-DD"
-                size="small"
-                style="margin-right: 10px; width: 240px;"
-            />
-            <el-button type="success" size="small" @click="handleExportReport" :loading="exportLoading">
-              <el-icon><Download /></el-icon> 导出报表
-            </el-button>
-          </div>
-
           <el-table
               :data="decidedManuscripts"
               border
@@ -426,7 +409,52 @@
             <el-tag size="small">{{ getStatusLabel(manuscriptHistory.manuscript?.subStatus || manuscriptHistory.manuscript?.status) }}</el-tag>
           </el-descriptions-item>
         </el-descriptions>
+        <h3 v-if="editorOpinions.length > 0">编辑意见摘要</h3>
+        <el-table
+            v-if="editorOpinions.length > 0"
+            :data="editorOpinions"
+            border
+            stripe
+            style="margin-bottom: 20px;"
+        >
+          <el-table-column label="编辑" min-width="140">
+            <template #default="scope">
+              {{ getEditorName(scope.row.editorId) }}
+            </template>
+          </el-table-column>
 
+          <el-table-column prop="recommendation" label="推荐意见" width="150" show-overflow-tooltip>
+            <template #default="scope">
+              <el-tag v-if="scope.row.recommendation" type="info" effect="plain">
+                {{ scope.row.recommendation }}
+              </el-tag>
+              <span v-else style="color: #909399;">-</span>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="summary" label="处理总结" min-width="200" show-overflow-tooltip>
+            <template #default="scope">
+              {{ scope.row.summary || '-' }}
+            </template>
+          </el-table-column>
+
+          <el-table-column label="决策" width="100" align="center">
+            <template #default="scope">
+              <el-tag
+                  v-if="scope.row.displayStatus"
+                  :type="scope.row.displayStatus === '录用' ? 'success' : (scope.row.displayStatus === '拒稿' ? 'danger' : 'warning')"
+              >
+                {{ scope.row.displayStatus }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="决策时间" width="170">
+            <template #default="scope">
+              {{ formatDate(scope.row.decisionTime) }}
+            </template>
+          </el-table-column>
+        </el-table>
         <h3>审稿意见摘要</h3>
         <el-table :data="manuscriptHistory.reviewSummaries || []" border stripe style="margin-bottom: 20px;">
           <el-table-column prop="ReviewerName" label="审稿人" width="120" />
@@ -943,7 +971,31 @@ const pendingAcceptCount = computed(() => {
 const pendingRejectCount = computed(() => {
   return batchDeskReviewData.value.filter(item => item.decision === 'DeskReject').length
 })
+// 新增：构建编辑意见数据，用于在弹窗中以表格形式展示
+const editorOpinions = computed(() => {
+  const history = manuscriptHistory.value
+  if (!history || !history.manuscript) return []
 
+  const m = history.manuscript
+
+  // 如果没有核心数据，返回空数组（或者你可以选择始终显示一行空数据）
+  // 这里逻辑是：只有当编辑给出了推荐意见、总结报告或做出了决定时才显示
+  const hasContent = m.editorRecommendation || m.editorSummaryReport || m.decision
+
+  if (!hasContent) return []
+
+  return [{
+    editorId: m.currentEditorId,
+    recommendation: m.editorRecommendation,
+    summary: m.editorSummaryReport,
+    decision: m.subStatus === 'Accepted' ? '录用' : (m.subStatus === 'Rejected' ? '拒稿' : m.decision),
+    decisionTime: m.decisionTime,
+    // 如果有 subStatus，优先显示 subStatus 的中文含义
+    displayStatus: m.subStatus === 'Accepted' ? '录用' :
+        (m.subStatus === 'Rejected' ? '拒稿' :
+            (m.decision || '处理中'))
+  }]
+})
 const validBatchCount = computed(() => {
   return batchDeskReviewData.value.filter(item => {
     if (!item.decision) return false
@@ -1275,8 +1327,8 @@ const submitRetract = async () => {
   const data = {
     manuscriptId: retractForm.value.manuscriptId,
     comments: retractForm.value.comments,
-    operatorId: currentUser.userId || 1,
-    operatorName: currentUser.fullName || '系统管理员'
+    operatorId: currentUser.userId,
+    operatorName: currentUser.fullName
   }
 
   console.log('提交撤稿数据:', data);
