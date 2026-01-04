@@ -75,4 +75,10 @@
         WHERE ReviewID = #{reviewId}
     </update>
 
+    <select id="selectByManuscriptId" resultMap="ReviewMap">
+        SELECT * FROM Review
+        WHERE ManuscriptID = #{manuscriptId}
+        ORDER BY ReviewID ASC
+    </select>
+
 </mapper>

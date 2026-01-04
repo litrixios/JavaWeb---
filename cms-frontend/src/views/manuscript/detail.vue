@@ -10,7 +10,6 @@
               <el-tag size="large" :type="statusType">
                 {{ manuscript.subStatus || manuscript.status }}
               </el-tag>
-              <span class="cycle-tip" v-if="trackInfo.estimatedCycle">预计周期: {{ trackInfo.estimatedCycle }}</span>
             </div>
 
             <el-steps :active="activeStep" align-center style="margin: 30px 0;">
@@ -19,6 +18,22 @@
               <el-step title="修回中" />
               <el-step title="决议中" />
             </el-steps>
+
+            <div v-if="trackInfo.reviewOpinions && trackInfo.reviewOpinions.length > 0" class="review-section">
+              <el-divider content-position="left"><h3>审稿人意见 (Review Comments)</h3></el-divider>
+
+              <el-card v-for="(item, index) in trackInfo.reviewOpinions" :key="index" class="review-card" shadow="never">
+                <template #header>
+                  <div class="review-header">
+                    <span class="reviewer-name">{{ item.reviewerAlias }}</span>
+                    <el-tag v-if="item.suggestion" size="small" effect="plain">{{ item.suggestion }}</el-tag>
+                  </div>
+                </template>
+                <div class="review-content">
+                  <pre>{{ item.comments }}</pre>
+                </div>
+              </el-card>
+              <div style="margin-bottom: 30px;"></div> </div>
 
             <h4>历史记录 (History)</h4>
             <el-timeline>
@@ -29,8 +44,8 @@
                   placement="top"
               >
                 <el-card shadow="hover">
-                  <h4>{{ log.operatorName }} 执行了 {{ log.operateType }}</h4>
-                  <p>{{ log.content }}</p>
+                  <h4>{{ log.operatorName }} 执行了 {{ log.operationType }}</h4>
+                  <p>{{ log.description }}</p>
                 </el-card>
               </el-timeline-item>
             </el-timeline>
@@ -98,32 +113,6 @@
           </el-form>
         </el-tab-pane>
 
-        <el-tab-pane label="沟通 (Communication)" name="communication">
-          <div class="chat-container">
-            <div class="message-list">
-              <div v-for="msg in messages" :key="msg.id" class="message-item">
-                <div class="message-meta">
-                  <span class="sender">{{ msg.senderName }}</span>
-                  <span class="time">{{ formatDate(msg.sendTime) }}</span>
-                </div>
-                <div class="message-content">{{ msg.content }}</div>
-              </div>
-              <el-empty v-if="messages.length === 0" description="暂无沟通记录" />
-            </div>
-
-            <div class="message-input">
-              <el-input
-                  v-model="newMessage"
-                  type="textarea"
-                  :rows="3"
-                  placeholder="请输入消息内容，发送给编辑..."
-              />
-              <div style="margin-top: 10px; text-align: right;">
-                <el-button type="primary" @click="handleSendMessage">发送消息</el-button>
-              </div>
-            </div>
-          </div>
-        </el-tab-pane>
       </el-tabs>
     </el-card>
   </div>
@@ -133,7 +122,6 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { trackManuscript, submitRevision } from '@/api/manuscript'
-import { getManuscriptHistory, sendMessage } from '@/api/message'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()
@@ -155,7 +143,7 @@ const manuscript = ref({})
 const historyLogs = ref([])
 const trackInfo = ref({})
 
-// 修回表单 - 修改部分：增加 anonymousFilePath
+// 修回表单
 const revisionForm = reactive({
   manuscriptId: parseInt(manuscriptId),
   originalFilePath: null,
@@ -164,11 +152,6 @@ const revisionForm = reactive({
   responseLetterPath: null
 })
 
-// 消息数据
-const messages = ref([])
-const newMessage = ref('')
-
-// (以下 computed, formatDate 等辅助函数保持不变)
 const statusType = computed(() => {
   const s = manuscript.value.status || ''
   const sub = manuscript.value.subStatus || ''
@@ -208,7 +191,6 @@ const loadData = async () => {
       }
       historyLogs.value = res.data.historyLogs || []
     }
-    loadMessages()
   } catch (error) {
     console.error(error)
   } finally {
@@ -216,14 +198,6 @@ const loadData = async () => {
   }
 }
 
-const loadMessages = async () => {
-  const res = await getManuscriptHistory(manuscriptId)
-  if (res.code === 200) {
-    messages.value = res.data
-  }
-}
-
-// 修改部分：修回提交校验
 const handleRevisionSubmit = async () => {
   if (!revisionForm.markedFilePath || !revisionForm.responseLetterPath || !revisionForm.anonymousFilePath) {
     ElMessage.error('请上传匿名稿、标记稿和回复信')
@@ -236,24 +210,6 @@ const handleRevisionSubmit = async () => {
     activeTab.value = 'track'
   } else {
     ElMessage.error(res.msg || '修回提交失败')
-  }
-}
-
-const handleSendMessage = async () => {
-  if (!newMessage.value.trim()) return
-  const payload = {
-    receiverId: manuscript.value.currentEditorId || 2,
-    topic: `MS-${manuscriptId}`,
-    title: `关于稿件 ${manuscriptId} 的沟通`,
-    content: newMessage.value
-  }
-  const res = await sendMessage(payload)
-  if (res.code === 200) {
-    ElMessage.success('发送成功')
-    newMessage.value = ''
-    loadMessages()
-  } else {
-    ElMessage.error(res.msg || '消息发送失败，请稍后重试')
   }
 }
 
@@ -271,41 +227,30 @@ onMounted(() => {
   align-items: center;
   gap: 15px;
 }
-.cycle-tip {
-  font-size: 13px;
-  color: #666;
-}
 .tip {
   font-size: 12px;
   color: #999;
 }
-.chat-container {
-  max-width: 800px;
+
+/* [新增] 审稿意见样式 */
+.review-section {
+  margin-top: 20px;
 }
-.message-list {
-  background: #f5f7fa;
-  padding: 20px;
-  border-radius: 8px;
-  height: 400px;
-  overflow-y: auto;
-  margin-bottom: 20px;
+.review-card {
+  margin-bottom: 15px;
+  border-left: 4px solid #409EFF; /* 左侧蓝色提示条 */
 }
-.message-item {
-  background: #fff;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 4px;
-  border: 1px solid #e4e7ed;
-}
-.message-meta {
+.review-header {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
-  color: #999;
-  margin-bottom: 5px;
+  align-items: center;
+  font-weight: bold;
 }
-.message-content {
-  font-size: 14px;
+.review-content pre {
+  white-space: pre-wrap; /* 保留换行符 */
+  font-family: inherit;
+  margin: 0;
   color: #333;
+  line-height: 1.6;
 }
 </style>

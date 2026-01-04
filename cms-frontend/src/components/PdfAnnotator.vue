@@ -2,11 +2,6 @@
   <div class="pdf-annotator-container" v-loading="loading">
     <div class="toolbar">
       <el-space>
-        <el-button-group>
-          <el-button :icon="ZoomOut" @click="scale = Math.max(0.5, scale - 0.2)" />
-          <el-button>{{ (scale * 100).toFixed(0) }}%</el-button>
-          <el-button :icon="ZoomIn" @click="scale = Math.min(2.5, scale + 0.2)" />
-        </el-button-group>
         <el-switch
             v-model="isAnnotationMode"
             active-text="批注模式 (点击页面添加)"
@@ -78,7 +73,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import VuePdfEmbed from 'vue-pdf-embed'
-import { ZoomIn, ZoomOut } from '@element-plus/icons-vue'
+// 已移除 @element-plus/icons-vue 的引入，因为不再需要 ZoomIn/ZoomOut
 import * as pdfjsLib from 'pdfjs-dist'
 
 // --- 修改部分开始 ---
@@ -101,7 +96,7 @@ const emit = defineEmits(['update:annotations'])
 
 const loading = ref(true)
 const pageCount = ref(0)
-const scale = ref(1.0)
+const scale = ref(1.0) // 保持默认为 1.0
 const pdfWidth = ref(800) // 估算宽度，实际由渲染决定
 const isAnnotationMode = ref(false)
 const dialogVisible = ref(false)

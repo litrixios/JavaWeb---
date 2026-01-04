@@ -49,4 +49,6 @@ public interface ReviewMapper {
      * 更新审稿任务状态为已完成
      */
     int completeReview(@Param("reviewId") Integer reviewId, @Param("finishDate") String finishDate);
+
+    List<Review> selectByManuscriptId(@Param("manuscriptId") Integer manuscriptId);
 }

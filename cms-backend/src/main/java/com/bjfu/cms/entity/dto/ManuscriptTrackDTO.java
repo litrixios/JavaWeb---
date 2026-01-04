@@ -4,6 +4,7 @@ import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.SystemLog;
 import lombok.Data;
 import java.util.List;
+import java.util.Map; // 新增导入
 
 @Data
 public class ManuscriptTrackDTO {
@@ -13,6 +14,9 @@ public class ManuscriptTrackDTO {
     // 历史操作日志列表
     private List<SystemLog> historyLogs;
 
-    // 预计审稿周期（可以是固定文本，也可以根据逻辑计算）
+    // 预计审稿周期
     private String estimatedCycle;
+
+    // 审稿意见列表 (列表中的Map包含：reviewerAlias, comments, suggestion等)
+    private List<Map<String, Object>> reviewOpinions;
 }

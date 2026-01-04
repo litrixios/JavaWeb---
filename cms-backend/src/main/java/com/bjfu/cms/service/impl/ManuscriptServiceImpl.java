@@ -20,6 +20,12 @@ import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.bjfu.cms.mapper.ReviewMapper;
+import com.bjfu.cms.entity.Review;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 
 import java.util.Date;
 import java.util.List;
@@ -44,6 +50,9 @@ public class ManuscriptServiceImpl implements ManuscriptService {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private ReviewMapper reviewMapper;
 
     // 假设系统管理员/系统通知账号ID为 1
     private static final Integer SYSTEM_ADMIN_ID = 1;
@@ -278,6 +287,26 @@ public class ManuscriptServiceImpl implements ManuscriptService {
             trackDTO.setEstimatedCycle("预计 4-6 周");
         } else {
             trackDTO.setEstimatedCycle("处理中");
+        }
+
+        String status = manuscript.getStatus();
+        if ("Revision".equals(status) || "Decided".equals(status)) {
+            List<Review> reviews = reviewMapper.selectByManuscriptId(manuscriptId);
+            List<Map<String, Object>> opinions = new ArrayList<>();
+
+            int reviewerIndex = 1;
+            for (Review r : reviews) {
+                // 只显示已完成且有意见的记录
+                if ("Completed".equals(r.getStatus()) && r.getCommentsToAuthor() != null) {
+                    Map<String, Object> map = new HashMap<>();
+                    // 使用匿名代号，如 "Reviewer 1"
+                    map.put("reviewerAlias", "Reviewer " + reviewerIndex++);
+                    map.put("comments", r.getCommentsToAuthor());
+                    map.put("suggestion", r.getSuggestion()); // 可选：是否显示建议结果(如 Major Revision)
+                    opinions.add(map);
+                }
+            }
+            trackDTO.setReviewOpinions(opinions);
         }
 
         return trackDTO;

@@ -11,10 +11,10 @@
       </template>
 
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <el-tab-pane label="未完成 (Incomplete)" name="INCOMPLETE" />
-        <el-tab-pane label="处理中 (Processing)" name="PROCESSING" />
-        <el-tab-pane label="需修回 (Revision)" name="REVISION" />
-        <el-tab-pane label="已决议 (Decision)" name="DECISION" />
+        <el-tab-pane label="未完成 (Incomplete)" name="Incomplete" />
+        <el-tab-pane label="处理中 (Processing)" name="Processing" />
+        <el-tab-pane label="需修回 (Revision)" name="Revision" />
+        <el-tab-pane label="已决议 (Decision)" name="Decided" />
       </el-tabs>
 
       <el-table v-loading="loading" :data="tableData" style="width: 100%; margin-top: 20px;">
@@ -35,7 +35,7 @@
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button
-                v-if="activeTab === 'INCOMPLETE'"
+                v-if="activeTab === 'Incomplete'"
                 link type="primary"
                 @click="handleEdit(row.manuscriptId)"
             >
@@ -43,7 +43,7 @@
             </el-button>
 
             <el-button
-                v-if="activeTab === 'REVISION'"
+                v-if="activeTab === 'Revision'"
                 link type="warning"
                 @click="handleDetail(row.manuscriptId, 'revision')"
             >
@@ -77,7 +77,9 @@ import { getMyManuscripts } from '@/api/manuscript'
 import { Plus } from '@element-plus/icons-vue'
 
 const router = useRouter()
-const activeTab = ref('PROCESSING')
+
+// 修改点2: 默认值修改为 Processing
+const activeTab = ref('Processing')
 const loading = ref(false)
 const tableData = ref([])
 const total = ref(0)
@@ -85,10 +87,9 @@ const total = ref(0)
 const queryParams = reactive({
   pageNum: 1,
   pageSize: 10,
-  status: 'PROCESSING'
+  status: 'Processing' // 修改点3: 默认查询参数也同步修改
 })
 
-// --- 修改点：状态映射修正 ---
 const getStatusTag = (status) => {
   const map = {
     'Incomplete': 'info',
