@@ -53,6 +53,7 @@
                  LEFT JOIN Users sender ON m.SenderID = sender.UserID
         WHERE m.Topic = #{topic}
           AND (m.SenderID = #{userId} OR m.ReceiverID = #{userId})
+          AND m.MsgType = 1
         ORDER BY m.SendTime ASC
     </select>
 
@@ -78,5 +79,13 @@
           AND m.MsgType = #{msgType}
         ORDER BY m.SendTime DESC
     </select>
+
+    <update id="markSystemMessagesAsRead">
+        UPDATE InternalMessage
+        SET IsRead = 1
+        WHERE ReceiverID = #{userId}
+          AND MsgType = 0
+          AND IsRead = 0
+    </update>
 
 </mapper>

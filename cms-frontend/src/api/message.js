@@ -44,3 +44,10 @@ export function getMyMessages() {
         method: 'get'
     })
 }
+
+export function markAllSystemAsRead() {
+    return request({
+        url: '/api/message/read-all-system',
+        method: 'post'
+    })
+}
