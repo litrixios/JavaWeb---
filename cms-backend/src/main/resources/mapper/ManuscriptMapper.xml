@@ -72,6 +72,11 @@
             AuthorList = #{authorList},
             FundingInfo = #{fundingInfo},
             Status = #{status},
+
+            SubStatus = #{subStatus},
+            Decision = #{decision},
+            DecisionTime = #{decisionTime},
+
             SubmissionTime = #{submissionTime}
         WHERE ManuscriptID = #{manuscriptId}
     </update>
