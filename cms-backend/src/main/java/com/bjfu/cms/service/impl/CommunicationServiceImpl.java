@@ -7,7 +7,6 @@ import com.bjfu.cms.entity.User;
 import com.bjfu.cms.entity.dto.ChatSessionDTO;
 import com.bjfu.cms.mapper.InternalMessageMapper;
 import com.bjfu.cms.mapper.ManuscriptMapper;
-import com.bjfu.cms.mapper.ManuscriptMetaMapper;
 import com.bjfu.cms.mapper.UserMapper;
 import com.bjfu.cms.service.CommunicationService;
 import com.bjfu.cms.service.strategy.AbstractMessageStrategy;
@@ -31,12 +30,6 @@ public class CommunicationServiceImpl implements CommunicationService {
     @Autowired
     private ManuscriptMapper manuscriptMapper;
 
-    /**
-     * 【核心】策略地图
-     * Spring 会自动扫描所有继承 AbstractMessageStrategy 的 @Component
-     * Key = Bean的名字 (例如 "Author_STRATEGY")
-     * Value = 对应的策略对象
-     */
     @Autowired
     private Map<String, AbstractMessageStrategy> strategyMap;
 
@@ -47,10 +40,8 @@ public class CommunicationServiceImpl implements CommunicationService {
         AbstractMessageStrategy strategy = strategyMap.get(strategyName);
 
         if (strategy == null) {
-            // 系统自动发送的消息可能没有sender(senderId=0或-1)，需要特殊处理，或者赋予管理员策略
             throw new RuntimeException("未找到发送策略");
         }
-
         strategy.executeSend(senderId, receiverId, topic, title, content, msgType);
     }
 
@@ -63,15 +54,12 @@ public class CommunicationServiceImpl implements CommunicationService {
     @Override
     public List<InternalMessage> getSystemNotifications() {
         Integer userId = UserContext.getUserId();
-        // 需要在 XML 实现 selectByTypeAndReceiver(type=0, userId)
         return messageMapper.selectByTypeAndReceiver(0, userId);
     }
 
     @Override
     public List<InternalMessage> getChatHistory(String topic) {
         Integer userId = UserContext.getUserId();
-        // 获取该稿件下的聊天 (Type=1)
-        // XML selectByTopicAndUser 需要增加 AND msg_type = 1
         return messageMapper.selectByTopicAndUser(topic, userId);
     }
 
@@ -89,23 +77,39 @@ public class CommunicationServiceImpl implements CommunicationService {
         // 1. 获取该用户相关的所有稿件
         List<Manuscript> manuscripts;
         if ("AUTHOR".equalsIgnoreCase(currentUser.getRole())) {
-            // 调用刚在 Mapper 中新增的方法
             manuscripts = manuscriptMapper.selectByAuthorId(userId);
         } else if ("EDITOR".equalsIgnoreCase(currentUser.getRole())) {
-            // 调用刚在 Mapper 中新增的方法
             manuscripts = manuscriptMapper.selectByEditorId(userId);
         } else {
             manuscripts = new ArrayList<>();
         }
 
-        // 2. 获取该用户的所有消息
+        // 2. 获取该用户的所有消息并按 Topic 分组
         List<InternalMessage> allMessages = messageMapper.selectAllMessagesForUser(userId);
         Map<String, List<InternalMessage>> msgGroup = allMessages.stream()
-                .filter(m -> m.getMsgType() == 1)
+                .filter(m -> m.getMsgType() == 1) // 仅筛选聊天类型的消息
                 .collect(Collectors.groupingBy(InternalMessage::getTopic));
 
-        // 3. 遍历构建 Session
+        // 3. 遍历稿件构建 Session
         for (Manuscript m : manuscripts) {
+            // ========================= 核心修复开始 =========================
+
+            // 针对作者角色的特殊过滤
+            if ("AUTHOR".equalsIgnoreCase(currentUser.getRole())) {
+                // 1. 业务逻辑限制：必须已分配编辑才能开始聊天
+                //    如果 CurrentEditorID 为 null，说明还在 TechCheck 或 PendingAssign 阶段
+                if (m.getCurrentEditorId() == null) {
+                    continue;
+                }
+
+                // 2. 数据安全防御：防止出现非本人的稿件 (理论上Mapper层已过滤，这里做双重保险)
+                if (m.getAuthorId() != null && !m.getAuthorId().equals(userId)) {
+                    continue;
+                }
+            }
+
+            // ========================= 核心修复结束 =========================
+
             ChatSessionDTO dto = new ChatSessionDTO();
             String topic = "MS-" + m.getManuscriptId();
 
@@ -116,34 +120,30 @@ public class CommunicationServiceImpl implements CommunicationService {
             // 确定聊天对象
             if ("AUTHOR".equalsIgnoreCase(currentUser.getRole())) {
                 dto.setTargetUserId(m.getCurrentEditorId());
-                dto.setTargetUserName(m.getCurrentEditorId() == null ? "待分配编辑" : "编辑"); // 简单处理名字，实际可查表
+                dto.setTargetUserName("编辑");
                 dto.setTargetRole("Editor");
             } else {
-                // 如果我是编辑，对象就是作者
-                // 注意：这里 AuthorName 可能在 selectByEditorId 中未联查出来，
-                // 如果 Manuscript 实体里没有 authorName 字段值，可能需要额外处理。
-                // 不过 selectByEditorId 返回的是 Manuscript 对象，通常含 AuthorID。
-                // 暂时用 "作者" 代替名字，或者前端再查一次。
+                // 如果是编辑，聊天对象是作者
                 dto.setTargetUserId(m.getAuthorId());
                 dto.setTargetUserName("作者");
                 dto.setTargetRole("Author");
             }
 
-            // 填充消息数据
+            // 填充最新消息和未读数
             if (msgGroup.containsKey(topic)) {
                 List<InternalMessage> msgs = msgGroup.get(topic);
                 if (!msgs.isEmpty()) {
-                    InternalMessage latest = msgs.get(0);
+                    InternalMessage latest = msgs.get(0); // 假设SQL已经按时间倒序排列
                     dto.setLastMessageContent(latest.getContent());
                     dto.setLastMessageTime(latest.getSendTime());
 
-                    // 【修复点】：Boolean 类型判断
                     long unread = msgs.stream()
                             .filter(msg -> msg.getReceiverId().equals(userId) && Boolean.FALSE.equals(msg.getIsRead()))
                             .count();
-                    dto.setUnreadCount((int)unread);
+                    dto.setUnreadCount((int) unread);
                 }
             } else {
+                // 没有历史消息时显示默认提示
                 dto.setLastMessageContent("暂无消息");
                 dto.setUnreadCount(0);
             }
@@ -157,5 +157,4 @@ public class CommunicationServiceImpl implements CommunicationService {
     public void markAllSystemAsRead(Integer userId) {
         messageMapper.markSystemMessagesAsRead(userId);
     }
-
 }
