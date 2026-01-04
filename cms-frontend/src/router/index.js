@@ -5,6 +5,7 @@ import Editorsidebar from '@/layout/EditorSIdebar.vue'
 import Layout2 from '@/layout/admin_index.vue'
 import Layout3 from '@/layout/systemadminSidebar.vue'
 import Router from '@/layout/eic.vue'
+import EditorialAdminSidebar from '@/layout/editorial-adminSidebar.vue'
 const routes = [
     // 1. 登录页
     {
@@ -232,15 +233,16 @@ const routes = [
             }
         ]
     },
-    //编辑部管理员
+// ✅ 编辑部管理员（改成最新 sidebar 布局）
+    // 编辑部管理员
     {
         path: '/editorial-admin',
         name: 'EditorialAdmin',
-        component: () => import('@/layout/AdminLayout.vue'),
+        component: EditorialAdminSidebar, // ✅ layout 目录下的布局
         meta: { role: 'EDITORIAL_ADMIN' },
-        redirect: '/editorial-admin/tech-check',  // 添加默认重定向
+        redirect: '/editorial-admin/tech-check',
         children: [
-            // 形式审查路由
+            // 形式审查
             {
                 path: 'tech-check',
                 name: 'TechCheckList',
@@ -251,7 +253,8 @@ const routes = [
                 name: 'TechCheckDetail',
                 component: () => import('@/views/editorial-admin/tech-check/detail.vue')
             },
-            // 新闻管理路由
+
+            // 新闻管理
             {
                 path: 'news',
                 name: 'NewsList',
@@ -269,6 +272,7 @@ const routes = [
             }
         ]
     },
+
 
     // 【新增】消息中心 (所有人可见)
     {

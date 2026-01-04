@@ -663,6 +663,7 @@
   </section>
 
   <!-- 征稿通知（动态展示，包含文件下载） -->
+  <!-- 征稿通知（动态展示，包含文件下载） -->
   <section class="section">
     <h2 class="section-title">征稿通知 (Call for Papers)</h2>
     <div class="call-for-papers">
@@ -670,41 +671,48 @@
         <c:when test="${not empty newsWithFiles}">
           <c:forEach var="news" items="${newsWithFiles}">
             <div class="cfp-card">
-              <h3 class="cfp-title">${news.title}</h3>
-              <div class="cfp-deadline">
-                <c:choose>
-                  <c:when test="${not empty news.publishDate}">
-                    发布时间: ${news.publishDate}
-                  </c:when>
-                  <c:otherwise>
-                    发布时间: 待定
-                  </c:otherwise>
-                </c:choose>
+              <div class="cfp-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleCfpContent(this)">
+                <div>
+                  <h3 class="cfp-title">${news.title}</h3>
+                  <div class="cfp-deadline">
+                    <c:choose>
+                      <c:when test="${not empty news.publishDate}">
+                        发布时间: ${news.publishDate}
+                      </c:when>
+                      <c:otherwise>
+                        发布时间: 待定
+                      </c:otherwise>
+                    </c:choose>
+                  </div>
+                </div>
+                <span class="cfp-toggle-icon" style="font-size: 1.2rem;">▼</span>
               </div>
-              <div class="cfp-content">
-                <p>${news.content}</p>
-              </div>
+              <div class="cfp-content-wrapper" style="display: none;">
+                <div class="cfp-content">
+                  <p>${news.content}</p>
+                </div>
 
-              <!-- 文件下载部分 -->
-              <div class="file-list">
-                <c:choose>
-                  <c:when test="${not empty news.files}">
-                    <c:forEach var="file" items="${news.files}">
-                      <div class="file-item">
-                        <div class="file-info">
-                          <span class="file-icon">📎</span>
-                          <span class="file-name">${file.fileName}</span>
+                <!-- 文件下载部分 -->
+                <div class="file-list">
+                  <c:choose>
+                    <c:when test="${not empty news.files}">
+                      <c:forEach var="file" items="${news.files}">
+                        <div class="file-item">
+                          <div class="file-info">
+                            <span class="file-icon">📎</span>
+                            <span class="file-name">${file.fileName}</span>
+                          </div>
+                          <a href="/files/download/${file.fileId}" class="download-btn" download="${file.fileName}">
+                            下载
+                          </a>
                         </div>
-                        <a href="/files/download/${file.fileId}" class="download-btn" download="${file.fileName}">
-                          下载
-                        </a>
-                      </div>
-                    </c:forEach>
-                  </c:when>
-                  <c:otherwise>
-                    <div class="no-files">暂无附件</div>
-                  </c:otherwise>
-                </c:choose>
+                      </c:forEach>
+                    </c:when>
+                    <c:otherwise>
+                      <div class="no-files">暂无附件</div>
+                    </c:otherwise>
+                  </c:choose>
+                </div>
               </div>
             </div>
           </c:forEach>
@@ -712,13 +720,20 @@
         <c:otherwise>
           <!-- 如果没有征稿数据，显示静态内容 -->
           <div class="cfp-card">
-            <h3 class="cfp-title">2025年度人工智能前沿技术特刊</h3>
-            <div class="cfp-deadline">发布时间: 2024-11-25</div>
-            <div class="cfp-content">
-              <p>本特刊聚焦人工智能领域的最新研究进展，包括机器学习、深度学习、自然语言处理等方向。</p>
+            <div class="cfp-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleCfpContent(this)">
+              <div>
+                <h3 class="cfp-title">2025年度人工智能前沿技术特刊</h3>
+                <div class="cfp-deadline">发布时间: 2024-11-25</div>
+              </div>
+              <span class="cfp-toggle-icon" style="font-size: 1.2rem;">▼</span>
             </div>
-            <div class="file-list">
-              <div class="no-files">暂无附件</div>
+            <div class="cfp-content-wrapper" style="display: none;">
+              <div class="cfp-content">
+                <p>本特刊聚焦人工智能领域的最新研究进展，包括机器学习、深度学习、自然语言处理等方向。</p>
+              </div>
+              <div class="file-list">
+                <div class="no-files">暂无附件</div>
+              </div>
             </div>
           </div>
         </c:otherwise>
@@ -735,6 +750,18 @@
 
 <script>
   // 选项卡切换功能
+  function toggleCfpContent(element) {
+    const wrapper = element.parentElement.querySelector('.cfp-content-wrapper');
+    const icon = element.querySelector('.cfp-toggle-icon');
+
+    if (wrapper.style.display === 'none') {
+      wrapper.style.display = 'block';
+      icon.textContent = '▲';
+    } else {
+      wrapper.style.display = 'none';
+      icon.textContent = '▼';
+    }
+  }
   function showTab(tabName) {
     // 隐藏所有选项卡内容
     document.querySelectorAll('.tab-content').forEach(tab => {

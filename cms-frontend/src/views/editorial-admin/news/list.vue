@@ -23,6 +23,7 @@
             style="width: 200px"
         />
       </el-form-item>
+
       <el-form-item label="日期范围">
         <el-date-picker
             v-model="searchForm.dateRange"
@@ -32,6 +33,7 @@
             end-placeholder="结束日期"
         />
       </el-form-item>
+
       <el-form-item>
         <el-button type="primary" @click="handleSearch">查询</el-button>
         <el-button @click="resetForm">重置</el-button>
@@ -67,10 +69,7 @@
 
       <el-table-column label="状态" width="100">
         <template #default="{ row }">
-          <el-tag
-              v-if="!row.__empty"
-              :type="row.isActive ? 'success' : 'info'"
-          >
+          <el-tag v-if="!row.__empty" :type="row.isActive ? 'success' : 'info'">
             {{ row.isActive ? '已发布' : '待发布' }}
           </el-tag>
           <span v-else>-</span>
@@ -80,18 +79,10 @@
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <template v-if="!row.__empty">
-            <el-button
-                type="primary"
-                size="small"
-                @click="handleEdit(row.newsId)"
-            >
+            <el-button type="primary" size="small" @click="handleEdit(row.newsId)">
               编辑
             </el-button>
-            <el-button
-                type="danger"
-                size="small"
-                @click="handleDelete(row.newsId)"
-            >
+            <el-button type="danger" size="small" @click="handleDelete(row.newsId)">
               删除
             </el-button>
           </template>
@@ -121,40 +112,30 @@ import { getNewsList, deleteNews } from '@/api/editorialAdmin'
 
 const router = useRouter()
 
-/** ===== 基础状态 ===== */
 const loading = ref(false)
 const tableData = ref([])
 const total = ref(0)
 const pageNum = ref(1)
 const pageSize = ref(10)
 
-/** ===== 搜索 ===== */
 const searchForm = reactive({
   keyword: '',
   dateRange: []
 })
 
-/** ===== 空行标记 ===== */
 const EMPTY_ROW = { __empty: true }
 
-/** ===== 当前页数据（补齐 10 行）===== */
 const currentPageData = computed(() => {
   const start = (pageNum.value - 1) * pageSize.value
   const end = start + pageSize.value
   const list = tableData.value.slice(start, end)
 
   const lack = pageSize.value - list.length
-  if (lack > 0) {
-    return list.concat(Array.from({ length: lack }, () => EMPTY_ROW))
-  }
-  return list
+  return lack > 0 ? list.concat(Array.from({ length: lack }, () => EMPTY_ROW)) : list
 })
 
-/** ===== 时间格式 ===== */
-const formatPublishDate = (val) =>
-    val ? dayjs(val).format('YYYY-MM-DD HH:mm:ss') : '-'
+const formatPublishDate = (val) => (val ? dayjs(val).format('YYYY-MM-DD HH:mm:ss') : '-')
 
-/** ===== 拉取数据（前端分页）===== */
 const fetchList = async () => {
   loading.value = true
   try {
@@ -163,11 +144,8 @@ const fetchList = async () => {
       startDate: searchForm.dateRange?.[0]?.toISOString?.() || '',
       endDate: searchForm.dateRange?.[1]?.toISOString?.() || ''
     })
-
     if (res.success) {
-      tableData.value = (res.data || []).sort(
-          (a, b) => Number(a.newsId) - Number(b.newsId)
-      )
+      tableData.value = (res.data || []).sort((a, b) => Number(a.newsId) - Number(b.newsId))
       total.value = tableData.value.length
     }
   } catch (e) {
@@ -177,7 +155,6 @@ const fetchList = async () => {
   }
 }
 
-/** ===== 搜索 / 重置 ===== */
 const handleSearch = () => {
   pageNum.value = 1
   fetchList()
@@ -190,25 +167,18 @@ const resetForm = () => {
   fetchList()
 }
 
-/** ===== 编辑 / 删除 ===== */
 const handleEdit = (newsId) => {
-  router.push({
-    path: '/editorial-admin/news/edit',
-    query: { newsId }
-  })
+  router.push({ path: '/editorial-admin/news/edit', query: { newsId } })
 }
 
 const handleDelete = async (newsId) => {
   try {
-    await ElMessageBox.confirm('确认删除该新闻？', '提示', {
-      type: 'warning'
-    })
+    await ElMessageBox.confirm('确认删除该新闻？', '提示', { type: 'warning' })
     await deleteNews(newsId)
     ElMessage.success('删除成功')
 
-    tableData.value = tableData.value.filter(i => i.newsId !== newsId)
+    tableData.value = tableData.value.filter((i) => i.newsId !== newsId)
     total.value = tableData.value.length
-
     const maxPage = Math.ceil(total.value / pageSize.value)
     if (pageNum.value > maxPage) pageNum.value = Math.max(1, maxPage)
   } catch {}
@@ -217,27 +187,20 @@ const handleDelete = async (newsId) => {
 onMounted(fetchList)
 </script>
 
-
 <style scoped>
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
 .pagination {
   margin-top: 16px;
   text-align: right;
 }
-
 </style>
 
 <style>
-/* 只影响当前页面的 el-table */
-.el-table .el-table__row {
-  height: 44px;
-}
-
+.el-table .el-table__row,
 .el-table .el-table__empty-row {
   height: 44px;
 }

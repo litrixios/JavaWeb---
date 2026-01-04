@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface ManuscriptMapper {
@@ -95,6 +96,12 @@ public interface ManuscriptMapper {
     // 【新增】根据作者ID查询其所有稿件
     List<Manuscript> selectByAuthorId(@Param("authorId") Integer authorId);
 
+    // 【新增】根据时间范围查询稿件（用于报表）
+    List<Manuscript> selectManuscriptsByDateRange(@Param("startDate") String startDate,
+                                                  @Param("endDate") String endDate);
+
+    // 【新增】查询某稿件的所有审稿意见
+    List<Map<String, Object>> selectReviewsByManuscriptId(@Param("manuscriptId") Integer manuscriptId);
     // 【新增】根据编辑ID查询其当前负责的所有稿件
     List<Manuscript> selectByEditorId(@Param("editorId") Integer editorId);
 
