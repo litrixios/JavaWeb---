@@ -64,12 +64,12 @@ public class SystemAdminController {
     @Operation(summary = "更新用户信息（包含头像上传）")
     @PostMapping("/update-profile")
     public Result<String> updateUserProfile(
-            @RequestParam(value = "file") MultipartFile file,
+            @RequestParam(value = "file",required = false) MultipartFile file,
             @RequestParam Integer userId,
             @RequestParam String fullName,
             @RequestParam String email,
-            @RequestParam String affiliation,
-            @RequestParam String researchDirection) {
+            @RequestParam(required = false) String affiliation,
+            @RequestParam(required = false) String researchDirection) {
         // 创建用户信息对象
         userService.uploadAvatar(userId, file);
         return userService.updateProfile(userId,fullName, email, affiliation, researchDirection);

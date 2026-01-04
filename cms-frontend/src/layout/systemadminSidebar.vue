@@ -54,7 +54,6 @@
         v-model="showProfileDialog"
         title="修改个人信息"
         width="600px"
-        :before-close="handleCloseDialog"
         @open="handleDialogOpen"
     >
       <div class="profile-dialog-content">
@@ -476,7 +475,7 @@ const handleSaveProfile = async () => {
       showProfileDialog.value = false
       avatarFile.value = null // 清空文件
     } else {
-      ElMessage.error(result?.message || '更新失败')
+      ElMessage.error('更新失败')
     }
   } catch (error) {
     console.error('保存失败:', error)
