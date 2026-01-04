@@ -15,7 +15,33 @@
       <el-table-column prop="title" label="标题" />
       <el-table-column prop="keywords" label="关键词" />
       <el-table-column prop="fundingInfo" label="项目资助情况" />
-      <el-table-column prop="authorList" label="作者" width="200" />
+      <el-table-column label="作者" width="200">
+        <template #default="{ row }">
+          <!-- 先处理字符串格式的数组，再判断 -->
+          <template v-if="row.authorList">
+            {{
+              // 尝试解析字符串为数组
+              (() => {
+                let authorData = row.authorList
+                // 如果是字符串且以 [ 开头，尝试 JSON 解析
+                if (typeof authorData === 'string' && authorData.startsWith('[')) {
+                  try {
+                    authorData = JSON.parse(authorData)
+                  } catch (e) {
+                    // 解析失败则保持原字符串
+                    return authorData
+                  }
+                }
+                // 再判断是否为数组
+                return Array.isArray(authorData)
+                    ? authorData.map(item => item.name || item).join('，')
+                    : authorData
+              })()
+            }}
+          </template>
+          <template v-else>-</template>
+        </template>
+      </el-table-column>
 
       <el-table-column label="提交时间" width="190">
         <template #default="{ row }">

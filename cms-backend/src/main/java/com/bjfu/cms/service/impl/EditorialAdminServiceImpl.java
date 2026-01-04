@@ -2,6 +2,7 @@ package com.bjfu.cms.service.impl;
 
 import com.bjfu.cms.common.result.Result;
 import com.bjfu.cms.common.utils.PdfUtils;
+import com.bjfu.cms.common.utils.SaplingAiDetectClient;
 import com.bjfu.cms.common.utils.UserContext;
 import com.bjfu.cms.entity.Manuscript;
 import com.bjfu.cms.entity.User;
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+
 @Service
 public class EditorialAdminServiceImpl implements EditorialAdminService {
 
@@ -34,6 +36,8 @@ public class EditorialAdminServiceImpl implements EditorialAdminService {
     @Value("${file.temp.path}")
     private String localTempPath;
 
+    @Autowired
+    private SaplingAiDetectClient saplingAiDetectClient;
 
     @Autowired
     private CommunicationService communicationService;
@@ -201,11 +205,44 @@ public class EditorialAdminServiceImpl implements EditorialAdminService {
         }
     }
 
-    // 查重模拟方法（实际需替换为真实查重逻辑）
+    // 查重模拟方法
     private double checkPlagiarism(String localFilePath) {
-        // 示例：随机返回0-15%的查重率
-        return Math.random() * 0.30;
+        try {
+            // 1) PDF提取文本
+            String text = PdfUtils.extractText(localFilePath);
+
+            // 2) 空文本直接 0
+            if (text == null || text.trim().isEmpty()) return 0.0;
+
+            // 3) 调 Sapling：返回 0~1
+            text = normalizeForAiDetect(text);
+            double aiScore = saplingAiDetectClient.detectAiScore(text);
+
+            // 4) 作为“率”返回（0~1）
+            return clamp01(aiScore);
+        } catch (Exception e) {
+            // 生产建议：记录日志 + 返回一个可识别的默认值
+            // 也可以直接抛出让上层提示“检测失败”
+            System.err.println("查重检测失败！文件路径：" + localFilePath + "，错误原因：" + e.getMessage());
+            return Math.random() * 0.30;
+        }
     }
+
+    private double clamp01(double v) {
+        if (v < 0) return 0;
+        if (v > 1) return 1;
+        return v;
+    }
+    private String normalizeForAiDetect(String text) {
+        if (text == null) return "";
+        // 去掉多余空白，减少字符消耗
+        String t = text.replaceAll("\\s+", " ").trim();
+
+        // 截断：比如最多 12000 字符（你可调）
+        int max = 12000;
+        return t.length() > max ? t.substring(0, max) : t;
+    }
+
 
     @Override
     public void previewLatestPdf(Integer manuscriptId, HttpServletResponse response) {

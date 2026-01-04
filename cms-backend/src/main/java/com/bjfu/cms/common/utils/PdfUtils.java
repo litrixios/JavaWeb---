@@ -7,6 +7,15 @@ import java.io.IOException;
 
 public class PdfUtils {
 
+    static {
+        // 禁用 PDFBox 自动扫描系统字体
+        System.setProperty("sun.java2d.font.disableAlgorithmicStyles", "true");
+        System.setProperty("org.apache.pdfbox.useNonSequentialParser", "true");
+        // 核心配置：指定不扫描系统字体
+        System.setProperty("pdfbox.fontcache", "false");
+        System.setProperty("org.apache.pdfbox.fontbox.ttf.parser.skipCorruptedFonts", "true");
+    }
+
     /**
      * 提取PDF文本内容
      */
