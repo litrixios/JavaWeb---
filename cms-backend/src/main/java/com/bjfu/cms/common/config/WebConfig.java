@@ -35,6 +35,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "/submit",
                         "/articles",
                         "/guide",
+                        "/register",
+                        "/login",
                         "/"
                 );
     }
