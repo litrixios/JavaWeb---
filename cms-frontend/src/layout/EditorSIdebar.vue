@@ -9,14 +9,17 @@
           default-active="1"
           router
       >
-        <el-menu-item index="/editor/my-manuscripts">
+        <!-- 权限控制：只有拥有 canAssignReviewer 权限才显示 -->
+        <el-menu-item index="/editor/my-manuscripts" v-if="userPermissions.canAssignReviewer === true">
           <el-icon><Document /></el-icon>
           <span>我的稿件</span>
         </el-menu-item>
-        <el-menu-item index="/editor/monitoring">
+        <!-- 权限控制：只有拥有 canViewReviewerIdentity 权限才显示 -->
+        <el-menu-item index="/editor/monitoring" v-if="userPermissions.canViewReviewerIdentity === true">
           <el-icon><Edit /></el-icon>
           <span>审稿监控</span>
         </el-menu-item>
+        <!-- 所有角色可见，无需权限控制 -->
         <el-menu-item index="/editor/tracking">
           <el-icon><Edit /></el-icon>
           <span>审稿进度</span>
@@ -119,16 +122,16 @@
           <el-form-item label="角色" prop="role">
             <el-input v-model="profileForm.role" disabled />
           </el-form-item>
-          <el-form-item label="姓名" prop="FullName">
+          <el-form-item label="姓名" prop="fullName">
             <el-input v-model="profileForm.fullName" placeholder="请输入您的姓名" />
           </el-form-item>
-          <el-form-item label="邮箱" prop="Email">
+          <el-form-item label="邮箱" prop="email">
             <el-input v-model="profileForm.email" placeholder="请输入邮箱地址" />
           </el-form-item>
-          <el-form-item label="所属机构" prop="Affiliation">
+          <el-form-item label="所属机构" prop="affiliation">
             <el-input v-model="profileForm.affiliation" placeholder="请输入所属机构" />
           </el-form-item>
-          <el-form-item label="研究方向" prop="ResearchDirection">
+          <el-form-item label="研究方向" prop="researchDirection">
             <el-input
                 v-model="profileForm.researchDirection"
                 type="textarea"
@@ -159,6 +162,40 @@ import { Document, Edit, User, Upload } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
+// ========== 核心新增：权限相关逻辑 ==========
+// 1. 响应式权限对象（兼容登录时存储的权限字段）
+const userPermissions = ref({
+  canAssignReviewer: false,
+  canViewReviewerIdentity: false
+})
+
+// 2. 安全读取 localStorage 中的权限数据
+const getValidPermissions = () => {
+  try {
+    const permStr = localStorage.getItem('permissions')
+    // 过滤无效值，避免解析报错
+    if (!permStr || permStr === 'undefined' || permStr === 'null' || permStr === '{}') {
+      return {
+        canAssignReviewer: false,
+        canViewReviewerIdentity: false
+      }
+    }
+    const permissions = JSON.parse(permStr)
+    // 补全默认值，避免模板中 undefined 报错
+    return {
+      canAssignReviewer: permissions.canAssignReviewer || false,
+      canViewReviewerIdentity: permissions.canViewReviewerIdentity || false
+    }
+  } catch (e) {
+    console.warn('权限数据解析失败，使用默认权限', e)
+    return {
+      canAssignReviewer: false,
+      canViewReviewerIdentity: false
+    }
+  }
+}
+
+// ========== 原有逻辑保持不变，新增权限初始化 ==========
 // 定义响应式变量
 const userName = ref('User')
 const userRole = ref('')
@@ -279,9 +316,21 @@ const handlePreviewAvatarError = () => {
   avatarPreviewUrl.value = defaultAvatar
 }
 
+// ========== 核心修改：挂载时初始化权限 ==========
 onMounted(() => {
   loadUserInfo()
+  // 初始化权限数据
+  userPermissions.value = getValidPermissions()
 })
+
+// ========== 可选：监听权限变化，实现动态更新 ==========
+watch(
+    () => localStorage.getItem('permissions'),
+    () => {
+      userPermissions.value = getValidPermissions()
+    },
+    { immediate: false }
+)
 
 // 监听用户信息变化，自动更新头像
 watch(() => profileForm.userId, async (newUserId) => {
@@ -495,6 +544,7 @@ const handleSaveProfile = async () => {
 const handleLogout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('userInfo')
+  localStorage.removeItem('permissions') // 退出时清空权限
   router.push('/login')
 }
 </script>

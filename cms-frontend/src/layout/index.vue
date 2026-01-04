@@ -1,4 +1,3 @@
-
 <template>
   <div class="app-wrapper">
     <div class="sidebar-container">
@@ -10,20 +9,24 @@
           default-active="1"
           router
       >
+        <!-- 我的稿件：可根据实际需求调整，此处默认显示（也可绑定对应权限） -->
         <el-menu-item index="/manuscript/list">
           <el-icon><Document /></el-icon>
           <span>我的稿件</span>
         </el-menu-item>
-        <el-menu-item index="/manuscript/submit">
+        <!-- 权限控制：在线投稿（对应 canSubmitManuscript 权限，仅当权限为true时显示） -->
+        <el-menu-item index="/manuscript/submit" v-if="userPermissions.canSubmitManuscript === true">
           <el-icon><Edit /></el-icon>
           <span>在线投稿</span>
         </el-menu-item>
 
+        <!-- 消息中心：默认所有角色可见，无需权限控制 -->
         <el-menu-item index="/message/index">
           <el-icon><Bell /></el-icon>
           <span>消息中心</span>
         </el-menu-item>
 
+        <!-- 修改个人信息：默认所有角色可见，无需权限控制 -->
         <el-menu-item @click="showProfileDialog = true">
           <el-icon><User /></el-icon>
           <span>修改个人信息</span>
@@ -121,16 +124,16 @@
           <el-form-item label="角色" prop="role">
             <el-input v-model="profileForm.role" disabled />
           </el-form-item>
-          <el-form-item label="姓名" prop="FullName">
+          <el-form-item label="姓名" prop="fullName">
             <el-input v-model="profileForm.fullName" placeholder="请输入您的姓名" />
           </el-form-item>
-          <el-form-item label="邮箱" prop="Email">
+          <el-form-item label="邮箱" prop="email">
             <el-input v-model="profileForm.email" placeholder="请输入邮箱地址" />
           </el-form-item>
-          <el-form-item label="所属机构" prop="Affiliation">
+          <el-form-item label="所属机构" prop="affiliation">
             <el-input v-model="profileForm.affiliation" placeholder="请输入所属机构" />
           </el-form-item>
-          <el-form-item label="研究方向" prop="ResearchDirection">
+          <el-form-item label="研究方向" prop="researchDirection">
             <el-input
                 v-model="profileForm.researchDirection"
                 type="textarea"
@@ -157,10 +160,73 @@
 import { ref, onMounted, reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Document, Edit, User, Upload } from '@element-plus/icons-vue'
+import { Document, Edit, User, Upload, Bell } from '@element-plus/icons-vue' // 补充导入Bell图标
 
 const router = useRouter()
 
+// ========== 核心优化：权限相关逻辑（包含所有9个权限字段，安全防错） ==========
+// 1. 响应式权限对象，初始化所有9个权限字段为false，避免模板undefined报错
+const userPermissions = ref({
+  canSubmitManuscript: false,
+  canViewAllManuscripts: false,
+  canAssignReviewer: false,
+  canViewReviewerIdentity: false,
+  canWriteReview: false,
+  canMakeDecision: false,
+  canModifySystemConfig: false,
+  canTechCheck: false,
+  canPublishNews: false
+})
+
+// 2. 安全读取localStorage中的权限数据，自动补全缺失字段、处理解析异常
+const getValidPermissions = () => {
+  try {
+    const permStr = localStorage.getItem('permissions')
+    // 过滤无效值（空、undefined、null、空对象）
+    if (!permStr || permStr === 'undefined' || permStr === 'null' || permStr === '{}') {
+      return {
+        canSubmitManuscript: false,
+        canViewAllManuscripts: false,
+        canAssignReviewer: false,
+        canViewReviewerIdentity: false,
+        canWriteReview: false,
+        canMakeDecision: false,
+        canModifySystemConfig: false,
+        canTechCheck: false,
+        canPublishNews: false
+      }
+    }
+    const permissions = JSON.parse(permStr)
+    // 补全所有权限字段，确保不存在undefined
+    return {
+      canSubmitManuscript: permissions.canSubmitManuscript || false,
+      canViewAllManuscripts: permissions.canViewAllManuscripts || false,
+      canAssignReviewer: permissions.canAssignReviewer || false,
+      canViewReviewerIdentity: permissions.canViewReviewerIdentity || false,
+      canWriteReview: permissions.canWriteReview || false,
+      canMakeDecision: permissions.canMakeDecision || false,
+      canModifySystemConfig: permissions.canModifySystemConfig || false,
+      canTechCheck: permissions.canTechCheck || false,
+      canPublishNews: permissions.canPublishNews || false
+    }
+  } catch (e) {
+    console.warn('权限数据解析失败，使用默认权限', e)
+    // 解析失败时返回默认权限（所有字段为false）
+    return {
+      canSubmitManuscript: false,
+      canViewAllManuscripts: false,
+      canAssignReviewer: false,
+      canViewReviewerIdentity: false,
+      canWriteReview: false,
+      canMakeDecision: false,
+      canModifySystemConfig: false,
+      canTechCheck: false,
+      canPublishNews: false
+    }
+  }
+}
+
+// ========== 原有逻辑保持不变 ==========
 // 定义响应式变量
 const userName = ref('User')
 const userRole = ref('')
@@ -192,7 +258,7 @@ const profileForm = reactive({
   avatarUrl: ''
 })
 
-// 表单验证规则
+// 表单验证规则（修复prop名称大小写不一致问题，与表单模型对应）
 const profileRules = reactive({
   fullName: [
     { required: true, message: '请输入姓名', trigger: 'blur' },
@@ -210,7 +276,7 @@ const profileRules = reactive({
   ]
 })
 
-// 获取头像的完整URL（关键修改）
+// 获取头像的完整URL
 const getAvatarUrl = async (userId) => {
   if (!userId) return defaultAvatar
 
@@ -281,9 +347,21 @@ const handlePreviewAvatarError = () => {
   avatarPreviewUrl.value = defaultAvatar
 }
 
+// ========== 初始化权限和用户信息 ==========
 onMounted(() => {
   loadUserInfo()
+  // 挂载时读取并赋值权限数据
+  userPermissions.value = getValidPermissions()
 })
+
+// ========== 监听权限变化，实现动态更新 ==========
+watch(
+    () => localStorage.getItem('permissions'),
+    () => {
+      userPermissions.value = getValidPermissions()
+    },
+    { immediate: false }
+)
 
 // 监听用户信息变化，自动更新头像
 watch(() => profileForm.userId, async (newUserId) => {
@@ -320,7 +398,7 @@ const beforeAvatarUpload = (file) => {
 
 // 处理头像上传
 const handleAvatarUpload = () => {
-  // 这里我们会在保存时一起处理文件上传
+  // 保存时统一处理文件上传
 }
 
 // 移除头像
@@ -371,7 +449,7 @@ const isFormModified = () => {
   }
 }
 
-// API调用 - 更新用户信息（根据后端接口修改）
+// API调用 - 更新用户信息
 const updateUserInfo = async (userData, file) => {
   try {
     const token = localStorage.getItem('token')
@@ -404,7 +482,7 @@ const updateUserInfo = async (userData, file) => {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
-        // 注意：使用FormData时不要设置Content-Type，浏览器会自动设置
+        // 使用FormData时无需手动设置Content-Type
       },
       body: formData
     })
@@ -422,7 +500,7 @@ const updateUserInfo = async (userData, file) => {
   }
 }
 
-// 保存个人信息（修改后的逻辑）
+// 保存个人信息
 const handleSaveProfile = async () => {
   if (!profileFormRef.value) return
 
@@ -447,7 +525,7 @@ const handleSaveProfile = async () => {
 
     saveLoading.value = true
 
-    // 直接调用更新接口，将头像文件和其他信息一起提交
+    // 提交用户信息和头像文件
     const result = await updateUserInfo(profileForm, avatarFile.value)
 
     if (result && result.success) {
@@ -463,15 +541,14 @@ const handleSaveProfile = async () => {
           affiliation: profileForm.affiliation,
           researchDirection: profileForm.researchDirection,
           remark: profileForm.remark
-          // avatarUrl 由后端返回，这里不直接更新
         }
         localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
 
-        // 更新显示的用户名和角色
+        // 更新显示的用户名
         userName.value = profileForm.fullName || userInfo.username || 'User'
         userRole.value = userInfo.role || ''
 
-        // 如果有新头像，重新加载头像
+        // 重新加载头像（如果有新上传）
         if (avatarFile.value) {
           const newAvatarUrl = await getAvatarUrl(profileForm.userId)
           userAvatarUrl.value = newAvatarUrl
@@ -494,9 +571,11 @@ const handleSaveProfile = async () => {
   }
 }
 
+// 退出登录（清空权限数据，避免残留）
 const handleLogout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('userInfo')
+  localStorage.removeItem('permissions') // 清空权限
   router.push('/login')
 }
 </script>
