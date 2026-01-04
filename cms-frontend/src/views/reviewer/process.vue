@@ -1,380 +1,348 @@
-<template>
-  <div class="process-container" v-loading="loading">
-    <div class="page-header">
-      <el-button icon="ArrowLeft" @click="$router.back()">返回列表</el-button>
-      <span class="title">
-        稿件审阅 (Review ID: {{ reviewId }})
-        <el-tag v-if="isReadOnly" type="success" effect="dark" style="margin-left: 10px;">已完成</el-tag>
-      </span>
-    </div>
+  <template>
+    <div class="process-container" style="padding: 20px;">
+      <el-page-header @back="$router.back()" content="稿件处理详情" />
 
-    <el-row :gutter="20" style="margin-top: 20px;">
-      <el-col :span="10">
-        <el-card class="box-card">
-          <template #header>
-            <div class="card-header">
-              <span>稿件详情 (匿名)</span>
-              <el-space>
-                <el-button type="primary" link @click="handleDownload">
-                  <el-icon><Download /></el-icon> 下载PDF
-                </el-button>
-                <el-button type="success" link @click="openPdfViewer">
-                  <el-icon><View /></el-icon> 在线批注
-                </el-button>
-              </el-space>
-            </div>
-          </template>
-
-          <div v-if="manuscript">
-            <h3 class="manuscript-title">{{ manuscript.title }}</h3>
-            <el-divider content-position="left">摘要</el-divider>
-            <p class="abstract-content">{{ manuscript.abstractText || '无摘要内容' }}</p>
-            <el-divider />
-            <div class="meta-info">
-              <p><strong>关键词：</strong> {{ manuscript.keywords || '-' }}</p>
-              <p><strong>分类：</strong> {{ manuscript.category || '-' }}</p>
-            </div>
+      <el-card style="margin-top: 20px">
+        <template #header>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: bold;">稿件核心信息</span>
+            <el-tag :type="manuscriptDetail.status === 'Decided' ? 'success' : 'warning'">
+              当前状态: {{ manuscriptDetail.status }} ({{ manuscriptDetail.subStatus }})
+            </el-tag>
           </div>
-          <el-empty v-else description="无法加载稿件信息" />
-        </el-card>
-      </el-col>
+        </template>
 
-      <el-col :span="14">
-        <el-card>
-          <template #header>
-            <span>审稿意见表</span>
-          </template>
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="稿件标题" :span="2">{{ manuscriptDetail.title }}</el-descriptions-item>
+          <el-descriptions-item label="作者 ID">{{ manuscriptDetail.authorId }}</el-descriptions-item>
+          <el-descriptions-item label="提交时间">{{ manuscriptDetail.submissionTime }}</el-descriptions-item>
+          <el-descriptions-item label="关键词" :span="2">{{ manuscriptDetail.keywords }}</el-descriptions-item>
+          <el-descriptions-item label="摘要" :span="2">
+            <div style="line-height: 1.6; white-space: pre-wrap;">{{ manuscriptDetail.abstractText }}</div>
+          </el-descriptions-item>
+          <el-descriptions-item label="源文件" :span="2">
+            <el-button
+                v-if="manuscriptDetail.manuscriptId"
+                type="success"
+                size="small"
+                @click="handleDownload"
+            >
+              <el-icon><Download /></el-icon> 下载最新稿件附件
+            </el-button>
+            <span v-else style="color: #999;">无附件</span>
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-card>
 
-          <el-form :model="form" ref="reviewFormRef" :rules="rules" label-position="top" :disabled="isReadOnly">
-
-            <div class="score-section">
-              <el-row :gutter="20">
-                <el-col :span="8">
-                  <el-form-item label="创新性 (Innovation)" prop="innovationScore">
-                    <el-rate v-model="form.innovationScore" show-score allow-half />
-                  </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                  <el-form-item label="方法论 (Methodology)" prop="methodologyScore">
-                    <el-rate v-model="form.methodologyScore" show-score allow-half />
-                  </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                  <el-form-item label="整体质量 (Quality)" prop="qualityScore">
-                    <el-rate v-model="form.qualityScore" show-score allow-half />
-                  </el-form-item>
-                </el-col>
-              </el-row>
-            </div>
-
-            <el-divider />
-
-            <el-form-item label="给作者的意见 (Author Comments) - 公开" prop="authorComments">
-              <template #label>
-                <span>给作者的意见 (Author Comments) - 公开 </span>
-                <el-tooltip content="您可以使用左侧的'在线批注'功能自动生成意见" placement="top">
-                  <el-icon><QuestionFilled /></el-icon>
-                </el-tooltip>
-              </template>
-              <el-input
-                  v-model="form.authorComments"
-                  type="textarea"
-                  :rows="8"
-                  placeholder="请详细描述稿件的优缺点，以及修改建议..."
-              />
-            </el-form-item>
-
-            <el-form-item label="给编辑的意见 (Confidential Comments) - 保密" prop="confidentialComments">
-              <el-input
-                  v-model="form.confidentialComments"
-                  type="textarea"
-                  :rows="3"
-                  placeholder="仅编辑可见的内容（可选）"
-              />
-            </el-form-item>
-
-            <el-divider />
-
-            <el-form-item label="总体建议 (Recommendation)" prop="recommendation">
-              <el-radio-group v-model="form.recommendation">
-                <el-radio-button label="Accept" value="Accept">接受 (Accept)</el-radio-button>
-                <el-radio-button label="Minor Revision" value="Minor Revision">小修 (Minor Revision)</el-radio-button>
-                <el-radio-button label="Major Revision" value="Major Revision">大修 (Major Revision)</el-radio-button>
-                <el-radio-button label="Reject" value="Reject">拒稿 (Reject)</el-radio-button>
-              </el-radio-group>
-            </el-form-item>
-
-            <div class="form-actions" v-if="!isReadOnly">
-              <el-button type="primary" size="large" @click="handleSubmit" :loading="submitting">
-                提交审稿意见
-              </el-button>
-            </div>
-            <div v-else class="form-actions">
-              <el-alert title="该审稿任务已完成，仅供查看。" type="info" :closable="false" center />
-            </div>
-
-          </el-form>
-        </el-card>
-      </el-col>
-    </el-row>
-
-    <el-dialog
-        v-model="pdfViewerVisible"
-        title="在线审阅与批注"
-        fullscreen
-        destroy-on-close
-        class="pdf-viewer-dialog"
-    >
-      <div style="height: calc(100vh - 120px); overflow-y: auto; background-color: #f0f2f5;">
-        <PdfAnnotator
-            v-if="pdfBlobUrl"
-            :source="pdfBlobUrl"
-            @update:annotations="handleAnnotationsUpdate"
-        />
-      </div>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="pdfViewerVisible = false">关闭</el-button>
-          <el-button type="primary" @click="saveAnnotationsToComment" :disabled="isReadOnly">
-            将批注汇总到意见框
+      <el-card style="margin-top: 20px">
+        <h3>指派审稿人</h3>
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <el-button type="primary" plain @click="reviewerDialogVisible = true">
+            <el-icon style="margin-right: 5px"><Search /></el-icon> 选择并添加审稿人
           </el-button>
-        </span>
-      </template>
-    </el-dialog>
-  </div>
-</template>
 
-<script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { getManuscriptForReview, downloadAnonymousManuscript, submitReview } from '@/api/reviewer'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Download, ArrowLeft, View, QuestionFilled } from '@element-plus/icons-vue'
-import PdfAnnotator from '@/components/PdfAnnotator.vue' // 引入我们新建的组件
+          <div v-if="selectedReviewers.length > 0" style="flex: 1">
+            <span style="font-size: 14px; color: #909399; margin-right: 10px;">已选择:</span>
+            <el-tag
+                v-for="id in selectedReviewers"
+                :key="id"
+                closable
+                @close="removeReviewer(id)"
+                style="margin-right: 8px"
+            >
+              {{ getReviewerName(id) }}
+            </el-tag>
+          </div>
 
-const route = useRoute()
-const router = useRouter()
-const reviewId = route.params.reviewId
+          <el-button type="primary" @click="handleInvite" :disabled="selectedReviewers.length === 0">发送邀请</el-button>
+        </div>
 
-const loading = ref(false)
-const submitting = ref(false)
-const manuscript = ref(null)
-const reviewFormRef = ref(null)
-const isReadOnly = ref(false)
+        <el-dialog v-model="reviewerDialogVisible" title="选择审稿人 (基于专业领域与负载)" width="850px">
+          <el-table
+              :data="reviewerOptions"
+              @selection-change="handleSelectionChange"
+              border
+              stripe
+              max-height="450"
+          >
+            <el-table-column type="selection" width="55" />
+            <el-table-column label="智能推荐" width="150" align="center">
+              <template #default="scope">
+                <el-tag
+                    v-if="scope.$index < 3 && scope.row.recommendScore > 0"
+                    type="success"
+                    style="
+        width: 115px;
+        display: inline-flex !important; /* 强制使用 flex */
+        flex-direction: row;             /* 强制水平排列 */
+        align-items: center;            /* 强制垂直居中 */
+        justify-content: center;         /* 强制水平居中 */
+        white-space: nowrap !important;  /* 绝不换行 */
+        font-weight: bold;
+      "
+                >
+                  <el-icon style="flex-shrink: 0; font-size: 14px; margin-right: 4px; display: inline-flex;">
+                    <StarFilled />
+                  </el-icon>
+                  <span style="flex-shrink: 0; line-height: 1;">强力推荐</span>
+                </el-tag>
 
-// PDF Viewer 相关状态
-const pdfViewerVisible = ref(false)
-const pdfBlobUrl = ref('')
-const currentAnnotations = ref([])
+                <el-tag
+                    v-else-if="scope.row.recommendScore > 5"
+                    type="warning"
+                    style="width: 115px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold;"
+                >
+                  高度匹配
+                </el-tag>
 
-const form = reactive({
-  reviewId: parseInt(reviewId),
-  innovationScore: 0,
-  methodologyScore: 0,
-  qualityScore: 0,
-  authorComments: '',
-  confidentialComments: '',
-  recommendation: ''
-})
+                <el-tag
+                    v-else
+                    type="primary"
+                    plain
+                    style="width: 115px; display: inline-flex; align-items: center; justify-content: center;"
+                >
+                  一般匹配
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="姓名" prop="name" width="120" />
+            <el-table-column label="所属单位" prop="affiliation" show-overflow-tooltip />
+            <el-table-column label="研究方向" prop="researchDirection" show-overflow-tooltip />
+            <el-table-column label="在审任务" prop="activeTasks" width="100" align="center">
+              <template #default="scope">
+                <el-tag :type="scope.row.activeTasks > 3 ? 'danger' : 'success'">
+                  {{ scope.row.activeTasks || 0 }} 篇
+                </el-tag>
+              </template>
+            </el-table-column>
+          </el-table>
+          <template #footer>
+            <el-button @click="reviewerDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="confirmReviewers">确定选择</el-button>
+          </template>
+        </el-dialog>
+      </el-card>
+    </div>
+  </template>
 
-const rules = {
-  innovationScore: [{ required: true, message: '请评分', trigger: 'change' }],
-  methodologyScore: [{ required: true, message: '请评分', trigger: 'change' }],
-  qualityScore: [{ required: true, message: '请评分', trigger: 'change' }],
-  authorComments: [{ required: true, message: '请填写给作者的意见', trigger: 'blur' }],
-  recommendation: [{ required: true, message: '请选择总体建议', trigger: 'change' }]
-}
+  <script setup>
+  import { ref, onMounted, watch } from 'vue' // 确保引入了 watch
+  import { useRoute } from 'vue-router'
+  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { Download, Search, StarFilled } from '@element-plus/icons-vue' // 新增 StarFilled
+  import axios from 'axios';
 
-// 获取详情
-const fetchDetails = async () => {
-  loading.value = true
-  try {
-    const res = await getManuscriptForReview(reviewId)
-    if (res.code === 200) {
-      manuscript.value = res.data
+
+
+  const route = useRoute()
+  const mid = route.query.id // 获取地址栏 ?id=xxx
+
+  // 1. 数据状态定义
+  const manuscriptDetail = ref({})
+  const reviewerDialogVisible = ref(false)
+  const tempSelection = ref([]) // 弹窗临时的勾选记录
+  const reviewerOptions = ref([])
+  const selectedReviewers = ref([])
+  const chatHistory = ref([])
+  const msgDialogVisible = ref(false)
+
+
+
+  const msgForm = ref({
+    title: '',
+    content: ''
+  })
+
+  // 2. 初始化加载
+  onMounted(() => {
+    if (!mid) {
+      ElMessage.error("未获取到有效的稿件ID")
+      return
     }
-  } catch(e) {
-    ElMessage.error("获取稿件信息失败")
-  } finally {
-    loading.value = false
-  }
-}
-
-// 下载文件
-const handleDownload = async () => {
-  try {
-    const blob = await downloadAnonymousManuscript(reviewId)
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `Manuscript_${reviewId}_Anonymous.pdf`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-  } catch (error) {
-    ElMessage.error('下载失败')
-  }
-}
-
-// 打开在线查看器
-const openPdfViewer = async () => {
-  loading.value = true
-  try {
-    // 复用下载接口获取 Blob
-    const blob = await downloadAnonymousManuscript(reviewId)
-    // 创建本地 Blob URL 供 PDF.js 读取
-    if (pdfBlobUrl.value) window.URL.revokeObjectURL(pdfBlobUrl.value) // 清理旧的
-    pdfBlobUrl.value = window.URL.createObjectURL(blob)
-    pdfViewerVisible.value = true
-  } catch (error) {
-    ElMessage.error('无法加载PDF文件，请尝试直接下载')
-  } finally {
-    loading.value = false
-  }
-}
-
-// 监听批注更新
-const handleAnnotationsUpdate = (list) => {
-  currentAnnotations.value = list
-}
-
-// 将批注汇总到意见框
-const saveAnnotationsToComment = () => {
-  if (currentAnnotations.value.length === 0) {
-    ElMessage.info('当前没有添加任何批注')
-    return
-  }
-
-  // 生成格式化的文本
-  const summary = currentAnnotations.value
-      .sort((a, b) => {
-        if (a.page !== b.page) return a.page - b.page
-        return a.y - b.y // 同一页按垂直位置排序
-      })
-      .map((note, index) => `${index + 1}. [第 ${note.page} 页] ${note.content}`)
-      .join('\n')
-
-  const separator = '\n\n=== 在线批注汇总 ===\n'
-
-  // 智能追加：如果已经有内容，先换行
-  if (form.authorComments) {
-    form.authorComments += separator + summary
-  } else {
-    form.authorComments = summary
-  }
-
-  ElMessage.success('批注已成功添加到意见输入框中')
-  pdfViewerVisible.value = false
-}
-
-// 提交表单
-const handleSubmit = () => {
-  reviewFormRef.value.validate(async (valid) => {
-    if (valid) {
-      ElMessageBox.confirm(
-          '提交后将无法修改，确定提交审稿意见吗？',
-          '确认提交',
-          { type: 'warning' }
-      ).then(async () => {
-        submitting.value = true
-        try {
-          const res = await submitReview(form)
-          if (res.code === 200) {
-            ElMessage.success('审稿意见提交成功！')
-            router.push('/reviewer/dashboard')
-          }
-        } finally {
-          submitting.value = false
-        }
-      })
-    } else {
-      ElMessage.error('请填写完整的审稿意见')
-      return false
+    fetchDetail()
+    fetchReviewers()
+    fetchChatHistory()
+  })
+  watch(reviewerDialogVisible, (val) => {
+    if (val) {
+      // 当弹窗打开(val为true)时，调用后端推荐接口获取最新排名
+      fetchReviewers();
     }
   })
-}
-
-// 生命周期钩子
-onMounted(() => {
-  if (!reviewId) {
-    ElMessage.error('缺少Review ID')
-    router.push('/reviewer/dashboard')
-    return
+  // 3. 业务逻辑方法
+  const fetchDetail = async () => {
+    const res = await fetch(`http://localhost:8080/api/editor/detail?id=${mid}`, {
+      headers: { 'Authorization': localStorage.getItem('token') }
+    })
+    const result = await res.json()
+    if (result.code === 200) manuscriptDetail.value = result.data
   }
 
-  fetchDetails()
-
-  // 历史数据回显逻辑 (只读模式)
-  const historyData = history.state?.reviewData
-  if (historyData && historyData.status === 'Completed') {
-    isReadOnly.value = true
-    // 回显数据
-    form.qualityScore = historyData.score || 0
-    // 假设后端返回的数据结构中有这些字段
-    form.innovationScore = historyData.innovationScore || 0
-    form.methodologyScore = historyData.methodologyScore || 0
-
-    // 兼容不同的字段命名
-    form.authorComments = historyData.commentsToAuthor || historyData.authorComments || ''
-    form.confidentialComments = historyData.confidentialComments || ''
-    form.recommendation = historyData.suggestion || historyData.recommendation || ''
+  const fetchReviewers = async () => {
+    try {
+      // 关键修改：改用 /api/editor/recommend 接口，并带上当前稿件 ID (mid)
+      const res = await fetch(`http://localhost:8080/api/editor/recommend?id=${mid}`, {
+        headers: { 'Authorization': localStorage.getItem('token') }
+      })
+      const result = await res.json()
+      if (result.code === 200) {
+        reviewerOptions.value = result.data.map(user => ({
+          id: Number(user.userId || user.id),
+          name: user.fullName || user.username,
+          affiliation: user.affiliation || '未填写',
+          researchDirection: user.researchDirection || '未填写',
+          activeTasks: user.activeTasks || 0,
+          recommendScore: user.recommendScore || 0 // 映射后端计算的分数
+        }))
+      }
+    } catch (e) {
+      ElMessage.error("推荐审稿人加载失败")
+    }
   }
-})
 
-// 组件销毁时释放内存
-onUnmounted(() => {
-  if (pdfBlobUrl.value) {
-    window.URL.revokeObjectURL(pdfBlobUrl.value)
+  // 监听弹窗内表格的勾选
+  const handleSelectionChange = (val) => {
+    tempSelection.value = val;
+  };
+
+  // 弹窗点击“确定选择”
+  const confirmReviewers = () => {
+    // 将勾选的人员 ID 合并到已选列表中（去重）
+    const newIds = tempSelection.value.map(item => item.id);
+    selectedReviewers.value = [...new Set([...selectedReviewers.value, ...newIds])];
+    reviewerDialogVisible.value = false;
+  };
+
+  // 获取姓名用于 Tag 标签展示
+  const getReviewerName = (id) => {
+    const reviewer = reviewerOptions.value.find(r => r.id === id);
+    return reviewer ? reviewer.name : id;
+  };
+
+  // 点击标签上的 x 移除审稿人
+  const removeReviewer = (id) => {
+    selectedReviewers.value = selectedReviewers.value.filter(item => item !== id);
+  };
+
+  const fetchChatHistory = async () => {
+    const res = await fetch(`http://localhost:8080/api/message/history/${mid}`, {
+      headers: { 'Authorization': localStorage.getItem('token') }
+    })
+    const result = await res.json()
+    if (result.code === 200) chatHistory.value = result.data
   }
-})
-</script>
 
-<style scoped>
-.process-container {
-  padding: 20px;
-}
-.page-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-}
-.title {
-  margin-left: 10px;
-  font-size: 18px;
-  font-weight: bold;
-}
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.manuscript-title {
-  font-size: 18px;
-  color: #303133;
-  margin-bottom: 10px;
-}
-.abstract-content {
-  line-height: 1.6;
-  color: #606266;
-  text-align: justify;
-}
-.meta-info p {
-  margin: 5px 0;
-  color: #909399;
-  font-size: 14px;
-}
-.score-section {
-  padding: 0 10px;
-}
-.form-actions {
-  display: flex;
-  justify-content: center;
-  margin-top: 30px;
-}
-/* 覆盖 Dialog 样式 */
-:deep(.pdf-viewer-dialog .el-dialog__body) {
-  padding: 0;
-  margin: 0;
-}
-</style>
+  const handleDownload = async () => {
+    try {
+      const response = await axios({
+        url: `http://localhost:8080/api/editor/download/${mid}`,
+        method: 'GET',
+        headers: { 'Authorization': localStorage.getItem('token') },
+        responseType: 'blob' // 必须确保这个属性直接写在请求配置里
+      });
+
+      // 1. 健壮性检查：如果后端返回的是 JSON（说明报错了），而不是文件流
+      if (response.data.type === 'application/json') {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = JSON.parse(reader.result);
+          ElMessage.error(result.message || "下载失败");
+        };
+        reader.readAsText(response.data);
+        return;
+      }
+
+      // 2. 获取文件名
+      let fileName = `manuscript_${mid}.pdf`;
+      const disposition = response.headers['content-disposition'];
+      if (disposition) {
+        const filenameMatch = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          fileName = decodeURIComponent(filenameMatch[1].replace(/['"]/g, ''));
+          if (fileName.includes("utf-8''")) fileName = fileName.split("utf-8''")[1];
+        }
+      }
+
+      // 3. 触发下载
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.style.display = 'none';
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+
+      // 4. 延迟清理
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+
+      ElMessage.success("下载成功");
+    } catch (error) {
+      console.error("下载出错:", error);
+      ElMessage.error("网络请求失败，请稍后重试");
+    }
+  };
+  // 发送邀请逻辑
+  const handleInvite = async () => {
+    if (selectedReviewers.value.length === 0) return ElMessage.warning("请至少选择一位审稿人")
+
+    const res = await fetch('http://localhost:8080/api/editor/invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token') },
+      body: JSON.stringify({
+        manuscriptId: parseInt(mid),
+        reviewerIds: selectedReviewers.value
+      })
+    })
+    const data = await res.json()
+    if (data.code === 200) {
+      ElMessage.success("邀请已发送")
+      fetchDetail() // 刷新状态
+      selectedReviewers.value = [] // 清空选择
+    }
+  }
+
+
+  </script>
+
+  <style scoped>
+
+  .process-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .el-card {
+    margin-bottom: 20px;
+  }
+  h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #303133;
+  }
+  /* 1. 增强未勾选时的边框颜色，让它更清晰 */
+  :deep(.el-checkbox__inner) {
+    border: 1px solid #b0b4bb !important; /* 调深灰色边框 */
+    width: 16px;  /* 稍微放大一点点 */
+    height: 16px;
+  }
+
+  /* 2. 鼠标悬停在勾选框上时的高亮颜色 */
+  :deep(.el-checkbox__inner:hover) {
+    border-color: #409eff !important;
+  }
+
+  /* 3. 勾选后的背景色和边框色（使用更亮的蓝色） */
+  :deep(.el-checkbox.is-checked .el-checkbox__inner) {
+    background-color: #409eff !important;
+    border-color: #409eff !important;
+  }
+
+  /* 4. 增强全选/半选状态的视觉效果 */
+  :deep(.el-checkbox__input.is-indeterminate .el-checkbox__inner) {
+    background-color: #409eff !important;
+    border-color: #409eff !important;
+  }
+  </style>

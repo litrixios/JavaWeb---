@@ -98,32 +98,6 @@
           </el-form>
         </el-tab-pane>
 
-        <el-tab-pane label="沟通 (Communication)" name="communication">
-          <div class="chat-container">
-            <div class="message-list">
-              <div v-for="msg in messages" :key="msg.id" class="message-item">
-                <div class="message-meta">
-                  <span class="sender">{{ msg.senderName }}</span>
-                  <span class="time">{{ formatDate(msg.sendTime) }}</span>
-                </div>
-                <div class="message-content">{{ msg.content }}</div>
-              </div>
-              <el-empty v-if="messages.length === 0" description="暂无沟通记录" />
-            </div>
-
-            <div class="message-input">
-              <el-input
-                  v-model="newMessage"
-                  type="textarea"
-                  :rows="3"
-                  placeholder="请输入消息内容，发送给编辑..."
-              />
-              <div style="margin-top: 10px; text-align: right;">
-                <el-button type="primary" @click="handleSendMessage">发送消息</el-button>
-              </div>
-            </div>
-          </div>
-        </el-tab-pane>
       </el-tabs>
     </el-card>
   </div>
@@ -133,7 +107,6 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { trackManuscript, submitRevision } from '@/api/manuscript'
-import { getManuscriptHistory, sendMessage } from '@/api/message'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()
@@ -163,10 +136,6 @@ const revisionForm = reactive({
   markedFilePath: null,
   responseLetterPath: null
 })
-
-// 消息数据
-const messages = ref([])
-const newMessage = ref('')
 
 // (以下 computed, formatDate 等辅助函数保持不变)
 const statusType = computed(() => {
@@ -208,18 +177,10 @@ const loadData = async () => {
       }
       historyLogs.value = res.data.historyLogs || []
     }
-    loadMessages()
   } catch (error) {
     console.error(error)
   } finally {
     loading.value = false
-  }
-}
-
-const loadMessages = async () => {
-  const res = await getManuscriptHistory(manuscriptId)
-  if (res.code === 200) {
-    messages.value = res.data
   }
 }
 
@@ -236,24 +197,6 @@ const handleRevisionSubmit = async () => {
     activeTab.value = 'track'
   } else {
     ElMessage.error(res.msg || '修回提交失败')
-  }
-}
-
-const handleSendMessage = async () => {
-  if (!newMessage.value.trim()) return
-  const payload = {
-    receiverId: manuscript.value.currentEditorId || 2,
-    topic: `MS-${manuscriptId}`,
-    title: `关于稿件 ${manuscriptId} 的沟通`,
-    content: newMessage.value
-  }
-  const res = await sendMessage(payload)
-  if (res.code === 200) {
-    ElMessage.success('发送成功')
-    newMessage.value = ''
-    loadMessages()
-  } else {
-    ElMessage.error(res.msg || '消息发送失败，请稍后重试')
   }
 }
 
@@ -278,34 +221,5 @@ onMounted(() => {
 .tip {
   font-size: 12px;
   color: #999;
-}
-.chat-container {
-  max-width: 800px;
-}
-.message-list {
-  background: #f5f7fa;
-  padding: 20px;
-  border-radius: 8px;
-  height: 400px;
-  overflow-y: auto;
-  margin-bottom: 20px;
-}
-.message-item {
-  background: #fff;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 4px;
-  border: 1px solid #e4e7ed;
-}
-.message-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: #999;
-  margin-bottom: 5px;
-}
-.message-content {
-  font-size: 14px;
-  color: #333;
 }
 </style>
