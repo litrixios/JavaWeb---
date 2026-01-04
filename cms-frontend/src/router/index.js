@@ -174,7 +174,12 @@ const routes = [
                 path: 'process/:id',
                 name: 'ProcessManuscript',
                 component: () => import('@/views/editor/process.vue'),
-                meta: { title: '稿件处理详情', hidden: true }
+                meta: { title: '稿件处理详情', hidden: true } // 功能2,3,4,5
+            },
+            {
+                path: '/editor/process',
+                name: 'ManuscriptProcess',
+                component: () => import('@/views/editor/process.vue') // 确保文件名和路径正确
             },
             {
                 path: 'monitoring',

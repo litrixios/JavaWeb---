@@ -64,8 +64,8 @@ public class CommunicationServiceImpl implements CommunicationService {
     }
 
     @Override
-    public void markRead(Integer messageId) {
-        messageMapper.markAsRead(messageId);
+    public void markTopicAsRead(String topic, Integer userId) {
+        messageMapper.markTopicAsRead(topic, userId);
     }
 
     @Override

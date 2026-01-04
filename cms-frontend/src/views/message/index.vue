@@ -134,49 +134,42 @@ import {
   getManuscriptHistory,
   getSystemNotifications,
   sendMessage,
-  markAllSystemAsRead
+  markAllSystemAsRead,
+  markTopicAsRead // 确保 api/message.js 中已导出此方法
 } from '@/api/message'
 import { Bell, Document } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
 // === 状态定义 ===
-const chatSessions = ref([])       // 左侧稿件会话列表
-const systemMessages = ref([])     // 系统通知列表
-const currentChatMessages = ref([])// 当前选中的会话聊天记录
+const chatSessions = ref([])
+const systemMessages = ref([])
+const currentChatMessages = ref([])
 
-const currentSessionType = ref('system') // 当前视图类型: 'system' | 'chat'
-const currentSessionData = ref({})       // 当前选中的 Session 对象
-const inputContent = ref('')             // 输入框内容
-const sending = ref(false)               // 发送加载状态
+const currentSessionType = ref('system')
+const currentSessionData = ref({})
+const inputContent = ref('')
+const sending = ref(false)
 
-const messageBox = ref(null) // 聊天滚动容器 ref
+const messageBox = ref(null)
 
-// 获取当前用户信息及角色
 const currentUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
 const currentUserId = currentUserInfo.userId
 const currentUserRole = currentUserInfo.role || ''
 
-// === 核心逻辑：判断是否有聊天权限 ===
+// === 核心逻辑 ===
 const canChat = computed(() => {
-  // 定义允许聊天的角色列表
-  // 根据你的描述，只有作者和编辑有详细聊天
   const allowedRoles = ['Author', 'AUTHOR', 'Editor', 'EDITOR']
   return allowedRoles.includes(currentUserRole)
 })
 
-// === 计算属性 ===
-
-// 系统通知未读数
 const systemUnreadCount = computed(() => {
   return systemMessages.value.filter(m => !m.isRead).length
 })
 
-// 系统通知预览文案
 const systemPreview = computed(() => {
   return systemMessages.value.length > 0 ? systemMessages.value[0].content : '暂无新通知'
 })
 
-// 是否允许发送消息 (基于当前选中的会话状态)
 const canSendMessage = computed(() => {
   return currentSessionData.value &&
       currentSessionData.value.targetUserId !== null &&
@@ -184,55 +177,48 @@ const canSendMessage = computed(() => {
 })
 
 // === 方法 ===
-
-// 初始化数据
 const initData = async () => {
   try {
-    // 1. 获取系统通知 (所有人都要获取)
     const resSys = await getSystemNotifications()
-    if (resSys.code === 200) {
-      systemMessages.value = resSys.data
-    }
+    if (resSys.code === 200) systemMessages.value = resSys.data
 
-    // 2. 获取会话列表 (只有有权限的角色才获取)
     if (canChat.value) {
       const resSession = await getChatSessions()
-      if (resSession.code === 200) {
-        chatSessions.value = resSession.data
-      }
+      if (resSession.code === 200) chatSessions.value = resSession.data
     }
   } catch (error) {
     console.error('初始化消息中心失败', error)
   }
 }
 
-// 切换会话
 const switchSession = async (type, sessionData) => {
   currentSessionType.value = type
 
-  // 点击“系统通知”时，消除红点
   if (type === 'system') {
     if (systemUnreadCount.value > 0) {
       try {
         await markAllSystemAsRead()
-        // 本地立刻更新状态，让红点消失
-        systemMessages.value.forEach(msg => {
-          msg.isRead = true
-        })
+        systemMessages.value.forEach(msg => msg.isRead = true)
       } catch (e) {
         console.error('标记系统通知已读失败', e)
       }
     }
   }
 
-  // 切换到聊天
   if (type === 'chat') {
-    if (!canChat.value) return // 再次校验权限
-
+    if (!canChat.value) return
     currentSessionData.value = sessionData
-    inputContent.value = '' // 切换时清空输入框
+    inputContent.value = ''
 
-    // 加载该稿件的历史记录
+    if (sessionData.unreadCount > 0) {
+      sessionData.unreadCount = 0
+      try {
+        await markTopicAsRead(sessionData.topic)
+      } catch (e) {
+        console.error('标记会话已读失败', e)
+      }
+    }
+
     const res = await getManuscriptHistory(sessionData.manuscriptId)
     if (res.code === 200) {
       currentChatMessages.value = res.data
@@ -241,7 +227,6 @@ const switchSession = async (type, sessionData) => {
   }
 }
 
-// 发送消息
 const handleSend = async () => {
   if (!inputContent.value.trim()) return
   if (!canSendMessage.value) return
@@ -253,36 +238,29 @@ const handleSend = async () => {
       topic: currentSessionData.value.topic,
       title: `关于稿件 ${currentSessionData.value.manuscriptTitle} 的沟通`,
       content: inputContent.value,
-      msgType: 1 // 1=聊天消息
+      msgType: 1
     }
 
     const res = await sendMessage(payload)
     if (res.code === 200) {
       ElMessage.success('发送成功')
       inputContent.value = ''
-
-      // 刷新当前聊天记录
       const historyRes = await getManuscriptHistory(currentSessionData.value.manuscriptId)
       if (historyRes.code === 200) {
         currentChatMessages.value = historyRes.data
         scrollToBottom()
       }
-
-      // 刷新左侧会话列表以更新预览
-      // 这里如果只想刷新列表而不重新拉取系统通知，可以单独拆分函数，暂时复用initData
       initData()
     } else {
       ElMessage.error(res.msg || '发送失败')
     }
   } catch (e) {
     ElMessage.error('发送出错')
-    console.error(e)
   } finally {
     sending.value = false
   }
 }
 
-// 滚动到底部
 const scrollToBottom = () => {
   nextTick(() => {
     if (messageBox.value) {
@@ -291,7 +269,6 @@ const scrollToBottom = () => {
   })
 }
 
-// 辅助工具函数
 const truncate = (str, len) => {
   if (!str) return ''
   return str.length > len ? str.substring(0, len) + '...' : str
@@ -306,15 +283,15 @@ const isMyMessage = (msg) => {
   return msg.senderId === currentUserId
 }
 
-// 生命周期
 onMounted(() => {
   initData()
 })
 </script>
 
 <style scoped>
+/* 容器高度适配 */
 .message-center-container {
-  height: calc(100vh - 84px); /* 适配你的 Layout 高度 */
+  height: calc(100vh - 84px);
   padding: 20px;
   box-sizing: border-box;
 }
@@ -420,7 +397,17 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   background: #fff;
-  overflow: hidden; /* 防止溢出 */
+  overflow: hidden; /* 防止父级溢出，确保子元素 flex 生效 */
+}
+
+/* 关键修复：添加 .system-view 样式
+   将其设置为 flex 容器，并占满 content-area
+*/
+.system-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;       /* 占满剩余空间 */
+  min-height: 0; /* 允许 flex 压缩，配合 overflow 实现内部滚动 */
 }
 
 .view-header {
@@ -432,11 +419,12 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 500;
   background: #fff;
+  flex-shrink: 0; /* 头部不被压缩 */
 }
 
 .scroll-wrapper {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1;           /* 占据剩余空间 */
+  overflow-y: auto;  /* 开启垂直滚动 */
 }
 
 .empty-view {
@@ -451,12 +439,14 @@ onMounted(() => {
 .chat-view {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  /* 关键修复：确保聊天窗口也支持滚动 */
+  flex: 1;
+  min-height: 0;
 }
 
 .message-history {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: auto; /* 开启聊天记录滚动 */
   padding: 20px;
   background: #f5f7fa;
 }
@@ -504,6 +494,7 @@ onMounted(() => {
   background: #fff;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0; /* 输入框不被压缩 */
 }
 
 .action-bar {

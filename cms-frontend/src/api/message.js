@@ -51,3 +51,11 @@ export function markAllSystemAsRead() {
         method: 'post'
     })
 }
+
+export function markTopicAsRead(topic) {
+    return request({
+        url: '/api/message/read-topic',
+        method: 'post',
+        params: { topic }
+    })
+}

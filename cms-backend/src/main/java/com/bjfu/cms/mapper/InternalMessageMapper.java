@@ -15,7 +15,7 @@ public interface InternalMessageMapper {
     List<InternalMessage> selectByReceiverId(@Param("receiverId") Integer receiverId);
 
     // 标记某条消息为已读
-    void markAsRead(@Param("messageId") Integer messageId);
+    void markTopicAsRead(@Param("topic") String topic, @Param("userId") Integer userId);
 
     // 根据 Topic 和 用户 查询 (用于聊天记录)
     List<InternalMessage> selectByTopicAndUser(@Param("topic") String topic, @Param("userId") Integer userId);

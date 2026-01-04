@@ -40,10 +40,6 @@
                )
     </insert>
 
-    <update id="markAsRead">
-        UPDATE InternalMessage SET IsRead = 1 WHERE MessageID = #{messageId}
-    </update>
-
     <select id="selectByTopicAndUser" resultMap="MessageMap">
         SELECT
             m.*,
@@ -85,6 +81,15 @@
         SET IsRead = 1
         WHERE ReceiverID = #{userId}
           AND MsgType = 0
+          AND IsRead = 0
+    </update>
+
+    <update id="markTopicAsRead">
+        UPDATE InternalMessage
+        SET IsRead = 1
+        WHERE Topic = #{topic}
+          AND ReceiverID = #{userId}
+          AND MsgType = 1
           AND IsRead = 0
     </update>
 

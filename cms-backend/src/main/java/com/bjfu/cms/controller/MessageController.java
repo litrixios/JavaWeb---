@@ -68,4 +68,10 @@ public class MessageController {
         return Result.success("已标记为已读");
     }
 
+    @PostMapping("/read-topic")
+    public Result<String> markTopicAsRead(@RequestParam String topic) {
+        Integer userId = UserContext.getUserId();
+        communicationService.markTopicAsRead(topic, userId);
+        return Result.success("已标记为已读");
+    }
 }
