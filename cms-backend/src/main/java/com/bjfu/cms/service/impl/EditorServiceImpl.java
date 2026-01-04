@@ -159,7 +159,7 @@ public class EditorServiceImpl implements EditorService {
 
         // 2. 更新状态 (必须严格匹配数据库的 CHECK 约束值)
         // 根据你的约束：Status 应为 'Processing', SubStatus 应为 'UnderReview'
-        //editorMapper.updateManuscriptStatus(msId, "Processing", "UnderReview");
+        editorMapper.updateManuscriptStatus(msId, "Processing", "UnderReview");
     }
 
 
