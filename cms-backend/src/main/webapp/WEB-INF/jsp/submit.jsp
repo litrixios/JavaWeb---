@@ -454,7 +454,7 @@
                         </div>
                         <h3 class="option-title">新稿件提交</h3>
                         <p class="option-description">首次向本期刊提交论文稿件</p>
-                        <a href="login" class="btn">开始投稿</a>
+                        <a href="http://localhost:5173/login" class="btn">开始投稿</a>
                     </div>
 
                     <div class="option-card">
@@ -463,7 +463,7 @@
                         </div>
                         <h3 class="option-title">修改稿提交</h3>
                         <p class="option-description">根据审稿意见修改后重新提交</p>
-                        <a href="login" class="btn">提交修改稿</a>
+                        <a href="http://localhost:5173/login" class="btn">提交修改稿</a>
                     </div>
 
                     <div class="option-card">
@@ -472,14 +472,14 @@
                         </div>
                         <h3 class="option-title">稿件状态查询</h3>
                         <p class="option-description">查看已投稿件的审稿进度</p>
-                        <a href="login" class="btn">查询状态</a>
+                        <a href="http://localhost:5173/login" class="btn">查询状态</a>
                     </div>
                 </div>
 
                 <div class="login-prompt">
                     <i class="fas fa-info-circle"></i>
                     <div>
-                        <p><strong>请注意：</strong>您需要登录账户才能提交论文。如果您还没有账户，请先<a href="login">注册</a>。</p>
+                        <p><strong>请注意：</strong>您需要登录账户才能提交论文。如果您还没有账户，请先<a href="http://localhost:5173/register">注册</a>。</p>
                     </div>
                 </div>
             </section>
