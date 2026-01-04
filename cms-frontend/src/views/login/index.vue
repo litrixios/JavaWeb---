@@ -18,13 +18,13 @@
         </el-form-item>
         <el-form-item label="身份">
           <el-select v-model="form.role" placeholder="请选择身份" style="width: 100%">
-            <el-option label="超级管理员" value="SuperAdmin" />
-            <el-option label="管理员" value="SystemAdmin" />
-            <el-option label="编辑部管理员" value="EditorialAdmin" />
-            <el-option label="主编" value="EditorInChief" />
-            <el-option label="编辑" value="Editor" />
-            <el-option label="审稿人" value="Reviewer" />
             <el-option label="作者" value="Author" />
+            <el-option label="审稿人" value="Reviewer" />
+            <el-option label="编辑" value="Editor" />
+            <el-option label="主编" value="EditorInChief" />
+            <el-option label="超级管理员" value="SuperAdmin" />
+            <el-option label="系统管理员" value="SystemAdmin" />
+            <el-option label="编辑部管理员" value="EditorialAdmin" />
           </el-select>
         </el-form-item>
         <el-form-item>
