@@ -23,6 +23,7 @@ public interface CommunicationService {
 
     List<InternalMessage> getMyAllMessages();
 
+    void markAllSystemAsRead(Integer userId);
     // 在 CommunicationService 接口中添加：
     List<ChatSessionDTO> getChatSessions();
 }

@@ -20,6 +20,8 @@ public interface InternalMessageMapper {
     // 根据 Topic 和 用户 查询 (用于聊天记录)
     List<InternalMessage> selectByTopicAndUser(@Param("topic") String topic, @Param("userId") Integer userId);
 
+    void markSystemMessagesAsRead(Integer userId);
+
     // 【新增】根据 消息类型 和 接收者 查询 (用于分离 系统通知 和 聊天列表)
     // msgType: 0=系统通知, 1=聊天消息
     List<InternalMessage> selectByTypeAndReceiver(@Param("msgType") Integer msgType, @Param("receiverId") Integer receiverId);

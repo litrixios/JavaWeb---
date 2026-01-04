@@ -60,4 +60,12 @@ public class MessageController {
         return Result.success(communicationService.getChatSessions());
     }
 
+    // 在 MessageController 中添加
+    @PostMapping("/read-all-system")
+    public Result<String> markAllSystemAsRead() {
+        Integer userId = UserContext.getUserId();
+        communicationService.markAllSystemAsRead(userId); // 需要在 Service 补全此方法
+        return Result.success("已标记为已读");
+    }
+
 }

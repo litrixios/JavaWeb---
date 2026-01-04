@@ -127,7 +127,14 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
-import { getChatSessions, getManuscriptHistory, getSystemNotifications, sendMessage } from '@/api/message'
+// 【注意】这里引入了新增的 markAllSystemAsRead
+import {
+  getChatSessions,
+  getManuscriptHistory,
+  getSystemNotifications,
+  sendMessage,
+  markAllSystemAsRead
+} from '@/api/message'
 import { Bell, Document } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
@@ -137,7 +144,7 @@ const systemMessages = ref([])     // 系统通知列表
 const currentChatMessages = ref([])// 当前选中的会话聊天记录
 
 const currentSessionType = ref('system') // 当前视图类型: 'system' | 'chat'
-const currentSessionData = ref({})       // 当前选中的 Session 对象 (ChatSessionDTO)
+const currentSessionData = ref({})       // 当前选中的 Session 对象
 const inputContent = ref('')             // 输入框内容
 const sending = ref(false)               // 发送加载状态
 
@@ -149,9 +156,9 @@ const currentUserId = currentUserInfo.userId
 
 // === 计算属性 ===
 
-// 系统通知未读数
+// 系统通知未读数 (计算 isRead 为 0 或 false 的条目)
 const systemUnreadCount = computed(() => {
-  return systemMessages.value.filter(m => m.isRead === 0 || m.isRead === false).length
+  return systemMessages.value.filter(m => !m.isRead).length
 })
 
 // 系统通知预览文案
@@ -159,7 +166,7 @@ const systemPreview = computed(() => {
   return systemMessages.value.length > 0 ? systemMessages.value[0].content : '暂无新通知'
 })
 
-// 是否允许发送消息 (必须有确定的接收人ID)
+// 是否允许发送消息
 const canSendMessage = computed(() => {
   return currentSessionData.value &&
       currentSessionData.value.targetUserId !== null &&
@@ -171,7 +178,7 @@ const canSendMessage = computed(() => {
 // 初始化数据
 const initData = async () => {
   try {
-    // 1. 获取会话列表 (后端根据稿件关系自动生成)
+    // 1. 获取会话列表
     const resSession = await getChatSessions()
     if (resSession.code === 200) {
       chatSessions.value = resSession.data
@@ -190,6 +197,21 @@ const initData = async () => {
 const switchSession = async (type, sessionData) => {
   currentSessionType.value = type
 
+  // 【新增逻辑】点击“系统通知”时，消除红点
+  if (type === 'system') {
+    if (systemUnreadCount.value > 0) {
+      try {
+        await markAllSystemAsRead()
+        // 本地立刻更新状态，让红点消失，提升体验
+        systemMessages.value.forEach(msg => {
+          msg.isRead = true
+        })
+      } catch (e) {
+        console.error('标记系统通知已读失败', e)
+      }
+    }
+  }
+
   if (type === 'chat') {
     currentSessionData.value = sessionData
     inputContent.value = '' // 切换时清空输入框
@@ -200,9 +222,8 @@ const switchSession = async (type, sessionData) => {
       currentChatMessages.value = res.data
       scrollToBottom()
 
-      // (可选)在此处调用后端接口将该会话的消息标记为已读
-      // await markAsRead(sessionData.topic)
-      // 然后本地把 sessionData.unreadCount 置为 0
+      // 注意：这里没有包含稿件聊天的“已读”逻辑
+      // 如果需要聊天也消红点，后端需增加对应接口，前端在此处调用
     }
   }
 }
@@ -217,7 +238,7 @@ const handleSend = async () => {
     const payload = {
       receiverId: currentSessionData.value.targetUserId,
       topic: currentSessionData.value.topic,
-      title: `关于稿件 ${currentSessionData.value.manuscriptTitle} 的沟通`, // 标题可作为邮件主题
+      title: `关于稿件 ${currentSessionData.value.manuscriptTitle} 的沟通`,
       content: inputContent.value,
       msgType: 1 // 1=聊天消息
     }
@@ -235,7 +256,6 @@ const handleSend = async () => {
       }
 
       // 刷新左侧会话列表以更新预览
-      // 为了体验更好，这里可以选择局部更新 chatSessions 的 lastMessageContent
       initData()
     } else {
       ElMessage.error(res.msg || '发送失败')

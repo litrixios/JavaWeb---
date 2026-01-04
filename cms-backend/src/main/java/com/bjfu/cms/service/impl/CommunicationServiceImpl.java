@@ -153,4 +153,9 @@ public class CommunicationServiceImpl implements CommunicationService {
         return sessions;
     }
 
+    @Override
+    public void markAllSystemAsRead(Integer userId) {
+        messageMapper.markSystemMessagesAsRead(userId);
+    }
+
 }
