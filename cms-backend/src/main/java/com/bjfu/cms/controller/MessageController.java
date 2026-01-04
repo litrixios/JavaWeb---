@@ -21,7 +21,7 @@ public class MessageController {
     @PostMapping("/send")
     public Result<String> sendMessage(@RequestBody MessageSendDTO dto) {
         Integer senderId = UserContext.getUserId();
-        // 默认认为是聊天(1)，除非前端显式传0
+        // 默认是聊天(1)
         Integer type = dto.getMsgType() != null ? dto.getMsgType() : 1;
 
         communicationService.sendMessage(

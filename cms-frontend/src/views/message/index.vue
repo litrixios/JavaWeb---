@@ -19,28 +19,30 @@
             <el-badge :value="systemUnreadCount" class="badge" v-if="systemUnreadCount > 0" />
           </div>
 
-          <div class="divider">稿件沟通</div>
+          <template v-if="canChat">
+            <div class="divider">稿件沟通</div>
 
-          <div
-              v-for="session in chatSessions"
-              :key="session.topic"
-              class="session-item"
-              :class="{ active: currentSessionType === 'chat' && currentSessionData.topic === session.topic }"
-              @click="switchSession('chat', session)"
-          >
-            <el-icon class="icon"><Document /></el-icon>
-            <div class="info">
-              <div class="name" :title="session.manuscriptTitle">
-                {{ truncate(session.manuscriptTitle, 12) }}
+            <div
+                v-for="session in chatSessions"
+                :key="session.topic"
+                class="session-item"
+                :class="{ active: currentSessionType === 'chat' && currentSessionData.topic === session.topic }"
+                @click="switchSession('chat', session)"
+            >
+              <el-icon class="icon"><Document /></el-icon>
+              <div class="info">
+                <div class="name" :title="session.manuscriptTitle">
+                  {{ truncate(session.manuscriptTitle, 12) }}
+                </div>
+                <div class="preview">
+                  {{ session.targetUserName }}: {{ truncate(session.lastMessageContent, 15) || '点击发起沟通' }}
+                </div>
               </div>
-              <div class="preview">
-                {{ session.targetUserName }}: {{ truncate(session.lastMessageContent, 15) || '点击发起沟通' }}
-              </div>
+              <el-badge :value="session.unreadCount" class="badge" v-if="session.unreadCount > 0" />
             </div>
-            <el-badge :value="session.unreadCount" class="badge" v-if="session.unreadCount > 0" />
-          </div>
 
-          <el-empty v-if="chatSessions.length === 0" description="暂无相关稿件" image-size="60" />
+            <el-empty v-if="chatSessions.length === 0" description="暂无相关稿件" image-size="60" />
+          </template>
         </div>
 
         <div class="content-area">
@@ -66,7 +68,7 @@
             </div>
           </div>
 
-          <div v-else-if="currentSessionType === 'chat'" class="chat-view">
+          <div v-else-if="currentSessionType === 'chat' && canChat" class="chat-view">
             <div class="view-header">
               <span class="title">稿件：{{ currentSessionData.manuscriptTitle }}</span>
               <el-tag size="small" style="margin-left: 10px;">
@@ -127,7 +129,6 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
-// 【注意】这里引入了新增的 markAllSystemAsRead
 import {
   getChatSessions,
   getManuscriptHistory,
@@ -150,13 +151,22 @@ const sending = ref(false)               // 发送加载状态
 
 const messageBox = ref(null) // 聊天滚动容器 ref
 
-// 获取当前用户信息
+// 获取当前用户信息及角色
 const currentUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
 const currentUserId = currentUserInfo.userId
+const currentUserRole = currentUserInfo.role || ''
+
+// === 核心逻辑：判断是否有聊天权限 ===
+const canChat = computed(() => {
+  // 定义允许聊天的角色列表
+  // 根据你的描述，只有作者和编辑有详细聊天
+  const allowedRoles = ['Author', 'AUTHOR', 'Editor', 'EDITOR']
+  return allowedRoles.includes(currentUserRole)
+})
 
 // === 计算属性 ===
 
-// 系统通知未读数 (计算 isRead 为 0 或 false 的条目)
+// 系统通知未读数
 const systemUnreadCount = computed(() => {
   return systemMessages.value.filter(m => !m.isRead).length
 })
@@ -166,7 +176,7 @@ const systemPreview = computed(() => {
   return systemMessages.value.length > 0 ? systemMessages.value[0].content : '暂无新通知'
 })
 
-// 是否允许发送消息
+// 是否允许发送消息 (基于当前选中的会话状态)
 const canSendMessage = computed(() => {
   return currentSessionData.value &&
       currentSessionData.value.targetUserId !== null &&
@@ -178,15 +188,18 @@ const canSendMessage = computed(() => {
 // 初始化数据
 const initData = async () => {
   try {
-    // 1. 获取会话列表
-    const resSession = await getChatSessions()
-    if (resSession.code === 200) {
-      chatSessions.value = resSession.data
-    }
-    // 2. 获取系统通知
+    // 1. 获取系统通知 (所有人都要获取)
     const resSys = await getSystemNotifications()
     if (resSys.code === 200) {
       systemMessages.value = resSys.data
+    }
+
+    // 2. 获取会话列表 (只有有权限的角色才获取)
+    if (canChat.value) {
+      const resSession = await getChatSessions()
+      if (resSession.code === 200) {
+        chatSessions.value = resSession.data
+      }
     }
   } catch (error) {
     console.error('初始化消息中心失败', error)
@@ -197,12 +210,12 @@ const initData = async () => {
 const switchSession = async (type, sessionData) => {
   currentSessionType.value = type
 
-  // 【新增逻辑】点击“系统通知”时，消除红点
+  // 点击“系统通知”时，消除红点
   if (type === 'system') {
     if (systemUnreadCount.value > 0) {
       try {
         await markAllSystemAsRead()
-        // 本地立刻更新状态，让红点消失，提升体验
+        // 本地立刻更新状态，让红点消失
         systemMessages.value.forEach(msg => {
           msg.isRead = true
         })
@@ -212,7 +225,10 @@ const switchSession = async (type, sessionData) => {
     }
   }
 
+  // 切换到聊天
   if (type === 'chat') {
+    if (!canChat.value) return // 再次校验权限
+
     currentSessionData.value = sessionData
     inputContent.value = '' // 切换时清空输入框
 
@@ -221,9 +237,6 @@ const switchSession = async (type, sessionData) => {
     if (res.code === 200) {
       currentChatMessages.value = res.data
       scrollToBottom()
-
-      // 注意：这里没有包含稿件聊天的“已读”逻辑
-      // 如果需要聊天也消红点，后端需增加对应接口，前端在此处调用
     }
   }
 }
@@ -256,6 +269,7 @@ const handleSend = async () => {
       }
 
       // 刷新左侧会话列表以更新预览
+      // 这里如果只想刷新列表而不重新拉取系统通知，可以单独拆分函数，暂时复用initData
       initData()
     } else {
       ElMessage.error(res.msg || '发送失败')

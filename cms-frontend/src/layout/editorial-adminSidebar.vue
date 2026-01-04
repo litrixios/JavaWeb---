@@ -20,6 +20,11 @@
           <span>形式审查</span>
         </el-menu-item>
 
+        <el-menu-item index="/editorial-admin/message">
+          <el-icon><Bell /></el-icon>
+          <span>消息中心</span>
+        </el-menu-item>
+
         <!-- 个人信息 -->
         <el-menu-item @click="showProfileDialog = true">
           <el-icon><User /></el-icon>
@@ -164,7 +169,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Document, Edit, User, Upload } from '@element-plus/icons-vue'
+import {Document, Edit, User, Upload, Bell} from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
