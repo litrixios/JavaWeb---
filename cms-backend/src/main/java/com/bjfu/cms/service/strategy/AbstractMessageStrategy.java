@@ -30,7 +30,7 @@ public abstract class AbstractMessageStrategy {
             throw new RuntimeException("接收用户不存在");
         }
 
-        // 2. 【钩子】权限校验 (交由子类实现)
+        // 2. 权限校验，这里是由子类来实现的
         checkPermission(sender, receiver, msgType, topic);
 
         // 3. 存入数据库 (站内信)
@@ -61,7 +61,7 @@ public abstract class AbstractMessageStrategy {
             try {
                 String subject = "【" + topic + "】" + title;
                 String body = content + "<br><hr><small>系统自动通知，请勿回复</small>";
-                // 这里的 null 是抄送列表，暂时传 null
+                // null 是抄送，暂时先填null
                 emailService.sendHtmlMail(receiver.getEmail(), null, subject, body);
             } catch (Exception e) {
                 System.err.println("邮件发送失败，但不影响站内信保存: " + e.getMessage());

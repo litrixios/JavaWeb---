@@ -19,9 +19,9 @@ public interface CommunicationService {
 //    // 【新增】根据 Topic (稿件ID) 获取当前用户的相关消息历史
 //    List<InternalMessage> getMessagesByTopic(String topic);
 
-    void markRead(Integer messageId);
-
     List<InternalMessage> getMyAllMessages();
+
+    void markTopicAsRead(String topic, Integer userId);
 
     void markAllSystemAsRead(Integer userId);
     // 在 CommunicationService 接口中添加：

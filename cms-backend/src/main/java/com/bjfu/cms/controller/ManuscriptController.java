@@ -27,7 +27,6 @@ public class ManuscriptController {
     @PostMapping("/submit")
     @Operation(summary = "投稿/保存草稿", description = "actionType传'SUBMIT'为正式提交，'SAVE'为保存草稿")
     public Result<String> submit(@RequestBody ManuscriptDTO manuscriptDTO) {
-        // 注：DTO中已经包含了 anonymousFilePath，Service层在保存Version时会使用
         manuscriptService.submitManuscript(manuscriptDTO);
         return Result.success(
                 "SUBMIT".equalsIgnoreCase(manuscriptDTO.getActionType()) ? "投稿成功" : "草稿已保存"
@@ -55,19 +54,16 @@ public class ManuscriptController {
     @PostMapping("/submit-revision")
     @Operation(summary = "提交修回稿件", description = "必须包含 manuscriptId, originalFilePath, anonymousFilePath, markedFilePath, responseLetterPath")
     public Result<String> submitRevision(@RequestBody ManuscriptDTO manuscriptDTO) {
-        // 1. 基础校验
         if (manuscriptDTO.getManuscriptId() == null) {
             return Result.error("稿件ID不能为空");
         }
 
-        // 2. 校验关键文件是否存在 (修改部分：增加对 anonymousFilePath 的校验)
         if (manuscriptDTO.getMarkedFilePath() == null ||
                 manuscriptDTO.getResponseLetterPath() == null ||
                 manuscriptDTO.getAnonymousFilePath() == null) {
             return Result.error("必须上传匿名稿(Anonymous)、标记修改版(Marked)和回复信(Response)");
         }
 
-        // 3. 调用 Service
         manuscriptService.submitRevision(manuscriptDTO);
 
         return Result.success("修回版本提交成功，已通知编辑部");

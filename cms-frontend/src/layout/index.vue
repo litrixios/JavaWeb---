@@ -20,8 +20,7 @@
           <span>在线投稿</span>
         </el-menu-item>
 
-        <!-- 消息中心：默认所有角色可见，无需权限控制 -->
-        <el-menu-item index="/message/index">
+        <el-menu-item index="/manuscript/message">
           <el-icon><Bell /></el-icon>
           <span>消息中心</span>
         </el-menu-item>

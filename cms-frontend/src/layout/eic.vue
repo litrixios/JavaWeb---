@@ -104,6 +104,12 @@
           <span>稿件全览</span>
         </el-menu-item>
         <!-- 所有角色可见，无需权限控制 -->
+
+        <el-menu-item index="/eic/message">
+          <el-icon><Bell /></el-icon>
+          <span>消息中心</span>
+        </el-menu-item>
+        <!-- 添加个人信息菜单项 -->
         <el-menu-item @click="showProfileDialog = true">
           <el-icon><User /></el-icon>
           <span>修改个人信息</span>
@@ -236,7 +242,7 @@
 import { ref, onMounted, reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Document, Edit, User, Upload } from '@element-plus/icons-vue'
+import {Document, Edit, User, Upload, Bell} from '@element-plus/icons-vue'
 
 const router = useRouter()
 
