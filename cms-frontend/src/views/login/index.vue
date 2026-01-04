@@ -87,77 +87,82 @@ const handleLogin = async () => {
   loading.value = true
 
   try {
-    // 调用后端登录接口
-    const response = await fetch('http://localhost:8080/api/auth/login', {
+    // 1. 调用登录接口
+    const loginResponse = await fetch('http://localhost:8080/api/auth/login', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form)
-    })
+    });
+    const loginResult = await loginResponse.json();
 
-    const result = await response.json()
-
-    console.log('完整的登录响应:', result) // 查看完整的响应结构
-
-    if (result.code==200) {
-      // 根据实际返回的数据结构调整
-      // 后端返回的是 {user: ..., token: ...}，不是 {data: {user: ..., token: ...}}
-      const userData = result.data.user // 直接取 user
-      const token = result.data.token   // 直接取 token
-
-      console.log('用户数据:', userData)
-      console.log('token:', token)
-      if(userData.status==1) {
-        if (userData && token) {
-          ElMessage.success('登录成功')
-          // 保存token和用户信息到本地存储
-          localStorage.setItem('token', token)
-          localStorage.setItem('userInfo', JSON.stringify(userData))
-
-          // 根据用户角色跳转到不同页面
-          const userRole = userData.role
-          console.log('用户角色:', userRole)
-
-          switch (userRole) {
-            case 'SuperAdmin':
-              router.push('/SuperAdmin/superadmin')
-              break
-            case 'SystemAdmin':
-              router.push('/Systemadmin/systemadmin')
-              break
-            case 'Editor':
-              router.push('/editor/my-manuscripts')
-              break
-            case 'Author':
-              router.push('/manuscript/list')
-              break
-            case 'Reviewer':
-              router.push('/reviewer/dashboard')
-              break
-            case 'EditorialAdmin':
-              router.push('/editorial-admin')
-              break
-            case 'EditorInChief':
-              router.push('/eic/audit')
-              break
-            default:
-              router.push('/manuscript/list')
-          }
-        } else {
-          ElMessage.error('返回的用户数据为空')
-        }
-      }else {
-        ElMessage.error('登录失败')
-      }
-    } else {
-      ElMessage.error(result.message || '登录失败')
+    if (loginResult.code !== 200) {
+      ElMessage.error(loginResult.message || '登录失败');
+      return;
     }
+
+    const userData = loginResult.data.user;
+    const token = loginResult.data.token;
+
+    // 验证用户状态（1为启用）
+    if (userData.status !== 1) {
+      ElMessage.error('账号已被禁用，请联系管理员');
+      return;
+    }
+
+    // 2. 调用权限接口获取用户权限
+    const permissionResponse = await fetch(
+        `http://localhost:8080/api/system-admin/users/${userData.userId}/permissions`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` } // 携带token验证
+        }
+    );
+    const permissionResult = await permissionResponse.json();
+
+    if (permissionResult.code !== 200) {
+      ElMessage.warning('获取权限信息失败，将使用默认权限');
+    }
+    const permissions = permissionResult.data || {}; // 默认为空对象
+
+    // 3. 存储登录信息和权限
+    localStorage.setItem('token', token);
+    localStorage.setItem('userInfo', JSON.stringify(userData));
+    localStorage.setItem('permissions', JSON.stringify(permissions));
+
+    // 4. 根据角色跳转页面（保持原逻辑）
+    const userRole = userData.role;
+    switch (userRole) {
+      case 'SuperAdmin':
+        router.push('/SuperAdmin/superadmin')
+        break
+      case 'SystemAdmin':
+        router.push('/Systemadmin/systemadmin')
+        break
+      case 'Editor':
+        router.push('/editor/my-manuscripts')
+        break
+      case 'Author':
+        router.push('/manuscript/list')
+        break
+      case 'Reviewer':
+        router.push('/reviewer/dashboard')
+        break
+      case 'EditorialAdmin':
+        router.push('/editorial-admin')
+        break
+      case 'EditorInChief':
+        router.push('/eic/audit')
+        break
+      default:
+        router.push('/manuscript/list')
+    }
+
+    ElMessage.success('登录成功');
+
   } catch (error) {
-    console.error('登录错误:', error)
-    ElMessage.error('网络错误，请检查后端服务是否启动')
+    console.error('登录错误:', error);
+    ElMessage.error('网络错误，请检查后端服务是否启动');
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 const goToRegister = () => {

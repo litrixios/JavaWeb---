@@ -93,14 +93,17 @@
           default-active="1"
           router
       >
-        <el-menu-item index="/eic/reviewer">
+        <!-- 权限控制：审稿人管理（对应 canAssignReviewer 权限） -->
+        <el-menu-item index="/eic/reviewer" v-if="userPermissions.canAssignReviewer === true">
           <el-icon><Document /></el-icon>
           <span>审稿人管理</span>
         </el-menu-item>
-        <el-menu-item index="/eic/audit">
+        <!-- 权限控制：稿件全览（对应 canViewAllManuscripts 权限） -->
+        <el-menu-item index="/eic/audit" v-if="userPermissions.canViewAllManuscripts === true">
           <el-icon><Edit /></el-icon>
           <span>稿件全览</span>
         </el-menu-item>
+        <!-- 所有角色可见，无需权限控制 -->
 
         <el-menu-item index="/eic/message">
           <el-icon><Bell /></el-icon>
@@ -203,16 +206,16 @@
           <el-form-item label="角色" prop="role">
             <el-input v-model="profileForm.role" disabled />
           </el-form-item>
-          <el-form-item label="姓名" prop="FullName">
+          <el-form-item label="姓名" prop="fullName">
             <el-input v-model="profileForm.fullName" placeholder="请输入您的姓名" />
           </el-form-item>
-          <el-form-item label="邮箱" prop="Email">
+          <el-form-item label="邮箱" prop="email">
             <el-input v-model="profileForm.email" placeholder="请输入邮箱地址" />
           </el-form-item>
-          <el-form-item label="所属机构" prop="Affiliation">
+          <el-form-item label="所属机构" prop="affiliation">
             <el-input v-model="profileForm.affiliation" placeholder="请输入所属机构" />
           </el-form-item>
-          <el-form-item label="研究方向" prop="ResearchDirection">
+          <el-form-item label="研究方向" prop="researchDirection">
             <el-input
                 v-model="profileForm.researchDirection"
                 type="textarea"
@@ -243,6 +246,70 @@ import {Document, Edit, User, Upload, Bell} from '@element-plus/icons-vue'
 
 const router = useRouter()
 
+// ========== 核心新增：权限相关逻辑（包含所有9个权限字段） ==========
+// 1. 响应式权限对象（初始化所有权限字段为false，避免模板报错）
+const userPermissions = ref({
+  canSubmitManuscript: false,
+  canViewAllManuscripts: false,
+  canAssignReviewer: false,
+  canViewReviewerIdentity: false,
+  canWriteReview: false,
+  canMakeDecision: false,
+  canModifySystemConfig: false,
+  canTechCheck: false,
+  canPublishNews: false
+})
+
+// 2. 安全读取 localStorage 中的权限数据（兼容所有9个权限字段）
+const getValidPermissions = () => {
+  try {
+    const permStr = localStorage.getItem('permissions')
+    // 过滤无效值，避免解析报错
+    if (!permStr || permStr === 'undefined' || permStr === 'null' || permStr === '{}') {
+      // 返回默认权限（所有字段为false）
+      return {
+        canSubmitManuscript: false,
+        canViewAllManuscripts: false,
+        canAssignReviewer: false,
+        canViewReviewerIdentity: false,
+        canWriteReview: false,
+        canMakeDecision: false,
+        canModifySystemConfig: false,
+        canTechCheck: false,
+        canPublishNews: false
+      }
+    }
+    const permissions = JSON.parse(permStr)
+    // 补全所有默认值，避免某个权限字段缺失导致模板undefined报错
+    return {
+      canSubmitManuscript: permissions.canSubmitManuscript || false,
+      canViewAllManuscripts: permissions.canViewAllManuscripts || false,
+      canAssignReviewer: permissions.canAssignReviewer || false,
+      canViewReviewerIdentity: permissions.canViewReviewerIdentity || false,
+      canWriteReview: permissions.canWriteReview || false,
+      canMakeDecision: permissions.canMakeDecision || false,
+      canModifySystemConfig: permissions.canModifySystemConfig || false,
+      canTechCheck: permissions.canTechCheck || false,
+      canPublishNews: permissions.canPublishNews || false
+    }
+  } catch (e) {
+    console.warn('权限数据解析失败，使用默认权限', e)
+    // 解析失败时返回默认权限
+    return {
+      canSubmitManuscript: false,
+      canViewAllManuscripts: false,
+      canAssignReviewer: false,
+      canViewReviewerIdentity: false,
+      canWriteReview: false,
+      canMakeDecision: false,
+      canModifySystemConfig: false,
+      canTechCheck: false,
+      canPublishNews: false
+    }
+  }
+}
+
+// ========== 原有逻辑保持不变，新增权限初始化 ==========
 // 定义响应式变量
 const userName = ref('User')
 const userRole = ref('')
@@ -363,9 +430,21 @@ const handlePreviewAvatarError = () => {
   avatarPreviewUrl.value = defaultAvatar
 }
 
+// ========== 核心修改：挂载时初始化权限 ==========
 onMounted(() => {
   loadUserInfo()
+  // 初始化权限数据（读取localStorage中的权限并赋值）
+  userPermissions.value = getValidPermissions()
 })
+
+// ========== 可选：监听权限变化，实现动态更新 ==========
+watch(
+    () => localStorage.getItem('permissions'),
+    () => {
+      userPermissions.value = getValidPermissions()
+    },
+    { immediate: false }
+)
 
 // 监听用户信息变化，自动更新头像
 watch(() => profileForm.userId, async (newUserId) => {
@@ -418,7 +497,7 @@ const handleDialogOpen = () => {
   avatarFile.value = null
 }
 
-// 关闭弹窗前确认
+// 关闭弹窗前确认（补充原有缺失的方法绑定）
 const handleCloseDialog = (done) => {
   if (isFormModified() || avatarFile.value) {
     ElMessageBox.confirm('确定要放弃修改吗？', '提示', {
@@ -579,6 +658,7 @@ const handleSaveProfile = async () => {
 const handleLogout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('userInfo')
+  localStorage.removeItem('permissions') // 退出时清空权限，避免残留
   router.push('/login')
 }
 </script>
