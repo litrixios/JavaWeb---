@@ -133,7 +133,7 @@ const handleLogin = async () => {
               router.push('/manuscript/list')
               break
             case 'Reviewer':
-              router.push('/layout/index')
+              router.push('/reviewer/dashboard')
               break
             case 'EditorialAdmin':
               router.push('/editorial-admin')
