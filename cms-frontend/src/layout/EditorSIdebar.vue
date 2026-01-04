@@ -21,6 +21,12 @@
           <el-icon><Edit /></el-icon>
           <span>审稿进度</span>
         </el-menu-item>
+
+        <el-menu-item index="/editor/message">
+          <el-icon><Bell /></el-icon>
+          <span>消息中心</span>
+        </el-menu-item>
+
         <el-menu-item @click="showProfileDialog = true">
           <el-icon><User /></el-icon>
           <span>修改个人信息</span>
@@ -155,7 +161,7 @@
 import { ref, onMounted, reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Document, Edit, User, Upload } from '@element-plus/icons-vue'
+import {Document, Edit, User, Upload, Bell} from '@element-plus/icons-vue'
 
 const router = useRouter()
 

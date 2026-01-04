@@ -1,4 +1,3 @@
-// 修改文件: cms-backend/src/main/java/com/bjfu/cms/entity/InternalMessage.java
 package com.bjfu.cms.entity;
 import lombok.Data;
 import java.util.Date;
@@ -19,13 +18,12 @@ public class InternalMessage {
     private Date sendTime;
 
     /**
-     * 【新增】消息类型
+     * 消息类型
      * 0: 系统通知 (单向，由系统触发或管理员群发)
      * 1: 聊天沟通 (双向，作者<->编辑，基于稿件)
      */
     private Integer msgType;
 
-    // === 联查字段 ===
     private String senderName;
     private String senderRole;
 }

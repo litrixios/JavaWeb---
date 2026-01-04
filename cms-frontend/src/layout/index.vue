@@ -19,7 +19,7 @@
           <span>在线投稿</span>
         </el-menu-item>
 
-        <el-menu-item index="/message/index">
+        <el-menu-item index="/manuscript/message">
           <el-icon><Bell /></el-icon>
           <span>消息中心</span>
         </el-menu-item>

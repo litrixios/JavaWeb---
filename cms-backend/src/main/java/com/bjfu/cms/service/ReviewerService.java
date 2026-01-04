@@ -40,12 +40,6 @@ public interface ReviewerService {
      */
     String getDeadline(Integer reviewId);
 
-    // 在 ReviewerService 接口中添加
-    /**
-     * 获取稿件文件路径（用于下载/预览）
-     */
-    String getManuscriptFilePath(Integer reviewId);
-
     /**
      * 提交最终审稿意见
      */

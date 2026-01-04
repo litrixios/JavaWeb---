@@ -64,8 +64,8 @@ public class CommunicationServiceImpl implements CommunicationService {
     }
 
     @Override
-    public void markRead(Integer messageId) {
-        messageMapper.markAsRead(messageId);
+    public void markTopicAsRead(String topic, Integer userId) {
+        messageMapper.markTopicAsRead(topic, userId);
     }
 
     @Override
@@ -92,23 +92,13 @@ public class CommunicationServiceImpl implements CommunicationService {
 
         // 3. 遍历稿件构建 Session
         for (Manuscript m : manuscripts) {
-            // ========================= 核心修复开始 =========================
-
             // 针对作者角色的特殊过滤
             if ("AUTHOR".equalsIgnoreCase(currentUser.getRole())) {
-                // 1. 业务逻辑限制：必须已分配编辑才能开始聊天
-                //    如果 CurrentEditorID 为 null，说明还在 TechCheck 或 PendingAssign 阶段
+                // 必须已分配编辑才能开始聊天
                 if (m.getCurrentEditorId() == null) {
                     continue;
                 }
-
-                // 2. 数据安全防御：防止出现非本人的稿件 (理论上Mapper层已过滤，这里做双重保险)
-                if (m.getAuthorId() != null && !m.getAuthorId().equals(userId)) {
-                    continue;
-                }
             }
-
-            // ========================= 核心修复结束 =========================
 
             ChatSessionDTO dto = new ChatSessionDTO();
             String topic = "MS-" + m.getManuscriptId();

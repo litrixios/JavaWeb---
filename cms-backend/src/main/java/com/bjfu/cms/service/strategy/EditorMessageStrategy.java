@@ -7,7 +7,7 @@ public class EditorMessageStrategy extends AbstractMessageStrategy {
 
     @Override
     protected void checkPermission(User sender, User receiver, Integer msgType, String topic) {
-        // 1. 如果是聊天 (Type 1)
+        // 聊天 (Type 1)
         if (msgType == 1) {
             if (!"Author".equals(receiver.getRole())) {
                 throw new RuntimeException("编辑聊天对象仅限作者。");
@@ -17,7 +17,5 @@ public class EditorMessageStrategy extends AbstractMessageStrategy {
             }
         }
 
-        // 2. 如果是系统通知 (Type 0)，通常由代码自动触发，但如果编辑手动发，也可以允许
-        // 比如通知作者去修改格式
     }
 }
