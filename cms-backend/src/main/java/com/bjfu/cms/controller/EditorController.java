@@ -38,6 +38,8 @@ public class EditorController {
     @Operation(summary = "查询指派给我的稿件")
     @GetMapping("/manuscripts")
     public Result<List<Manuscript>> getList() {
+        List<Manuscript> s=editorService.getAssignedList();
+
         return Result.success(editorService.getAssignedList());
     }
 

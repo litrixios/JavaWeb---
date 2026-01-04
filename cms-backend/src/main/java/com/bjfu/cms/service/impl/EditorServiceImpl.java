@@ -9,21 +9,20 @@ import com.bjfu.cms.mapper.ManuscriptMapper; // 确保有这个Mapper
 import com.bjfu.cms.mapper.UserMapper;
 import com.bjfu.cms.service.EditorService;
 import com.bjfu.cms.service.EmailService;
+import jakarta.servlet.ServletOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
@@ -111,26 +110,31 @@ public class EditorServiceImpl implements EditorService {
     @Override
     @Transactional
     public void submitToEIC(Manuscript m) {
-        // 1. 获取完整的稿件信息（为了拿到标题和主编信息）
+        // 1. 获取完整的稿件信息
         Manuscript originalMs = manuscriptMapper.selectById(m.getManuscriptId());
-        m.setCurrentEditorId(UserContext.getUserId());
+        if (originalMs == null) throw new RuntimeException("稿件不存在");
+
+        Integer currentUserId = UserContext.getUserId();
+        m.setCurrentEditorId(currentUserId);
 
         // 2. 更新数据库中的建议和报告
         editorMapper.updateRecommendation(m);
 
-        // 3. 自动发送消息给主编 (假设系统中角色为 'EditorInChief' 的用户是接收者)
-        // 注意：实际项目中可能需要根据配置获取主编ID，这里示例获取 ID 为 1 的主编或通过 Role 查询
+        // 3. 获取主编 ID
         Integer eicId = editorMapper.findUserByRole("EditorInChief");
 
-        User user = userMapper.selectById(UserContext.getUserId());
+        // 4. 获取当前编辑的姓名（增加健壮性检查）
+        User user = userMapper.selectById(currentUserId);
+        // 如果查不到 User 对象，则降级显示“未知编辑”或直接显示 ID
+        String editorName = (user != null) ? user.getFullName() : "ID:" + currentUserId;
 
         if (eicId != null) {
             communicationService.sendMessage(
-                    1,
+                    1, // 发送者 ID (系统)
                     eicId,
                     "MS-" + m.getManuscriptId(),
                     "稿件建议提醒: " + originalMs.getTitle(),
-                    "编辑" + user.getFullName() + "已提交建议结论：" + m.getEditorRecommendation() + "。请及时审核。",
+                    "编辑 [" + editorName + "] 已提交建议结论：" + m.getEditorRecommendation() + "。请及时审核。",
                     0
             );
         }
@@ -172,35 +176,71 @@ public class EditorServiceImpl implements EditorService {
 
     @Override
     public void downloadManuscript(Integer manuscriptId, HttpServletResponse response) throws Exception {
-        // 1. 获取路径并下载
-        String remoteFilePath = manuscriptMapper.selectLatestOriginalFilePath(manuscriptId);
-        if (remoteFilePath == null || remoteFilePath.isEmpty()) throw new RuntimeException("文件不存在");
+        // 日志 1：进入方法
+        System.out.println(">>>> 开始处理下载请求，稿件ID: " + manuscriptId);
 
+        String remoteFilePath = manuscriptMapper.selectLatestOriginalFilePath(manuscriptId);
+        System.out.println(">>>> 数据库查到的远程路径: " + remoteFilePath);
+
+        if (remoteFilePath == null || remoteFilePath.isEmpty()) throw new RuntimeException("文件路径为空");
+
+        File tempDir = new File(localTempPath);
+        if (!tempDir.exists()) {
+            boolean created = tempDir.mkdirs(); // mkdirs 会连同父目录一起创建
+            System.out.println(">>>> 临时目录不存在，创建结果: " + created);
+        }
+
+        // 2. SFTP 下载
         sftpService.download(remoteFilePath, localTempPath);
 
         String fileName = remoteFilePath.substring(remoteFilePath.lastIndexOf("/") + 1);
         File localFile = new File(localTempPath + File.separator + fileName);
 
-        if (!localFile.exists()) throw new IOException("文件下载失败");
+        // 日志 2：检查本地文件状态
+        if (!localFile.exists()) {
+            System.err.println(">>>> 错误：本地临时文件不存在! 路径: " + localFile.getAbsolutePath());
+            throw new IOException("文件下载到本地失败");
+        }
+        System.out.println(">>>> 本地文件已生成，大小: " + localFile.length() + " bytes");
 
-        // 2. 【关键】清除之前的状态，确保 Header 生效
-        response.reset();
+        if (localFile.length() == 0) {
+            System.err.println(">>>> 警告：本地文件大小为 0，下载可能已损坏");
+        }
 
-        // 3. 【关键】设置 Header 必须在获取 OutputStream 之前
-        response.setContentType("application/octet-stream");
-        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+        // 3. 准备响应
+        // 关键：暂时注释掉 response.reset()，看看是否是它冲突了
+        // response.reset();
 
-        // 设置下载头
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Length", String.valueOf(localFile.length()));
+
+        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
         response.setHeader("Content-Disposition", "attachment;filename=" + encodedFileName + ";filename*=utf-8''" + encodedFileName);
-        // 暴露 Header 让前端 axios 能读取
-        response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
+        response.setHeader("Access-Control-Expose-Headers", "Content-Disposition, Content-Length");
 
-        // 4. 写入流
-        try (FileInputStream fis = new FileInputStream(localFile)) {
-            org.springframework.util.FileCopyUtils.copy(fis, response.getOutputStream());
-            response.getOutputStream().flush();
+        // 4. 流拷贝（手动控制以确保不报 Broken Pipe）
+        try (FileInputStream fis = new FileInputStream(localFile);
+             BufferedInputStream bis = new BufferedInputStream(fis);
+             OutputStream os = response.getOutputStream()) {
+
+            System.out.println(">>>> 开始向响应流写入数据...");
+            byte[] buffer = new byte[8192];
+            int len;
+            int totalWrite = 0;
+            while ((len = bis.read(buffer)) != -1) {
+                os.write(buffer, 0, len);
+                totalWrite += len;
+            }
+            os.flush();
+            System.out.println(">>>> 数据写入完成，总计发送: " + totalWrite + " bytes");
+        } catch (Exception e) {
+            System.err.println(">>>> 写入过程中发生异常: " + e.getMessage());
         } finally {
-            if (localFile.exists()) localFile.delete(); // 清理临时文件
+            // 5. 延迟删除：确保流关闭后再删
+            if (localFile.exists()) {
+                boolean deleted = localFile.delete();
+                System.out.println(">>>> 临时文件删除结果: " + deleted);
+            }
         }
     }
 
