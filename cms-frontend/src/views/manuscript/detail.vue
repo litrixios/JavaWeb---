@@ -20,6 +20,22 @@
               <el-step title="决议中" />
             </el-steps>
 
+            <div v-if="trackInfo.reviewOpinions && trackInfo.reviewOpinions.length > 0" class="review-section">
+              <el-divider content-position="left"><h3>审稿人意见 (Review Comments)</h3></el-divider>
+
+              <el-card v-for="(item, index) in trackInfo.reviewOpinions" :key="index" class="review-card" shadow="never">
+                <template #header>
+                  <div class="review-header">
+                    <span class="reviewer-name">{{ item.reviewerAlias }}</span>
+                    <el-tag v-if="item.suggestion" size="small" effect="plain">{{ item.suggestion }}</el-tag>
+                  </div>
+                </template>
+                <div class="review-content">
+                  <pre>{{ item.comments }}</pre>
+                </div>
+              </el-card>
+              <div style="margin-bottom: 30px;"></div> </div>
+
             <h4>历史记录 (History)</h4>
             <el-timeline>
               <el-timeline-item
@@ -128,7 +144,7 @@ const manuscript = ref({})
 const historyLogs = ref([])
 const trackInfo = ref({})
 
-// 修回表单 - 修改部分：增加 anonymousFilePath
+// 修回表单
 const revisionForm = reactive({
   manuscriptId: parseInt(manuscriptId),
   originalFilePath: null,
@@ -137,7 +153,6 @@ const revisionForm = reactive({
   responseLetterPath: null
 })
 
-// (以下 computed, formatDate 等辅助函数保持不变)
 const statusType = computed(() => {
   const s = manuscript.value.status || ''
   const sub = manuscript.value.subStatus || ''
@@ -184,7 +199,6 @@ const loadData = async () => {
   }
 }
 
-// 修改部分：修回提交校验
 const handleRevisionSubmit = async () => {
   if (!revisionForm.markedFilePath || !revisionForm.responseLetterPath || !revisionForm.anonymousFilePath) {
     ElMessage.error('请上传匿名稿、标记稿和回复信')
@@ -221,5 +235,27 @@ onMounted(() => {
 .tip {
   font-size: 12px;
   color: #999;
+}
+
+/* [新增] 审稿意见样式 */
+.review-section {
+  margin-top: 20px;
+}
+.review-card {
+  margin-bottom: 15px;
+  border-left: 4px solid #409EFF; /* 左侧蓝色提示条 */
+}
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+.review-content pre {
+  white-space: pre-wrap; /* 保留换行符 */
+  font-family: inherit;
+  margin: 0;
+  color: #333;
+  line-height: 1.6;
 }
 </style>
