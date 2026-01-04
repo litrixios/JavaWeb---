@@ -10,7 +10,6 @@
               <el-tag size="large" :type="statusType">
                 {{ manuscript.subStatus || manuscript.status }}
               </el-tag>
-              <span class="cycle-tip" v-if="trackInfo.estimatedCycle">预计周期: {{ trackInfo.estimatedCycle }}</span>
             </div>
 
             <el-steps :active="activeStep" align-center style="margin: 30px 0;">
@@ -45,8 +44,8 @@
                   placement="top"
               >
                 <el-card shadow="hover">
-                  <h4>{{ log.operatorName }} 执行了 {{ log.operateType }}</h4>
-                  <p>{{ log.content }}</p>
+                  <h4>{{ log.operatorName }} 执行了 {{ log.operationType }}</h4>
+                  <p>{{ log.description }}</p>
                 </el-card>
               </el-timeline-item>
             </el-timeline>
@@ -227,10 +226,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 15px;
-}
-.cycle-tip {
-  font-size: 13px;
-  color: #666;
 }
 .tip {
   font-size: 12px;
