@@ -6,6 +6,7 @@ import Layout2 from '@/layout/admin_index.vue'
 import Layout3 from '@/layout/systemadminSidebar.vue'
 import EicLayout from '@/layout/eic.vue'
 import EditorialAdminSidebar from '@/layout/editorial-adminSidebar.vue'
+import ReviewerSidebar from '@/layout/ReviewerSidebar.vue'
 
 // === 1. 定义通用的消息中心组件 (复用核心) ===
 const MessageCenter = () => import('@/views/message/index.vue')
