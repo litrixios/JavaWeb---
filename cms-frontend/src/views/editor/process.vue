@@ -35,7 +35,7 @@
     </el-card>
 
     <el-card style="margin-top: 20px">
-      <h3>1. 指派审稿人</h3>
+      <h3>指派审稿人</h3>
       <div style="display: flex; align-items: center; gap: 15px;">
         <el-button type="primary" plain @click="reviewerDialogVisible = true">
           <el-icon style="margin-right: 5px"><Search /></el-icon> 选择并添加审稿人
@@ -123,27 +123,11 @@
       </el-dialog>
     </el-card>
 
-    <el-card style="margin-top: 20px">
-      <h3>2. 提交建议 (给主编)</h3>
-      <el-form label-position="top">
-        <el-form-item label="建议结论">
-          <el-select v-model="recommendForm.editorRecommendation" placeholder="请选择建议方向" style="width: 300px">
-            <el-option label="建议录用 (Acceptance)" value="Suggest Acceptance" />
-            <el-option label="建议拒稿 (Rejection)" value="Suggest Rejection" />
-            <el-option label="建议修改 (Revision)" value="Suggest Revision" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="总结报告 (编辑评审意见汇总)">
-          <el-input v-model="recommendForm.editorSummaryReport" type="textarea" :rows="5" placeholder="请填写给主编的总结报告..." />
-        </el-form-item>
-        <el-button type="success" @click="handleRecommend">提交总结报告并通知主编</el-button>
-      </el-form>
-    </el-card>
 
     <el-card style="margin-top: 20px">
       <template #header>
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-weight: bold;">3. 与作者沟通历史</span>
+          <span style="font-weight: bold;">与作者沟通历史</span>
           <el-button type="primary" plain size="small" @click="msgDialogVisible = true">给作者发消息</el-button>
         </div>
       </template>
@@ -206,11 +190,7 @@ const selectedReviewers = ref([])
 const chatHistory = ref([])
 const msgDialogVisible = ref(false)
 
-const recommendForm = ref({
-  manuscriptId: mid,
-  editorRecommendation: '',
-  editorSummaryReport: ''
-})
+
 
 const msgForm = ref({
   title: '',
@@ -369,23 +349,6 @@ const handleInvite = async () => {
   }
 }
 
-// 提交建议给主编逻辑
-const handleRecommend = async () => {
-  if (!recommendForm.value.editorRecommendation || !recommendForm.value.editorSummaryReport) {
-    return ElMessage.warning("请完整填写建议结论和报告")
-  }
-
-  const res = await fetch('http://localhost:8080/api/editor/recommend', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token') },
-    body: JSON.stringify(recommendForm.value)
-  })
-  const data = await res.json()
-  if (data.code === 200) {
-    ElMessage.success("建议已提交，系统已通知主编")
-    fetchDetail()
-  }
-}
 
 // 发送消息给作者逻辑
 const handleSendMessage = async () => {
