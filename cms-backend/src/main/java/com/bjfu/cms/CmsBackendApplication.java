@@ -3,6 +3,7 @@ package com.bjfu.cms;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -10,6 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling // 开启定时任务
 @MapperScan("com.bjfu.cms.mapper") // <--mapper 文件都在这
 @EnableAsync // <--开启异步任务支持
+@ServletComponentScan
 public class CmsBackendApplication {
 
 	public static void main(String[] args) {

@@ -74,7 +74,6 @@ public class CommunicationServiceImpl implements CommunicationService {
         User currentUser = userMapper.selectById(userId);
         List<ChatSessionDTO> sessions = new ArrayList<>();
 
-        // 1. 获取该用户相关的所有稿件
         List<Manuscript> manuscripts;
         if ("AUTHOR".equalsIgnoreCase(currentUser.getRole())) {
             manuscripts = manuscriptMapper.selectByAuthorId(userId);
@@ -84,17 +83,13 @@ public class CommunicationServiceImpl implements CommunicationService {
             manuscripts = new ArrayList<>();
         }
 
-        // 2. 获取该用户的所有消息并按 Topic 分组
         List<InternalMessage> allMessages = messageMapper.selectAllMessagesForUser(userId);
         Map<String, List<InternalMessage>> msgGroup = allMessages.stream()
                 .filter(m -> m.getMsgType() == 1) // 仅筛选聊天类型的消息
                 .collect(Collectors.groupingBy(InternalMessage::getTopic));
 
-        // 3. 遍历稿件构建 Session
         for (Manuscript m : manuscripts) {
-            // 针对作者角色的特殊过滤
             if ("AUTHOR".equalsIgnoreCase(currentUser.getRole())) {
-                // 必须已分配编辑才能开始聊天
                 if (m.getCurrentEditorId() == null) {
                     continue;
                 }
@@ -123,7 +118,7 @@ public class CommunicationServiceImpl implements CommunicationService {
             if (msgGroup.containsKey(topic)) {
                 List<InternalMessage> msgs = msgGroup.get(topic);
                 if (!msgs.isEmpty()) {
-                    InternalMessage latest = msgs.get(0); // 假设SQL已经按时间倒序排列
+                    InternalMessage latest = msgs.get(0);
                     dto.setLastMessageContent(latest.getContent());
                     dto.setLastMessageTime(latest.getSendTime());
 
@@ -133,7 +128,6 @@ public class CommunicationServiceImpl implements CommunicationService {
                     dto.setUnreadCount((int) unread);
                 }
             } else {
-                // 没有历史消息时显示默认提示
                 dto.setLastMessageContent("暂无消息");
                 dto.setUnreadCount(0);
             }

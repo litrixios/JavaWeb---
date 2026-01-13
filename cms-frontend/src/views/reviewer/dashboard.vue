@@ -185,8 +185,7 @@ const handleAccept = (row) => {
       console.log(res)
       if (res.code === 200) {
         ElMessage.success('已接受邀请')
-        fetchInvitations() // 刷新当前列表
-        // 自动跳转到"我的任务"并刷新
+        fetchInvitations()
         activeTab.value = 'MY_REVIEWS'
         fetchMyReviews()
       }
