@@ -78,7 +78,6 @@ import { Plus } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
-// 修改点2: 默认值修改为 Processing
 const activeTab = ref('Processing')
 const loading = ref(false)
 const tableData = ref([])
@@ -87,7 +86,7 @@ const total = ref(0)
 const queryParams = reactive({
   pageNum: 1,
   pageSize: 10,
-  status: 'Processing' // 修改点3: 默认查询参数也同步修改
+  status: 'Processing'
 })
 
 const getStatusTag = (status) => {
