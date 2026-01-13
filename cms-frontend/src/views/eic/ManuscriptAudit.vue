@@ -493,7 +493,7 @@
 
         <div class="detail-item">
           <label>作者列表：</label>
-          <div class="content">{{ currentManuscript.authorList }}</div>
+          <div class="content">{{ formatAuthorList(currentManuscript.authorList) }}</div>
         </div>
 
         <div class="detail-item">
@@ -1327,8 +1327,8 @@ const submitRetract = async () => {
   const data = {
     manuscriptId: retractForm.value.manuscriptId,
     comments: retractForm.value.comments,
-    operatorId: currentUser.userId,
-    operatorName: currentUser.fullName
+    operatorId: currentUser.userId || 1,
+    operatorName: currentUser.fullName || '系统管理员'
   }
 
   console.log('提交撤稿数据:', data);
