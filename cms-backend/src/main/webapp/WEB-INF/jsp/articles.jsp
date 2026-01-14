@@ -5,12 +5,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>文章与专刊 - 国际人工智能研究</title>
+  <title>子刊浏览 - 国际人工智能研究</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     /* 基础样式 */
     * {
-
       margin: 0;
       padding: 0;
       box-sizing: border-box;
@@ -81,19 +80,19 @@
     .page-header {
       background: linear-gradient(135deg, #3498db, #2980b9);
       color: white;
-      padding: 4rem 0;
+      padding: 3rem 0;
       text-align: center;
-      margin-bottom: 3rem;
+      margin-bottom: 2rem;
     }
 
     .page-title {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
       font-weight: 300;
     }
 
     .page-subtitle {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       opacity: 0.9;
       font-weight: 300;
     }
@@ -102,75 +101,44 @@
     .section {
       background: white;
       margin-bottom: 2rem;
-      padding: 2.5rem;
+      padding: 2rem;
       border-radius: 10px;
       box-shadow: 0 2px 20px rgba(0,0,0,0.1);
     }
 
     .section-title {
       color: #2c3e50;
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       margin-bottom: 1.5rem;
       padding-bottom: 0.5rem;
       border-bottom: 3px solid #3498db;
       display: inline-block;
     }
 
-    /* 期刊分类选项卡 */
-    .issue-tabs {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-    }
-
-    .tab-btn {
-      padding: 0.8rem 1.5rem;
-      background: #ecf0f1;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-weight: 500;
-      color: #7f8c8d;
-    }
-
-    .tab-btn.active {
-      background: #3498db;
-      color: white;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    /* 期刊列表样式 */
-    .issues-grid {
+    /* 子刊列表样式 */
+    .journals-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 1.5rem;
       margin-top: 1.5rem;
     }
 
-    .issue-card {
+    .journal-card {
       background: #f8f9fa;
       border-radius: 10px;
       padding: 1.5rem;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
       border-left: 4px solid #3498db;
       cursor: pointer;
+      height: 100%;
     }
 
-    .issue-card:hover {
+    .journal-card:hover {
       transform: translateY(-5px);
       box-shadow: 0 5px 25px rgba(0,0,0,0.15);
     }
 
-    .issue-cover {
+    .journal-cover {
       width: 100%;
       height: 150px;
       background: linear-gradient(135deg, #3498db, #2980b9);
@@ -180,89 +148,35 @@
       align-items: center;
       justify-content: center;
       color: white;
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: bold;
     }
 
-    .issue-title {
+    .journal-title {
       color: #2c3e50;
       font-size: 1.2rem;
       margin-bottom: 0.5rem;
+      min-height: 3rem;
     }
 
-    .issue-meta {
+    .journal-meta {
       color: #7f8c8d;
       font-size: 0.9rem;
       margin-bottom: 0.5rem;
     }
 
-    .issue-articles {
+    .journal-description {
+      color: #666;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      margin-bottom: 1rem;
+      min-height: 4rem;
+    }
+
+    .journal-articles {
       color: #3498db;
       font-size: 0.9rem;
       font-weight: 500;
-    }
-
-    /* 文章列表样式 */
-    .articles-list {
-      list-style: none;
-      margin-top: 2rem;
-    }
-
-    .article-item {
-      padding: 1.5rem;
-      border-bottom: 1px solid #eee;
-      transition: background-color 0.3s ease;
-    }
-
-    .article-item:hover {
-      background-color: #f8f9fa;
-    }
-
-    .article-title {
-      color: #2c3e50;
-      font-size: 1.2rem;
-      margin-bottom: 0.5rem;
-      text-decoration: none;
-      display: block;
-    }
-
-    .article-title:hover {
-      color: #3498db;
-    }
-
-    .article-authors {
-      color: #7f8c8d;
-      margin-bottom: 0.5rem;
-      font-size: 0.9rem;
-    }
-
-    .article-abstract {
-      color: #666;
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
-      line-height: 1.5;
-    }
-
-    .article-meta {
-      display: flex;
-      justify-content: space-between;
-      color: #7f8c8d;
-      font-size: 0.8rem;
-    }
-
-    .article-actions {
-      display: flex;
-      gap: 1rem;
-    }
-
-    .article-action {
-      color: #3498db;
-      text-decoration: none;
-      font-size: 0.8rem;
-    }
-
-    .article-action:hover {
-      text-decoration: underline;
     }
 
     /* 搜索和筛选 */
@@ -303,21 +217,6 @@
       min-width: 150px;
     }
 
-    /* 返回按钮 */
-    .back-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: #3498db;
-      text-decoration: none;
-      margin-bottom: 1.5rem;
-      font-weight: 500;
-    }
-
-    .back-btn:hover {
-      text-decoration: underline;
-    }
-
     /* 响应式设计 */
     @media (max-width: 768px) {
       .nav-container {
@@ -331,7 +230,7 @@
         gap: 1rem;
       }
 
-      .issues-grid {
+      .journals-grid {
         grid-template-columns: 1fr;
       }
 
@@ -366,120 +265,74 @@
 <!-- 页面标题 -->
 <header class="page-header">
   <div class="container">
-    <h1 class="page-title">文章与专刊</h1>
-    <p class="page-subtitle">探索国际人工智能研究期刊的已发表论文和特刊</p>
+    <h1 class="page-title">子刊浏览</h1>
+    <p class="page-subtitle">探索国际人工智能研究期刊下的各类专业子刊</p>
   </div>
 </header>
 
 <div class="container">
 
-  <!-- 期刊列表区域 -->
-  <section class="section" id="issues-section">
-    <h2 class="section-title">期刊列表</h2>
+  <!-- 子刊列表区域 -->
+  <section class="section" id="journals-section">
+    <h2 class="section-title">全部子刊</h2>
 
-    <div class="issue-tabs">
-      <button class="tab-btn active" onclick="showTab('latest')">最新期刊 (Latest Issues)</button>
-      <button class="tab-btn" onclick="showTab('special')">特刊 (Special Issues)</button>
-      <button class="tab-btn" onclick="showTab('all')">所有期刊 (All Issues)</button>
-    </div>
+    <div class="journals-grid">
+      <div class="journal-card" onclick="showJournalDetails('AIT')">
+        <div class="journal-cover">AIT</div>
+        <h3 class="journal-title">人工智能理论与方法</h3>
+        <div class="journal-meta">主编: 张伟教授 | ISSN: 2096-1234</div>
+        <div class="journal-description">专注于人工智能基础理论、算法设计和数学方法的研究，推动AI领域的理论创新。</div>
+      </div>
 
-    <!-- 最新期刊 -->
-    <div id="latest" class="tab-content active">
-      <div class="issues-grid">
-        <div class="issue-card" onclick="showArticles('issue-2024-12')">
-          <div class="issue-cover">IAIR Vol.15 No.12</div>
-          <h3 class="issue-title">2024年12月期</h3>
-          <div class="issue-meta">出版日期: 2024-12-01</div>
-          <div class="issue-articles">收录文章: 8篇</div>
-        </div>
+      <div class="journal-card" onclick="showJournalDetails('MLA')">
+        <div class="journal-cover">MLA</div>
+        <h3 class="journal-title">机器学习与应用</h3>
+        <div class="journal-meta">主编: 李静教授 | ISSN: 2096-1235</div>
+        <div class="journal-description">关注机器学习算法在实际问题中的应用，包括工业、商业和社会领域的创新应用。</div>
+      </div>
 
-        <div class="issue-card" onclick="showArticles('issue-2024-11')">
-          <div class="issue-cover">IAIR Vol.15 No.11</div>
-          <h3 class="issue-title">2024年11月期</h3>
-          <div class="issue-meta">出版日期: 2024-11-01</div>
-          <div class="issue-articles">收录文章: 10篇</div>
-        </div>
+      <div class="journal-card" onclick="showJournalDetails('CVP')">
+        <div class="journal-cover">CVP</div>
+        <h3 class="journal-title">计算机视觉与模式识别</h3>
+        <div class="journal-meta">主编: 王建国教授 | ISSN: 2096-1236</div>
+        <div class="journal-description">发表计算机视觉、图像处理、模式识别和多媒体分析领域的前沿研究成果。</div>
+      </div>
 
-        <div class="issue-card" onclick="showArticles('issue-2024-10')">
-          <div class="issue-cover">IAIR Vol.15 No.10</div>
-          <h3 class="issue-title">2024年10月期</h3>
-          <div class="issue-meta">出版日期: 2024-10-01</div>
-          <div class="issue-articles">收录文章: 9篇</div>
-        </div>
+      <div class="journal-card" onclick="showJournalDetails('NLP')">
+        <div class="journal-cover">NLP</div>
+        <h3 class="journal-title">自然语言处理与计算语言学</h3>
+        <div class="journal-meta">主编: 陈晓华教授 | ISSN: 2096-1237</div>
+        <div class="journal-description">专注于自然语言处理、机器翻译、情感分析和计算语言学的基础与应用研究。</div>
+      </div>
+
+      <div class="journal-card" onclick="showJournalDetails('RAI')">
+        <div class="journal-cover">RAI</div>
+        <h3 class="journal-title">机器人与人工智能系统</h3>
+        <div class="journal-meta">主编: 赵琳教授 | ISSN: 2096-1238</div>
+        <div class="journal-description">发表机器人学、智能控制系统、自主系统和智能硬件等领域的研究成果。</div>
+      </div>
+
+      <div class="journal-card" onclick="showJournalDetails('AIH')">
+        <div class="journal-cover">AIH</div>
+        <h3 class="journal-title">人工智能与医疗健康</h3>
+        <div class="journal-meta">主编: 刘强教授 | ISSN: 2096-1239</div>
+        <div class="journal-description">关注AI在医疗诊断、药物研发、健康管理和生物信息学中的应用与创新。</div>
+      </div>
+
+      <div class="journal-card" onclick="showJournalDetails('AIE')">
+        <div class="journal-cover" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">AIE</div>
+        <h3 class="journal-title">人工智能伦理与社会影响</h3>
+        <div class="journal-meta">主编: 孙正义教授 | ISSN: 2096-1240</div>
+        <div class="journal-description">探讨人工智能的伦理问题、社会责任、政策影响和可持续发展。</div>
+      </div>
+
+      <div class="journal-card" onclick="showJournalDetails('EAI')">
+        <div class="journal-cover" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">EAI</div>
+        <h3 class="journal-title">边缘计算与人工智能</h3>
+        <div class="journal-meta">主编: 周计算教授 | ISSN: 2096-1241</div>
+        <div class="journal-description">研究边缘智能、物联网AI、分布式学习和低功耗AI算法。</div>
       </div>
     </div>
-
-    <!-- 特刊 -->
-    <div id="special" class="tab-content">
-      <div class="issues-grid">
-        <div class="issue-card" onclick="showArticles('special-ai-health')">
-          <div class="issue-cover" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">特刊</div>
-          <h3 class="issue-title">人工智能在医疗健康中的应用</h3>
-          <div class="issue-meta">出版日期: 2024-09-15</div>
-          <div class="issue-articles">收录文章: 12篇</div>
-        </div>
-
-        <div class="issue-card" onclick="showArticles('special-sustainable-ai')">
-          <div class="issue-cover" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">特刊</div>
-          <h3 class="issue-title">可持续人工智能</h3>
-          <div class="issue-meta">出版日期: 2024-06-20</div>
-          <div class="issue-articles">收录文章: 9篇</div>
-        </div>
-
-        <div class="issue-card" onclick="showArticles('special-trustworthy-ai')">
-          <div class="issue-cover" style="background: linear-gradient(135deg, #f39c12, #e67e22);">特刊</div>
-          <h3 class="issue-title">可信人工智能</h3>
-          <div class="issue-meta">出版日期: 2024-03-10</div>
-          <div class="issue-articles">收录文章: 11篇</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 所有期刊 -->
-    <div id="all" class="tab-content">
-      <div class="issues-grid">
-        <div class="issue-card" onclick="showArticles('issue-2024-09')">
-          <div class="issue-cover">IAIR Vol.15 No.9</div>
-          <h3 class="issue-title">2024年9月期</h3>
-          <div class="issue-meta">出版日期: 2024-09-01</div>
-          <div class="issue-articles">收录文章: 8篇</div>
-        </div>
-
-        <div class="issue-card" onclick="showArticles('issue-2024-08')">
-          <div class="issue-cover">IAIR Vol.15 No.8</div>
-          <h3 class="issue-title">2024年8月期</h3>
-          <div class="issue-meta">出版日期: 2024-08-01</div>
-          <div class="issue-articles">收录文章: 7篇</div>
-        </div>
-
-        <div class="issue-card" onclick="showArticles('issue-2024-07')">
-          <div class="issue-cover">IAIR Vol.15 No.7</div>
-          <h3 class="issue-title">2024年7月期</h3>
-          <div class="issue-meta">出版日期: 2024-07-01</div>
-          <div class="issue-articles">收录文章: 9篇</div>
-        </div>
-
-        <div class="issue-card" onclick="showArticles('issue-2024-06')">
-          <div class="issue-cover">IAIR Vol.15 No.6</div>
-          <h3 class="issue-title">2024年6月期</h3>
-          <div class="issue-meta">出版日期: 2024-06-01</div>
-          <div class="issue-articles">收录文章: 10篇</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 文章列表区域 (默认隐藏) -->
-  <section class="section" id="articles-section" style="display: none;">
-    <a href="#" class="back-btn" onclick="showIssues()">
-      <i class="fas fa-arrow-left"></i> 返回期刊列表
-    </a>
-
-    <h2 class="section-title" id="articles-title">文章列表</h2>
-
-    <ul class="articles-list" id="articles-list">
-      <!-- 文章内容将通过JavaScript动态加载 -->
-    </ul>
   </section>
 </div>
 
@@ -490,200 +343,390 @@
 </footer>
 
 <script>
-  // 文章数据
-  const articlesData = {
-    'issue-2024-12': {
-      title: '2024年12月期 - IAIR Vol.15 No.12',
-      articles: [
+  // 子刊数据
+  var journalsData = {
+    'AIT': {
+      title: '人工智能理论与方法',
+      abbreviation: 'AIT',
+      issn: '2096-1234',
+      editor: '张伟 教授',
+      description: '《人工智能理论与方法》专注于人工智能的基础理论研究、算法设计和数学方法创新。本刊旨在推动AI领域的理论发展，发表高质量的原创性理论研究论文。',
+      scope: [
+        '机器学习理论',
+        '深度学习基础',
+        '优化算法',
+        '强化学习理论',
+        '概率图模型',
+        '计算学习理论'
+      ],
+      latestArticles: [
         {
-          title: '基于Transformer的多模态学习框架研究',
-          authors: '张伟明, 李静, 王建国',
-          abstract: '本研究提出了一种新型的多模态学习框架，通过Transformer架构有效整合视觉和文本信息，在多个基准数据集上取得了state-of-the-art的性能。',
-          date: '2024-12-01',
-          doi: '10.1234/iair.2024.12.001',
-          pdf: '#'
+          title: '深度神经网络的泛化能力分析',
+          authors: '张三, 李四, 王五',
+          date: '2024-12-15',
+          link: '#'
         },
         {
-          title: '联邦学习中的隐私保护机制分析',
-          authors: '陈晓华, 赵琳, 刘强',
-          abstract: '本文系统分析了联邦学习中的隐私保护技术，提出了一种基于差分隐私的改进方案，在保护用户数据隐私的同时保持了模型性能。',
-          date: '2024-12-01',
-          doi: '10.1234/iair.2024.12.002',
-          pdf: '#'
-        },
-        {
-          title: '大语言模型在代码生成中的应用研究',
-          authors: '王编程, 李代码, 张算法',
-          abstract: '探讨了大语言模型在自动代码生成和程序理解方面的应用，提出了一种结合语法约束的代码生成方法，显著提高了生成代码的质量和可读性。',
-          date: '2024-12-01',
-          doi: '10.1234/iair.2024.12.003',
-          pdf: '#'
+          title: '非凸优化的新算法研究',
+          authors: '赵六, 钱七',
+          date: '2024-12-10',
+          link: '#'
         }
-      ]
+      ],
+      statistics: {
+        totalArticles: 245,
+        articlesThisYear: 45,
+        impactFactor: 6.8
+      }
     },
-    'special-ai-health': {
-      title: '特刊：人工智能在医疗健康中的应用',
-      articles: [
+    'MLA': {
+      title: '机器学习与应用',
+      abbreviation: 'MLA',
+      issn: '2096-1235',
+      editor: '李静 教授',
+      description: '《机器学习与应用》关注机器学习算法在工业、商业和社会领域的实际应用。本刊发表具有实际应用价值的机器学习研究成果。',
+      scope: [
+        '工业机器学习',
+        '商业智能',
+        '推荐系统',
+        '预测分析',
+        '异常检测',
+        '时序分析'
+      ],
+      latestArticles: [
         {
-          title: '深度学习在医学影像诊断中的最新进展',
-          authors: '王医学, 李影像, 张诊断',
-          abstract: '综述了深度学习技术在CT、MRI等医学影像分析中的应用，讨论了当前的技术挑战和未来发展方向。',
-          date: '2024-09-15',
-          doi: '10.1234/iair.special.2024.001',
-          pdf: '#'
+          title: '基于深度学习的金融风控系统',
+          authors: '王明, 陈红',
+          date: '2024-12-20',
+          link: '#'
         },
         {
-          title: '基于自然语言处理的电子病历分析系统',
-          authors: '刘文本, 陈分析, 赵系统',
-          abstract: '提出了一种基于BERT的电子病历分析系统，能够自动提取关键医疗信息，辅助医生进行诊断决策。',
-          date: '2024-09-15',
-          doi: '10.1234/iair.special.2024.002',
-          pdf: '#'
-        },
-        {
-          title: '个性化药物推荐系统的深度学习模型',
-          authors: '张药物, 李推荐, 王个性化',
-          abstract: '开发了一种结合患者基因组数据和临床信息的深度学习模型，为个体化药物治疗提供精准推荐。',
-          date: '2024-09-15',
-          doi: '10.1234/iair.special.2024.003',
-          pdf: '#'
+          title: '智能制造中的质量预测模型',
+          authors: '刘洋, 张华',
+          date: '2024-12-18',
+          link: '#'
         }
-      ]
+      ],
+      statistics: {
+        totalArticles: 312,
+        articlesThisYear: 68,
+        impactFactor: 7.2
+      }
     },
-    'issue-2024-11': {
-      title: '2024年11月期 - IAIR Vol.15 No.11',
-      articles: [
+    'CVP': {
+      title: '计算机视觉与模式识别',
+      abbreviation: 'CVP',
+      issn: '2096-1236',
+      editor: '王建国 教授',
+      description: '《计算机视觉与模式识别》发表计算机视觉、图像处理、模式识别和多媒体分析领域的前沿研究成果。',
+      scope: [
+        '目标检测与识别',
+        '图像分割',
+        '三维重建',
+        '人脸识别',
+        '视频分析',
+        '医学影像分析'
+      ],
+      latestArticles: [
         {
-          title: '强化学习在机器人控制中的新方法',
-          authors: '赵机器人, 钱控制, 孙学习',
-          abstract: '提出了一种基于深度强化学习的机器人控制算法，在复杂环境中表现出优越的适应性和鲁棒性。',
-          date: '2024-11-01',
-          doi: '10.1234/iair.2024.11.001',
-          pdf: '#'
+          title: '多视角三维物体重建新方法',
+          authors: '陈建国, 李伟',
+          date: '2024-12-22',
+          link: '#'
         },
         {
-          title: '知识图谱在智能问答系统中的应用',
-          authors: '周知识, 吴图谱, 郑问答',
-          abstract: '构建了一个大规模领域知识图谱，并将其应用于智能问答系统，显著提高了问答的准确性和覆盖范围。',
-          date: '2024-11-01',
-          doi: '10.1234/iair.2024.11.002',
-          pdf: '#'
+          title: '实时视频目标跟踪算法',
+          authors: '张勇, 王芳',
+          date: '2024-12-19',
+          link: '#'
         }
-      ]
+      ],
+      statistics: {
+        totalArticles: 198,
+        articlesThisYear: 42,
+        impactFactor: 8.1
+      }
     },
-    'special-sustainable-ai': {
-      title: '特刊：可持续人工智能',
-      articles: [
+    'NLP': {
+      title: '自然语言处理与计算语言学',
+      abbreviation: 'NLP',
+      issn: '2096-1237',
+      editor: '陈晓华 教授',
+      description: '《自然语言处理与计算语言学》专注于自然语言处理、机器翻译、情感分析和计算语言学的基础与应用研究。',
+      scope: [
+        '机器翻译',
+        '情感分析',
+        '信息抽取',
+        '问答系统',
+        '文本生成',
+        '语义理解'
+      ],
+      latestArticles: [
         {
-          title: '绿色AI：降低深度学习模型能耗的方法研究',
-          authors: '钱绿色, 孙能耗, 李可持续',
-          abstract: '研究了一系列降低深度学习模型训练和推理能耗的技术，包括模型压缩、知识蒸馏和动态计算等。',
-          date: '2024-06-20',
-          doi: '10.1234/iair.special.2024.004',
-          pdf: '#'
+          title: '大语言模型在机器翻译中的应用',
+          authors: '刘涛, 周明',
+          date: '2024-12-25',
+          link: '#'
         },
         {
-          title: 'AI在气候变化预测中的应用综述',
-          authors: '周气候, 吴预测, 郑AI',
-          abstract: '系统回顾了人工智能技术在气候变化建模、极端天气预测和环境影响评估中的应用现状和挑战。',
-          date: '2024-06-20',
-          doi: '10.1234/iair.special.2024.005',
-          pdf: '#'
+          title: '跨语言情感分析研究',
+          authors: '赵芳, 钱伟',
+          date: '2024-12-21',
+          link: '#'
         }
-      ]
+      ],
+      statistics: {
+        totalArticles: 267,
+        articlesThisYear: 56,
+        impactFactor: 7.5
+      }
     },
-    'special-trustworthy-ai': {
-      title: '特刊：可信人工智能',
-      articles: [
+    'RAI': {
+      title: '机器人与人工智能系统',
+      abbreviation: 'RAI',
+      issn: '2096-1238',
+      editor: '赵琳 教授',
+      description: '《机器人与人工智能系统》发表机器人学、智能控制系统、自主系统和智能硬件等领域的研究成果。',
+      scope: [
+        '机器人控制',
+        '自主导航',
+        '人机交互',
+        '智能制造',
+        '无人机系统',
+        '智能硬件'
+      ],
+      latestArticles: [
         {
-          title: '深度神经网络的可解释性方法研究',
-          authors: '冯可解释, 陈可信, 褚AI',
-          abstract: '提出了一种新的神经网络可视化技术，能够有效解释模型的决策过程，提高AI系统的透明度和可信度。',
-          date: '2024-03-10',
-          doi: '10.1234/iair.special.2024.006',
-          pdf: '#'
+          title: '仿生机器人的运动控制研究',
+          authors: '孙强, 李娜',
+          date: '2024-12-16',
+          link: '#'
         },
         {
-          title: '对抗攻击下的深度学习模型鲁棒性分析',
-          authors: '卫对抗, 沈攻击, 韩鲁棒',
-          abstract: '系统分析了深度学习模型在面对各种对抗攻击时的脆弱性，并提出了一种新的防御机制。',
-          date: '2024-03-10',
-          doi: '10.1234/iair.special.2024.007',
-          pdf: '#'
+          title: '工业机器人智能编程系统',
+          authors: '王刚, 陈静',
+          date: '2024-12-14',
+          link: '#'
         }
-      ]
+      ],
+      statistics: {
+        totalArticles: 176,
+        articlesThisYear: 34,
+        impactFactor: 6.3
+      }
+    },
+    'AIH': {
+      title: '人工智能与医疗健康',
+      abbreviation: 'AIH',
+      issn: '2096-1239',
+      editor: '刘强 教授',
+      description: '《人工智能与医疗健康》关注AI在医疗诊断、药物研发、健康管理和生物信息学中的应用与创新。',
+      scope: [
+        '医学影像分析',
+        '疾病预测',
+        '药物发现',
+        '健康监测',
+        '基因组学',
+        '精准医疗'
+      ],
+      latestArticles: [
+        {
+          title: '深度学习在癌症早期诊断中的应用',
+          authors: '周华, 吴明',
+          date: '2024-12-28',
+          link: '#'
+        },
+        {
+          title: 'AI辅助药物分子设计',
+          authors: '郑伟, 王芳',
+          date: '2024-12-24',
+          link: '#'
+        }
+      ],
+      statistics: {
+        totalArticles: 223,
+        articlesThisYear: 52,
+        impactFactor: 8.9
+      }
+    },
+    'AIE': {
+      title: '人工智能伦理与社会影响',
+      abbreviation: 'AIE',
+      issn: '2096-1240',
+      editor: '孙正义 教授',
+      description: '《人工智能伦理与社会影响》探讨人工智能的伦理问题、社会责任、政策影响和可持续发展。',
+      scope: [
+        'AI伦理框架',
+        '算法公平性',
+        '隐私保护',
+        'AI政策研究',
+        '社会影响评估',
+        '可持续发展'
+      ],
+      latestArticles: [
+        {
+          title: 'AI决策的伦理审查机制',
+          authors: '李道德, 王正义',
+          date: '2024-12-17',
+          link: '#'
+        },
+        {
+          title: '算法偏见的社会影响研究',
+          authors: '张公平, 陈平',
+          date: '2024-12-13',
+          link: '#'
+        }
+      ],
+      statistics: {
+        totalArticles: 45,
+        articlesThisYear: 23,
+        impactFactor: 5.2
+      }
+    },
+    'EAI': {
+      title: '边缘计算与人工智能',
+      abbreviation: 'EAI',
+      issn: '2096-1241',
+      editor: '周计算 教授',
+      description: '《边缘计算与人工智能》研究边缘智能、物联网AI、分布式学习和低功耗AI算法。',
+      scope: [
+        '边缘智能',
+        '物联网AI',
+        '分布式学习',
+        '模型压缩',
+        '低功耗算法',
+        '实时推理'
+      ],
+      latestArticles: [
+        {
+          title: '边缘设备上的轻量级模型部署',
+          authors: '钱边缘, 孙计算',
+          date: '2024-12-23',
+          link: '#'
+        },
+        {
+          title: '物联网中的联邦学习优化',
+          authors: '赵联网, 李物',
+          date: '2024-12-20',
+          link: '#'
+        }
+      ],
+      statistics: {
+        totalArticles: 32,
+        articlesThisYear: 18,
+        impactFactor: 4.8
+      }
     }
   };
 
-  // 显示期刊选项卡
-  function showTab(tabName) {
-    // 隐藏所有选项卡内容
-    document.querySelectorAll('.tab-content').forEach(tab => {
-      tab.classList.remove('active');
-    });
+  // 显示子刊详情
+  function showJournalDetails(journalId) {
+    var journal = journalsData[journalId];
+    if (journal) {
+      // 创建详情模态框
+      var modal = document.createElement('div');
+      modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 20px;';
 
-    // 移除所有选项卡按钮的active类
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.classList.remove('active');
-    });
+      var scopeList = '';
+      for (var i = 0; i < journal.scope.length; i++) {
+        scopeList += '<li style="background: #f8f9fa; padding: 0.5rem 1rem; border-radius: 4px; color: #666;">• ' + journal.scope[i] + '</li>';
+      }
 
-    // 显示选中的选项卡内容
-    document.getElementById(tabName).classList.add('active');
+      var articlesList = '';
+      for (var i = 0; i < journal.latestArticles.length; i++) {
+        var article = journal.latestArticles[i];
+        articlesList += '<div style="padding: 0.5rem 0; border-bottom: 1px solid #eee;">' +
+                '<div style="font-weight: 500; color: #2c3e50;">' + article.title + '</div>' +
+                '<div style="color: #7f8c8d; font-size: 0.9rem;">作者: ' + article.authors + ' | 发表日期: ' + article.date + '</div>' +
+                '</div>';
+      }
 
-    // 激活选中的选项卡按钮
-    event.target.classList.add('active');
-  }
+      modal.innerHTML = '<div style="background: white; border-radius: 10px; padding: 2rem; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto;">' +
+              '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">' +
+              '<h2 style="color: #2c3e50; font-size: 1.8rem;">' + journal.title + '</h2>' +
+              '<button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #7f8c8d;">&times;</button>' +
+              '</div>' +
 
-  // 显示文章列表
-  function showArticles(issueId) {
-    // 隐藏期刊列表，显示文章列表
-    document.getElementById('issues-section').style.display = 'none';
-    document.getElementById('articles-section').style.display = 'block';
+              '<div style="display: flex; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap;">' +
+              '<div style="flex: 1; min-width: 200px;">' +
+              '<div style="background: linear-gradient(135deg, #3498db, #2980b9); height: 150px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold; margin-bottom: 1rem;">' +
+              journal.abbreviation +
+              '</div>' +
+              '</div>' +
+              '<div style="flex: 2; min-width: 300px;">' +
+              '<div style="margin-bottom: 1rem;"><strong>ISSN:</strong> ' + journal.issn + '</div>' +
+              '<div style="margin-bottom: 1rem;"><strong>主编:</strong> ' + journal.editor + '</div>' +
+              '<div style="margin-bottom: 1rem;"><strong>影响因子:</strong> ' + journal.statistics.impactFactor + '</div>' +
+              '<div style="margin-bottom: 1rem;"><strong>总文章数:</strong> ' + journal.statistics.totalArticles + '篇</div>' +
+              '<div><strong>今年文章:</strong> ' + journal.statistics.articlesThisYear + '篇</div>' +
+              '</div>' +
+              '</div>' +
 
-    // 设置文章列表标题
-    document.getElementById('articles-title').textContent = articlesData[issueId].title;
+              '<div style="margin-bottom: 2rem;">' +
+              '<h3 style="color: #2c3e50; margin-bottom: 1rem; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem;">期刊简介</h3>' +
+              '<p style="line-height: 1.6; color: #666;">' + journal.description + '</p>' +
+              '</div>' +
 
-    // 清空现有文章列表
-    const articlesList = document.getElementById('articles-list');
-    articlesList.innerHTML = '';
+              '<div style="margin-bottom: 2rem;">' +
+              '<h3 style="color: #2c3e50; margin-bottom: 1rem; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem;">研究范围</h3>' +
+              '<ul style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; list-style: none; padding: 0;">' +
+              scopeList +
+              '</ul>' +
+              '</div>' +
 
-    // 添加文章到列表
-    articlesData[issueId].articles.forEach(article => {
-      const articleItem = document.createElement('li');
-      articleItem.className = 'article-item';
-      articleItem.innerHTML = `
-                    <a href="#" class="article-title">${article.title}</a>
-                    <div class="article-authors">作者: ${article.authors}</div>
-                    <div class="article-abstract">${article['abstract']}</div>
-                    <div class="article-meta">
-                        <span>发表日期: ${article.date} | DOI: ${article.doi}</span>
-                        <div class="article-actions">
-                            <a href="${article.pdf}" class="article-action">PDF全文</a>
-                            <a href="#" class="article-action">引用</a>
-                            <a href="#" class="article-action">分享</a>
-                        </div>
-                    </div>
-                `;
-      articlesList.appendChild(articleItem);
-    });
-  }
+              '<div>' +
+              '<h3 style="color: #2c3e50; margin-bottom: 1rem; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem;">最新文章</h3>' +
+              '<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">' +
+              articlesList +
+              '</div>' +
+              '</div>' +
 
-  // 返回期刊列表
-  function showIssues() {
-    document.getElementById('issues-section').style.display = 'block';
-    document.getElementById('articles-section').style.display = 'none';
+              '<div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">' +
+              '<button onclick="this.parentElement.parentElement.parentElement.remove()" style="padding: 0.5rem 1.5rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">关闭</button>' +
+              '<button onclick="window.open(\'#\', \'_blank\')" style="padding: 0.5rem 1.5rem; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">查看详情</button>' +
+              '</div>' +
+              '</div>';
+
+      document.body.appendChild(modal);
+
+      // 点击模态框外部关闭
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          modal.remove();
+        }
+      });
+    }
   }
 
   // 搜索功能
   document.getElementById('searchInput').addEventListener('input', function() {
-    const searchTerm = this.value.toLowerCase();
-    // 这里可以添加搜索逻辑
-    console.log('搜索关键词:', searchTerm);
+    var searchTerm = this.value.toLowerCase();
+    var journalCards = document.querySelectorAll('.journal-card');
+
+    for (var i = 0; i < journalCards.length; i++) {
+      var card = journalCards[i];
+      var title = card.querySelector('.journal-title').textContent.toLowerCase();
+      var description = card.querySelector('.journal-description').textContent.toLowerCase();
+
+      if (title.includes(searchTerm) || description.includes(searchTerm)) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    }
   });
 
-  // 页面加载时初始化
-  document.addEventListener('DOMContentLoaded', function() {
-    // 可以在这里添加更多的初始化代码
+  // 筛选功能
+  document.getElementById('categoryFilter').addEventListener('change', function() {
+    var category = this.value;
+    // 这里可以根据选择的分类进行筛选
+    if (category === '') {
+      // 显示所有子刊
+      var journalCards = document.querySelectorAll('.journal-card');
+      for (var i = 0; i < journalCards.length; i++) {
+        journalCards[i].style.display = 'block';
+      }
+    }
   });
 </script>
 </body>

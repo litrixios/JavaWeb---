@@ -179,65 +179,80 @@
             display: inline-block;
         }
 
-        /* 投稿选项样式 */
-        .submit-options {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
+        /* 简化的投稿入口样式 */
+        .submit-simple {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
             margin-top: 2rem;
         }
 
-        .option-card {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 2rem;
-            text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border-left: 4px solid #3498db;
-        }
-
-        .option-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
-        }
-
-        .option-icon {
-            width: 80px;
-            height: 80px;
-            background: #3498db;
+        .submit-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1.5rem;
+            margin: 0 auto 2rem;
             color: white;
-            font-size: 2rem;
+            font-size: 3rem;
+            box-shadow: 0 5px 20px rgba(52, 152, 219, 0.3);
         }
 
-        .option-title {
-            color: #2c3e50;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .option-description {
+        .submit-description {
             color: #7f8c8d;
-            margin-bottom: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
         }
 
         .btn {
-            display: inline-block;
-            background: #3498db;
-            color: white;
-            padding: 0.8rem 1.5rem;
-            border-radius: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2rem;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 500;
-            transition: background 0.3s ease;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            min-width: 150px;
         }
 
-        .btn:hover {
+        .btn-login {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-login:hover {
             background: #2980b9;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-register {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-register:hover {
+            background: #219653;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+
+        .btn i {
+            margin-right: 0.5rem;
         }
 
         /* 作者指南样式 */
@@ -337,23 +352,6 @@
             margin-bottom: 0.5rem;
         }
 
-        /* 登录提示样式 */
-        .login-prompt {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-top: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .login-prompt i {
-            color: #f39c12;
-            font-size: 1.5rem;
-        }
-
         /* 响应式设计 */
         @media (max-width: 768px) {
             .nav-container {
@@ -376,13 +374,29 @@
                 margin-bottom: 2rem;
             }
 
-            .submit-options, .cfp-points {
+            .cfp-points {
                 grid-template-columns: 1fr;
             }
 
             .step {
                 flex-direction: column;
                 text-align: center;
+            }
+
+            .auth-buttons {
+                flex-direction: column;
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .submit-icon {
+                width: 100px;
+                height: 100px;
+                font-size: 2.5rem;
             }
         }
     </style>
@@ -442,45 +456,34 @@
 
         <!-- 主要内容区域 -->
         <div class="content">
-            <!-- Submit your article 部分 -->
+            <!-- Submit your article 部分 - 简化版 -->
             <section id="submit" class="section">
                 <h2 class="section-title">Submit your article</h2>
-                <p>通过我们的在线投稿系统提交您的论文稿件。请确保您的稿件符合期刊的格式要求和范围。</p>
+                <p>欢迎投稿至国际人工智能研究期刊。请登录或注册账号以提交您的论文稿件。</p>
 
-                <div class="submit-options">
-                    <div class="option-card">
-                        <div class="option-icon">
-                            <i class="fas fa-file-upload"></i>
-                        </div>
-                        <h3 class="option-title">新稿件提交</h3>
-                        <p class="option-description">首次向本期刊提交论文稿件</p>
-                        <a href="http://localhost:5173/login" class="btn">开始投稿</a>
+                <div class="submit-simple">
+                    <div class="submit-icon">
+                        <i class="fas fa-file-upload"></i>
                     </div>
 
-                    <div class="option-card">
-                        <div class="option-icon">
-                            <i class="fas fa-edit"></i>
-                        </div>
-                        <h3 class="option-title">修改稿提交</h3>
-                        <p class="option-description">根据审稿意见修改后重新提交</p>
-                        <a href="http://localhost:5173/login" class="btn">提交修改稿</a>
+                    <p class="submit-description">
+                        通过我们的在线投稿系统提交您的论文稿件。您需要登录账户才能访问投稿系统，进行新稿件提交、修改稿提交和稿件状态查询等操作。
+                    </p>
+
+                    <div class="auth-buttons">
+                        <a href="http://localhost:5173/login" class="btn btn-login">
+                            <i class="fas fa-sign-in-alt"></i>
+                            登录账户
+                        </a>
+                        <a href="http://localhost:5173/register" class="btn btn-register">
+                            <i class="fas fa-user-plus"></i>
+                            注册账户
+                        </a>
                     </div>
 
-                    <div class="option-card">
-                        <div class="option-icon">
-                            <i class="fas fa-tasks"></i>
-                        </div>
-                        <h3 class="option-title">稿件状态查询</h3>
-                        <p class="option-description">查看已投稿件的审稿进度</p>
-                        <a href="http://localhost:5173/login" class="btn">查询状态</a>
-                    </div>
-                </div>
-
-                <div class="login-prompt">
-                    <i class="fas fa-info-circle"></i>
-                    <div>
-                        <p><strong>请注意：</strong>您需要登录账户才能提交论文。如果您还没有账户，请先<a href="http://localhost:5173/register">注册</a>。</p>
-                    </div>
+                    <p style="color: #7f8c8d; font-size: 0.9rem; margin-top: 2rem;">
+                        <i class="fas fa-info-circle"></i> 如果您还没有账户，请先注册新账户
+                    </p>
                 </div>
             </section>
 

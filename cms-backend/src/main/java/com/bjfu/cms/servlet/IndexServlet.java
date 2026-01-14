@@ -24,21 +24,15 @@ public class IndexServlet extends HttpServlet {
     private EditorialBoardService editorialBoardService;
     private NewsService newsService;
 
-//    @Override
-//    public void init() throws ServletException {
-//        // 初始化时获取服务实例
-//        editorialBoardService = ServiceFactory.getEditorialBoardService();
-//        newsService = ServiceFactory.getNewsService();
-//    }
-@Override
-public void init() throws ServletException {
-    // 从Spring容器获取Bean
-    WebApplicationContext ctx = WebApplicationContextUtils
-            .getRequiredWebApplicationContext(getServletContext());
+    @Override
+    public void init() throws ServletException {
+        // 从Spring容器获取Bean
+        WebApplicationContext ctx = WebApplicationContextUtils
+                .getRequiredWebApplicationContext(getServletContext());
 
-    editorialBoardService = ctx.getBean(EditorialBoardService.class);
-    newsService = ctx.getBean(NewsService.class);
-}
+        editorialBoardService = ctx.getBean(EditorialBoardService.class);
+        newsService = ctx.getBean(NewsService.class);
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -46,26 +40,25 @@ public void init() throws ServletException {
 
         try {
             // 1. 获取编委数据
-            System.out.println("11111");
             List<Map<String, Object>> editorialBoard = editorialBoardService.getPublicList();
-
             request.setAttribute("editorialBoard", editorialBoard);
 
             // 2. 获取激活的新闻列表
             List<News> allNews = newsService.getAllNews(null, null, null);
-            List<News> newsList = new ArrayList<>();
+            List<News> activeNewsList = new ArrayList<>();
             if (allNews != null) {
                 for(News news : allNews) {
                     if(news.getIsActive() != null && news.getIsActive()) {
-                        newsList.add(news);
+                        activeNewsList.add(news);
                     }
                 }
             }
-            request.setAttribute("callForPapers", newsList);
 
-            // 3. 获取每个新闻的附件信息
-            List<Map<String, Object>> newsWithFiles = new ArrayList<>();
-            for(News news : newsList) {
+            // 3. 分离新闻：有附件的放在征稿通知，没有附件的放在新闻列表
+            List<Map<String, Object>> newsWithFiles = new ArrayList<>(); // 征稿通知（有附件）
+            List<Map<String, Object>> newsWithoutFiles = new ArrayList<>(); // 新闻列表（无附件）
+
+            for(News news : activeNewsList) {
                 try {
                     // 获取新闻的附件列表
                     List<File> files = newsService.getFilesByNewsId(news.getNewsId());
@@ -75,22 +68,31 @@ public void init() throws ServletException {
                     newsMap.put("content", news.getContent());
                     newsMap.put("publishDate", news.getPublishDate());
                     newsMap.put("files", files != null ? files : new ArrayList<>());
-                    newsWithFiles.add(newsMap);
+
+                    // 根据是否有附件进行分类
+                    if (files != null && !files.isEmpty()) {
+                        newsWithFiles.add(newsMap); // 有附件 -> 征稿通知
+                    } else {
+                        newsWithoutFiles.add(newsMap); // 无附件 -> 新闻列表
+                    }
                 } catch (Exception e) {
-                    // 如果获取附件失败，仍然添加新闻信息，但附件列表为空
+                    // 如果获取附件失败，默认放在新闻列表（无附件）
                     Map<String, Object> newsMap = new HashMap<>();
                     newsMap.put("newsId", news.getNewsId());
                     newsMap.put("title", news.getTitle());
                     newsMap.put("content", news.getContent());
                     newsMap.put("publishDate", news.getPublishDate());
                     newsMap.put("files", new ArrayList<>());
-                    newsWithFiles.add(newsMap);
+                    newsWithoutFiles.add(newsMap);
                     e.printStackTrace(); // 可记录日志
                 }
             }
-            request.setAttribute("newsWithFiles", newsWithFiles);
 
-            // 4. 转发到JSP页面
+            // 4. 设置请求属性
+            request.setAttribute("newsWithFiles", newsWithFiles); // 征稿通知数据
+            request.setAttribute("newsWithoutFiles", newsWithoutFiles); // 新闻列表数据
+
+            // 5. 转发到JSP页面
             request.getRequestDispatcher("/WEB-INF/jsp/index.jsp").forward(request, response);
 
         } catch (Exception e) {
